@@ -29,6 +29,12 @@ namespace ChatAppServer.WebAPI.Controllers
 
             foreach (var userId in request.MemberIds)
             {
+                var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
+                if (user == null)
+                {
+                    return BadRequest(new { Message = $"User with Id {userId} not found" });
+                }
+
                 var groupMember = new GroupMember
                 {
                     GroupId = group.Id,
@@ -42,6 +48,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(group);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> AddMember([FromForm] AddGroupMemberDto request, CancellationToken cancellationToken)
@@ -127,5 +134,50 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(membersDto);
         }
+
+        [HttpDelete]
+        public async Task<IActionResult> RemoveMember([FromBody] RemoveGroupMemberDto request, CancellationToken cancellationToken)
+        {
+            var groupMember = await _context.GroupMembers
+                .FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
+
+            if (groupMember == null)
+            {
+                return NotFound("Group member not found");
+            }
+
+            _context.GroupMembers.Remove(groupMember);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Ok("Member removed from the group");
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetUserGroups(Guid userId, CancellationToken cancellationToken)
+        {
+            var userGroups = await _context.GroupMembers
+                .Where(gm => gm.UserId == userId)
+                .Select(gm => gm.Group)
+                .ToListAsync(cancellationToken);
+
+            return Ok(userGroups);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUserGroupsWithDetails(Guid userId, CancellationToken cancellationToken)
+        {
+            var userGroups = await _context.Groups
+                .Where(g => g.Members.Any(gm => gm.UserId == userId))
+                .Select(g => new
+                {
+                    Group = g,
+                    Members = g.Members.Select(gm => gm.User).ToList(),
+                    RecentChats = g.Chats.OrderByDescending(c => c.Date).Take(10).ToList() // lấy 10 tin nhắn gần nhất
+                })
+                .ToListAsync(cancellationToken);
+
+            return Ok(userGroups);
+        }
+
     }
+
 }

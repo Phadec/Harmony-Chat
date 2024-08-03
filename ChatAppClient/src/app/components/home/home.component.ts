@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 import { FormsModule } from '@angular/forms';
 import { UserModel } from '../../models/user.model';
@@ -21,9 +21,9 @@ export class HomeComponent implements OnInit {
   user: UserModel = new UserModel();
   hub: signalR.HubConnection | undefined;
   message: string = "";
+  attachment: File | null = null;
 
-  constructor(private http: HttpClient) {
-  }
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.user = JSON.parse(localStorage.getItem("accessToken") ?? "{}");
@@ -37,16 +37,14 @@ export class HomeComponent implements OnInit {
       this.hub?.invoke("Connect", this.user.id);
 
       this.hub?.on("Users", (res: UserModel) => {
-        console.log(res);
-        const user = this.users.find(p => p.id == res.id);
+        const user = this.users.find(p => p.id === res.id);
         if (user) {
           user.status = res.status;
         }
       });
 
       this.hub?.on("Messages", (res: ChatModel) => {
-        console.log(res);
-        if (this.selectedUserId == res.userId) {
+        if (this.selectedUserId === res.userId) {
           this.chats.push(res);
         }
       });
@@ -58,12 +56,7 @@ export class HomeComponent implements OnInit {
   getFriends() {
     this.http.get<any>(`https://localhost:7267/api/friends/${this.user.id}/friends`).subscribe(
       response => {
-        if (response && response.$values) {
-          this.users = response.$values;
-        } else {
-          this.users = response;
-        }
-        console.log(this.users);
+        this.users = response.$values || response;
       },
       error => {
         console.error('Error fetching friends:', error);
@@ -80,16 +73,9 @@ export class HomeComponent implements OnInit {
     this.selectedUserId = user.id;
     this.selectedUser = user;
 
-    console.log('Selected User ID:', this.selectedUserId);
-    console.log('Current User ID:', this.user.id);
-
     this.http.get<any>(`https://localhost:7267/api/Chats/GetChats?userId=${this.user.id}&toUserId=${this.selectedUserId}`).subscribe(
       response => {
-        if (response && response.$values) {
-          this.chats = response.$values;
-        } else {
-          this.chats = response;
-        }
+        this.chats = response.$values || response;
       },
       error => {
         console.error('Error fetching chats:', error);
@@ -97,21 +83,26 @@ export class HomeComponent implements OnInit {
     );
   }
 
+  onFileSelected(event: any) {
+    this.attachment = event.target.files[0];
+  }
+
   sendMessage() {
-    const data = {
-      userId: this.user.id,
-      toUserId: this.selectedUserId,
-      message: this.message
-    };
+    const formData = new FormData();
+    formData.append('userId', this.user.id);
+    formData.append('toUserId', this.selectedUserId);
+    formData.append('message', this.message);
+    if (this.attachment) {
+      formData.append('attachment', this.attachment);
+    }
 
-    console.log('Sending message:', JSON.stringify(data));
-
-    this.http.post<ChatModel>("https://localhost:7267/api/Chats/SendMessage", data).subscribe(
+    this.http.post<ChatModel>("https://localhost:7267/api/Chats/SendPrivateMessage", formData).subscribe(
       res => {
         this.chats.push(res);
         this.message = "";
+        this.attachment = null;
       },
-      error => {
+      (error: HttpErrorResponse) => {
         console.error('Error sending message:', error);
         console.error('Error details:', error.error); // Log chi tiết lỗi
 

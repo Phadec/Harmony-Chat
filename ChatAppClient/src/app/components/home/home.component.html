@@ -53,10 +53,11 @@
           </div>
           <div class="chat-message clearfix">
             <div class="input-group mb-0">
+              <input [(ngModel)]="message" type="text" class="form-control" placeholder="Enter text here..." style="height: 30px;">
+              <input type="file" (change)="onFileSelected($event)" class="form-control">
               <div (click)="sendMessage()" class="input-group-prepend">
                 <span class="input-group-text"><i class="fa fa-send"></i></span>
               </div>
-              <input [(ngModel)]="message" type="text" class="form-control" placeholder="Enter text here..." style="height: 30px;">
             </div>
           </div>
         </div>

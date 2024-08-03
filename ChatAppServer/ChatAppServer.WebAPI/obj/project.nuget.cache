@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4UFEf1TjSbo=",
+  "dgSpecHash": "Gj8ijrRjlDA=",
   "success": true,
-  "projectFilePath": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
+  "projectFilePath": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vietp\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\vietp\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",

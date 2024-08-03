@@ -1,12 +1,11 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace ChatAppServer.WebAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class mg1 : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -49,7 +48,8 @@ namespace ChatAppServer.WebAPI.Migrations
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ToUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     GroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AttachmentUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -60,7 +60,7 @@ namespace ChatAppServer.WebAPI.Migrations
                         column: x => x.GroupId,
                         principalTable: "Groups",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Chats_Users_ToUserId",
                         column: x => x.ToUserId,
@@ -142,7 +142,7 @@ namespace ChatAppServer.WebAPI.Migrations
                         column: x => x.GroupId,
                         principalTable: "Groups",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_GroupMembers_Users_UserId",
                         column: x => x.UserId,

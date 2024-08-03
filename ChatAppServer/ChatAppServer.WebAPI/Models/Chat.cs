@@ -15,7 +15,8 @@
         public User ToUser { get; set; }
         public Guid? GroupId { get; set; }
         public Group Group { get; set; }
-        public string Message { get; set; } = string.Empty;
+        public string? Message { get; set; } // Cho phép null
+        public string? AttachmentUrl { get; set; } // Cho phép null
         public DateTime Date { get; set; }
     }
 }

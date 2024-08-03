@@ -1,6 +1,7 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
 using ChatAppServer.WebAPI.Hubs;
 using ChatAppServer.WebAPI.Models;
+using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -30,49 +31,70 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetChats(Guid userId, Guid toUserId, CancellationToken cancellationToken)
         {
-            List<Chat> chats = await _context.Chats
-                .Where(p =>
-                    (p.UserId == userId && p.ToUserId == toUserId) ||
-                    (p.ToUserId == userId && p.UserId == toUserId))
-                .OrderBy(p => p.Date)
-                .ToListAsync(cancellationToken);
+            try
+            {
+                var chats = await _context.Chats
+                    .Where(c => (c.UserId == userId && c.ToUserId == toUserId) || (c.UserId == toUserId && c.ToUserId == userId))
+                    .Select(chat => new
+                    {
+                        chat.Id,
+                        chat.UserId,
+                        chat.ToUserId,
+                        chat.GroupId,
+                        Message = chat.Message ?? string.Empty, // Nếu null, trả về chuỗi rỗng
+                        AttachmentUrl = chat.AttachmentUrl ?? string.Empty, // Nếu null, trả về chuỗi rỗng
+                        chat.Date
+                    })
+                    .ToListAsync(cancellationToken);
 
-            return Ok(chats);
+                return Ok(chats);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpGet]
         public async Task<IActionResult> GetGroupChats(Guid groupId, CancellationToken cancellationToken)
         {
-            List<Chat> chats = await _context.Chats
+            var chats = await _context.Chats
                 .Where(p => p.GroupId == groupId)
+                .Include(p => p.User) // Eager load User để có thể lấy Username
                 .OrderBy(p => p.Date)
+                .Select(chat => new ChatDto
+                {
+                    Id = chat.Id,
+                    UserId = chat.UserId,
+                    Username = chat.User.Username, // Assuming Username is a property of User
+                    ToUserId = chat.ToUserId,
+                    GroupId = chat.GroupId,
+                    Message = chat.Message ?? string.Empty,
+                    AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
+                    Date = chat.Date
+                })
                 .ToListAsync(cancellationToken);
 
             return Ok(chats);
         }
 
         [HttpPost]
-        public async Task<IActionResult> SendMessage([FromBody] SendMessageDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> SendPrivateMessage([FromForm] SendMessageDto request, CancellationToken cancellationToken)
         {
-            if (request == null || string.IsNullOrEmpty(request.Message))
+            if (request == null || (string.IsNullOrEmpty(request.Message) && request.Attachment == null))
             {
-                return BadRequest(new { Message = "Invalid message data." });
+                return BadRequest(new { Message = "Invalid message data. Message or Attachment is required." });
             }
 
-            // Log received data
-            Console.WriteLine($"Received request: UserId={request.UserId}, ToUserId={request.ToUserId}, Message={request.Message}");
-
-            // Validate userId and toUserId
-            if (request.UserId == Guid.Empty || request.ToUserId == Guid.Empty)
+            // Xử lý tệp đính kèm
+            string? attachmentUrl = null;
+            if (request.Attachment != null)
             {
-                return BadRequest(new { Message = "UserId and ToUserId must be valid GUIDs." });
+                attachmentUrl = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
             }
 
-            // Kiểm tra xem người dùng có phải là bạn bè của nhau không
-
-            bool areFriends = await AreFriends(request.UserId, request.ToUserId, cancellationToken);
-
-            if (!areFriends)
+            // Kiểm tra xem người dùng có phải là bạn bè hay không
+            if (!request.ToUserId.HasValue || !await AreFriends(request.UserId, request.ToUserId.Value, cancellationToken))
             {
                 return BadRequest("You can only send messages to users who are your friends.");
             }
@@ -83,13 +105,14 @@ namespace ChatAppServer.WebAPI.Controllers
                 UserId = request.UserId,
                 ToUserId = request.ToUserId,
                 Message = request.Message,
+                AttachmentUrl = attachmentUrl,
                 Date = DateTime.UtcNow
             };
 
             await _context.AddAsync(chat, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Gửi tin nhắn qua SignalR nếu người nhận đang kết nối
+            // Gửi tin nhắn qua SignalR
             var connection = ChatHub.Users.FirstOrDefault(p => p.Value == chat.ToUserId);
             if (connection.Key != null)
             {
@@ -102,6 +125,11 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> SendGroupMessage([FromForm] SendGroupMessageDto request, CancellationToken cancellationToken)
         {
+            if (request == null || (string.IsNullOrEmpty(request.Message) && request.Attachment == null))
+            {
+                return BadRequest(new { Message = "Invalid message data. Message or Attachment is required." });
+            }
+
             // Kiểm tra xem người dùng có phải là thành viên của nhóm không
             bool isMember = await _context.GroupMembers
                 .AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
@@ -111,12 +139,20 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest("You can only send messages to groups you are a member of.");
             }
 
+            // Xử lý tệp đính kèm
+            string? attachmentUrl = null;
+            if (request.Attachment != null)
+            {
+                attachmentUrl = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
+            }
+
             // Tạo và lưu tin nhắn nhóm
             Chat chat = new()
             {
                 UserId = request.UserId,
                 GroupId = request.GroupId,
                 Message = request.Message,
+                AttachmentUrl = attachmentUrl,
                 Date = DateTime.UtcNow
             };
 
@@ -138,13 +174,15 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(chat);
         }
 
-        // Phương thức kiểm tra xem hai người có phải là bạn bè không
+
+        // Kiểm tra xem hai người dùng có phải là bạn bè không
         private async Task<bool> AreFriends(Guid userId1, Guid userId2, CancellationToken cancellationToken)
         {
             return await _context.Users
                 .AnyAsync(u => u.Id == userId1 && u.Friends.Any(f => f.FriendId == userId2), cancellationToken) &&
-                await _context.Users
+                   await _context.Users
                 .AnyAsync(u => u.Id == userId2 && u.Friends.Any(f => f.FriendId == userId1), cancellationToken);
         }
+
     }
 }

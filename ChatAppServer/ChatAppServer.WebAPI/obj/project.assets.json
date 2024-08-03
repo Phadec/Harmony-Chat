@@ -4855,11 +4855,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
+      "projectUniqueName": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
       "projectName": "ChatAppServer.WebAPI",
-      "projectPath": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
+      "projectPath": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
       "packagesPath": "C:\\Users\\vietp\\.nuget\\packages\\",
-      "outputPath": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\obj\\",
+      "outputPath": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\vietp\\AppData\\Roaming\\NuGet\\NuGet.Config",

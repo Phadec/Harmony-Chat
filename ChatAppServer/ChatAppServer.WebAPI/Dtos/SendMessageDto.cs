@@ -1,8 +1,8 @@
 ﻿namespace ChatAppServer.WebAPI.Dtos
 {
-
     public sealed record SendMessageDto(
         Guid UserId,
-        Guid ToUserId,
-        string Message);
+        Guid? ToUserId,
+        string? Message,
+        IFormFile? Attachment);
 }

@@ -28,6 +28,9 @@ namespace ChatAppServer.WebAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
@@ -177,7 +180,7 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.HasOne("ChatAppServer.WebAPI.Models.Group", "Group")
                         .WithMany("Chats")
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ChatAppServer.WebAPI.Models.User", "ToUser")
                         .WithMany("ReceivedChats")
@@ -240,7 +243,7 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.HasOne("ChatAppServer.WebAPI.Models.Group", "Group")
                         .WithMany("Members")
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ChatAppServer.WebAPI.Models.User", "User")

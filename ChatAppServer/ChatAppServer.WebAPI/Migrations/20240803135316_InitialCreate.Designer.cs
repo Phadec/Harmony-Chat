@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatAppServer.WebAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240803070143_mg2")]
-    partial class mg2
+    [Migration("20240803135316_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -30,6 +30,9 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
@@ -180,7 +183,7 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.HasOne("ChatAppServer.WebAPI.Models.Group", "Group")
                         .WithMany("Chats")
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ChatAppServer.WebAPI.Models.User", "ToUser")
                         .WithMany("ReceivedChats")
@@ -243,7 +246,7 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.HasOne("ChatAppServer.WebAPI.Models.Group", "Group")
                         .WithMany("Members")
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ChatAppServer.WebAPI.Models.User", "User")

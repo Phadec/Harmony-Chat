@@ -1,8 +1,8 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
 using ChatAppServer.WebAPI.Models;
-using GenericFileService.Files;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ExternalFileService = GenericFileService.Files.FileService;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
@@ -27,16 +27,16 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "Username existed!" });
             }
 
-            string avatar = request.File != null ? FileService.FileSaveToServer(request.File, "wwwroot/avatar/") : null;
+            string avatar = request.File != null ? ExternalFileService.FileSaveToServer(request.File, "wwwroot/avatar/") : null;
 
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             User user = new()
             {
                 Username = request.Username,
-                FullName = request.FullName, // Thêm FullName
-                Birthday = request.Birthday, // Thêm Birthday
-                Email = request.Email, // Thêm Email
+                FullName = request.FullName,
+                Birthday = request.Birthday,
+                Email = request.Email,
                 Avatar = avatar,
                 PasswordHash = passwordHash,
                 Status = "offline" // Hoặc trạng thái mặc định khác nếu cần
