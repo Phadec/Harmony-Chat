@@ -5,6 +5,10 @@
       "PackagePath": "staticwebassets\\avatar\\1eb7126c-a9b1-48fe-ab4b-4ff4c085b869.jpg"
     },
     {
+      "Id": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\532e578b-0030-41d8-a849-b3419ff08dba.jpg",
+      "PackagePath": "staticwebassets\\avatar\\532e578b-0030-41d8-a849-b3419ff08dba.jpg"
+    },
+    {
       "Id": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\80f8aaa7-3e01-4284-b9be-eb1b40f971cb.jpg",
       "PackagePath": "staticwebassets\\avatar\\80f8aaa7-3e01-4284-b9be-eb1b40f971cb.jpg"
     },
@@ -15,6 +19,14 @@
     {
       "Id": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\ae35b9a9-2d19-4332-b451-d693f1a212bf.jpg",
       "PackagePath": "staticwebassets\\avatar\\ae35b9a9-2d19-4332-b451-d693f1a212bf.jpg"
+    },
+    {
+      "Id": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\b1ea45f1-bae6-46bd-a20f-4a1f8c28ad1a.jpg",
+      "PackagePath": "staticwebassets\\avatar\\b1ea45f1-bae6-46bd-a20f-4a1f8c28ad1a.jpg"
+    },
+    {
+      "Id": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\caf13c94-5e48-44e2-84d2-6f81079a1f42.jpg",
+      "PackagePath": "staticwebassets\\avatar\\caf13c94-5e48-44e2-84d2-6f81079a1f42.jpg"
     },
     {
       "Id": "D:\\NET_Angular_SignalR_ile_ChatApp\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\cf614e6c-3e79-480c-974c-43d7c70c6c64.jpg",

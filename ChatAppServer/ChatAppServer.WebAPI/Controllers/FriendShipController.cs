@@ -37,29 +37,9 @@ public class FriendsController : ControllerBase
             };
 
             await _context.FriendRequests.AddAsync(friendRequest, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
 
-            // Tạo và lưu mối quan hệ bạn bè cho cả người gửi và người nhận
-            var user = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-            var friend = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == friendId, cancellationToken);
-
-            if (user == null || friend == null)
-            {
-                return NotFound("User not found.");
-            }
-
-            user.AddFriend(friendId); // Thêm người bạn vào danh sách bạn bè của người gửi
-            friend.AddFriend(userId); // Thêm người gửi vào danh sách bạn bè của người nhận
-
-            // Cập nhật trạng thái của các đối tượng
-            _context.Users.Update(user);
-            _context.Users.Update(friend);
-
-            // Lưu các thay đổi vào cơ sở dữ liệu
-            var affectedRows = await _context.SaveChangesAsync(cancellationToken);
-
-            Console.WriteLine($"Number of rows affected: {affectedRows}");
-
-            return Ok();
+            return Ok(friendRequest);
         }
         catch (Exception ex)
         {
@@ -68,22 +48,37 @@ public class FriendsController : ControllerBase
         }
     }
 
-
     [HttpDelete("{userId}/remove/{friendId}")]
     public async Task<IActionResult> RemoveFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
     {
         var user = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        if (user == null)
+        var friend = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == friendId, cancellationToken);
+
+        if (user == null || friend == null)
         {
             return NotFound();
         }
 
-        user.RemoveFriend(friendId);
+        var userFriendship = user.Friends.FirstOrDefault(f => f.FriendId == friendId);
+        var friendFriendship = friend.Friends.FirstOrDefault(f => f.FriendId == userId);
+
+        if (userFriendship != null)
+        {
+            user.Friends.Remove(userFriendship);
+        }
+
+        if (friendFriendship != null)
+        {
+            friend.Friends.Remove(friendFriendship);
+        }
+
         _context.Users.Update(user);
+        _context.Users.Update(friend);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Ok();
     }
+
 
     [HttpGet("{userId}/friends")]
     public async Task<IActionResult> GetFriends(Guid userId, CancellationToken cancellationToken)
@@ -123,7 +118,6 @@ public class FriendsController : ControllerBase
 
         return Ok(friendsDto);
     }
-
 
     [HttpGet("{userId}/friend-requests")]
     public async Task<IActionResult> GetFriendRequests(Guid userId, CancellationToken cancellationToken)
@@ -172,10 +166,20 @@ public class FriendsController : ControllerBase
             }
 
             user.AddFriend(friendRequest.SenderId);
+
+            var sender = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == friendRequest.SenderId, cancellationToken);
+            if (sender == null)
+            {
+                Console.WriteLine($"Sender with Id {friendRequest.SenderId} not found.");
+                return NotFound($"Sender with ID {friendRequest.SenderId} not found.");
+            }
+
+            sender.AddFriend(userId);
             friendRequest.Status = "Accepted";
 
             _context.FriendRequests.Update(friendRequest);
             _context.Users.Update(user);
+            _context.Users.Update(sender);
 
             var affectedRows = await _context.SaveChangesAsync(cancellationToken);
             Console.WriteLine($"Number of rows affected: {affectedRows}");
@@ -188,7 +192,6 @@ public class FriendsController : ControllerBase
             return StatusCode(500, "An error occurred while processing your request.");
         }
     }
-
 
     [HttpPost("{userId}/reject-friend-request/{requestId}")]
     public async Task<IActionResult> RejectFriendRequest(Guid userId, Guid requestId, CancellationToken cancellationToken)

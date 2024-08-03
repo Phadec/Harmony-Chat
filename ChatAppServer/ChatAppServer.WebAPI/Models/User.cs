@@ -8,6 +8,9 @@
             Friends = new List<Friendship>();
             SentFriendRequests = new List<FriendRequest>();
             ReceivedFriendRequests = new List<FriendRequest>();
+            SentChats = new List<Chat>();
+            ReceivedChats = new List<Chat>();
+            Groups = new List<GroupMember>();
         }
 
         public Guid Id { get; set; }
@@ -21,6 +24,9 @@
         public List<Friendship> Friends { get; set; }
         public List<FriendRequest> SentFriendRequests { get; set; }
         public List<FriendRequest> ReceivedFriendRequests { get; set; }
+        public List<Chat> SentChats { get; set; }
+        public List<Chat> ReceivedChats { get; set; }
+        public List<GroupMember> Groups { get; set; }
 
         public void AddFriend(Guid friendId)
         {

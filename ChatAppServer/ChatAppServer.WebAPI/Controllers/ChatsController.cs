@@ -40,10 +40,36 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(chats);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SendMessage([FromForm] SendMessageDto request, CancellationToken cancellationToken)
+        [HttpGet]
+        public async Task<IActionResult> GetGroupChats(Guid groupId, CancellationToken cancellationToken)
         {
+            List<Chat> chats = await _context.Chats
+                .Where(p => p.GroupId == groupId)
+                .OrderBy(p => p.Date)
+                .ToListAsync(cancellationToken);
+
+            return Ok(chats);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendMessage([FromBody] SendMessageDto request, CancellationToken cancellationToken)
+        {
+            if (request == null || string.IsNullOrEmpty(request.Message))
+            {
+                return BadRequest(new { Message = "Invalid message data." });
+            }
+
+            // Log received data
+            Console.WriteLine($"Received request: UserId={request.UserId}, ToUserId={request.ToUserId}, Message={request.Message}");
+
+            // Validate userId and toUserId
+            if (request.UserId == Guid.Empty || request.ToUserId == Guid.Empty)
+            {
+                return BadRequest(new { Message = "UserId and ToUserId must be valid GUIDs." });
+            }
+
             // Kiểm tra xem người dùng có phải là bạn bè của nhau không
+
             bool areFriends = await AreFriends(request.UserId, request.ToUserId, cancellationToken);
 
             if (!areFriends)
@@ -68,6 +94,45 @@ namespace ChatAppServer.WebAPI.Controllers
             if (connection.Key != null)
             {
                 await _hubContext.Clients.Client(connection.Key).SendAsync("Messages", chat);
+            }
+
+            return Ok(chat);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendGroupMessage([FromForm] SendGroupMessageDto request, CancellationToken cancellationToken)
+        {
+            // Kiểm tra xem người dùng có phải là thành viên của nhóm không
+            bool isMember = await _context.GroupMembers
+                .AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
+
+            if (!isMember)
+            {
+                return BadRequest("You can only send messages to groups you are a member of.");
+            }
+
+            // Tạo và lưu tin nhắn nhóm
+            Chat chat = new()
+            {
+                UserId = request.UserId,
+                GroupId = request.GroupId,
+                Message = request.Message,
+                Date = DateTime.UtcNow
+            };
+
+            await _context.AddAsync(chat, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Gửi tin nhắn qua SignalR tới tất cả các thành viên của nhóm
+            var groupMembers = await _context.GroupMembers
+                .Where(gm => gm.GroupId == request.GroupId)
+                .Select(gm => gm.UserId)
+                .ToListAsync(cancellationToken);
+
+            var connections = ChatHub.Users.Where(p => groupMembers.Contains(p.Value));
+            foreach (var connection in connections)
+            {
+                await _hubContext.Clients.Client(connection.Key).SendAsync("GroupMessages", chat);
             }
 
             return Ok(chat);

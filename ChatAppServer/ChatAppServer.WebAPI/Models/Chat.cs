@@ -1,14 +1,21 @@
-﻿namespace ChatAppServer.WebAPI.Models;
-
-public sealed class Chat
+﻿namespace ChatAppServer.WebAPI.Models
 {
-    public Chat()
+    public sealed class Chat
     {
-        Id = Guid.NewGuid();
+        public Chat()
+        {
+            Id = Guid.NewGuid();
+            Date = DateTime.UtcNow;
+        }
+
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
+        public User User { get; set; }
+        public Guid? ToUserId { get; set; }
+        public User ToUser { get; set; }
+        public Guid? GroupId { get; set; }
+        public Group Group { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
     }
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public Guid ToUserId { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public DateTime Date { get; set; }
 }

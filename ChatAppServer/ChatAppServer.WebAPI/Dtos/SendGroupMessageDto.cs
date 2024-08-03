@@ -1,8 +1,7 @@
 ﻿namespace ChatAppServer.WebAPI.Dtos
 {
-
-    public sealed record SendMessageDto(
+    public sealed record SendGroupMessageDto(
         Guid UserId,
-        Guid ToUserId,
+        Guid GroupId,
         string Message);
 }
