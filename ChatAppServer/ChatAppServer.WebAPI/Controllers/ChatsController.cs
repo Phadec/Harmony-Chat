@@ -24,7 +24,20 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
-            List<User> users = await _context.Users.OrderBy(p => p.Username).ToListAsync();
+            var users = await _context.Users
+                .OrderBy(p => p.Username)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    username = p.Username,
+                    fullName = p.FullName,
+                    birthday = p.Birthday,
+                    email = p.Email,
+                    avatar = p.Avatar,
+                    status = p.Status
+                })
+                .ToListAsync();
+
             return Ok(users);
         }
 
@@ -40,7 +53,6 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.Id,
                         chat.UserId,
                         chat.ToUserId,
-                        chat.GroupId,
                         Message = chat.Message ?? string.Empty, // Nếu null, trả về chuỗi rỗng
                         AttachmentUrl = chat.AttachmentUrl ?? string.Empty, // Nếu null, trả về chuỗi rỗng
                         chat.Date
@@ -62,12 +74,11 @@ namespace ChatAppServer.WebAPI.Controllers
                 .Where(p => p.GroupId == groupId)
                 .Include(p => p.User) // Eager load User để có thể lấy Username
                 .OrderBy(p => p.Date)
-                .Select(chat => new ChatDto
+                .Select(chat => new ChatGroupDto
                 {
                     Id = chat.Id,
                     UserId = chat.UserId,
                     Username = chat.User.Username, // Assuming Username is a property of User
-                    ToUserId = chat.ToUserId,
                     GroupId = chat.GroupId,
                     Message = chat.Message ?? string.Empty,
                     AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
@@ -119,8 +130,20 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _hubContext.Clients.Client(connection.Key).SendAsync("Messages", chat);
             }
 
-            return Ok(chat);
+            // Trả về các thông tin cần thiết
+            var response = new
+            {
+                chat.Id,
+                chat.UserId,
+                chat.ToUserId,
+                chat.Message,
+                chat.AttachmentUrl,
+                chat.Date
+            };
+
+            return Ok(response);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> SendGroupMessage([FromForm] SendGroupMessageDto request, CancellationToken cancellationToken)
@@ -171,8 +194,20 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _hubContext.Clients.Client(connection.Key).SendAsync("GroupMessages", chat);
             }
 
-            return Ok(chat);
+            // Trả về các thông tin cần thiết
+            var response = new
+            {
+                chat.Id,
+                chat.UserId,
+                chat.GroupId,
+                chat.Message,
+                chat.AttachmentUrl,
+                chat.Date
+            };
+
+            return Ok(response);
         }
+
 
 
         // Kiểm tra xem hai người dùng có phải là bạn bè không
