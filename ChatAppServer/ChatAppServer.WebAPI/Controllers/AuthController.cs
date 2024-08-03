@@ -45,8 +45,21 @@ namespace ChatAppServer.WebAPI.Controllers
             await _context.AddAsync(user, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return Ok(user);
+            // Trả về đối tượng ẩn danh chứa các trường cần thiết
+            var result = new
+            {
+                user.Id,
+                user.Username,
+                user.FullName,
+                user.Birthday,
+                user.Email,
+                user.Avatar,
+                user.Status
+            };
+
+            return Ok(result);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Login([FromForm] LoginDto request, CancellationToken cancellationToken)

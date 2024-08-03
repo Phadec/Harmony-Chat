@@ -40,7 +40,17 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.FriendRequests.AddAsync(friendRequest, cancellationToken);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return Ok(friendRequest);
+                // Trả về đối tượng ẩn danh chứa các trường cần thiết
+                var result = new
+                {
+                    friendRequest.Id,
+                    friendRequest.SenderId,
+                    friendRequest.ReceiverId,
+                    friendRequest.RequestDate,
+                    friendRequest.Status
+                };
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -48,6 +58,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
 
         [HttpDelete("{userId}/remove/{friendId}")]
         public async Task<IActionResult> RemoveFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
