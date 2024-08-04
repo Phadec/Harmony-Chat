@@ -1,5 +1,6 @@
 ﻿using ChatAppServer.WebAPI.Models;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 
 namespace ChatAppServer.WebAPI.Hubs
@@ -23,7 +24,16 @@ namespace ChatAppServer.WebAPI.Hubs
                 user.Status = "online";
                 await _context.SaveChangesAsync();
 
-                await Clients.All.SendAsync("Users", user);
+                await Clients.All.SendAsync("Users", new
+                {
+                    user.Id,
+                    user.Username,
+                    user.FullName,
+                    user.Birthday,
+                    user.Email,
+                    user.Avatar,
+                    user.Status
+                });
             }
         }
 
@@ -42,10 +52,64 @@ namespace ChatAppServer.WebAPI.Hubs
                     user.Status = "offline";
                     await _context.SaveChangesAsync();
 
-                    await Clients.All.SendAsync("Users", user);
+                    await Clients.All.SendAsync("Users", new
+                    {
+                        user.Id,
+                        user.Username,
+                        user.FullName,
+                        user.Birthday,
+                        user.Email,
+                        user.Avatar,
+                        user.Status
+                    });
                 }
             }
             await base.OnDisconnectedAsync(exception);
+        }
+
+        // Method to notify new message
+        public async Task NotifyNewMessage(Chat chat)
+        {
+            if (chat.GroupId.HasValue)
+            {
+                var groupMembers = await _context.GroupMembers
+                    .Where(gm => gm.GroupId == chat.GroupId)
+                    .Select(gm => gm.UserId)
+                    .ToListAsync();
+
+                foreach (var userId in groupMembers)
+                {
+                    var connection = Users.FirstOrDefault(p => p.Value == userId);
+                    if (connection.Key != null)
+                    {
+                        await Clients.Client(connection.Key).SendAsync("ReceiveGroupMessage", new
+                        {
+                            chat.Id,
+                            chat.UserId,
+                            chat.GroupId,
+                            chat.Message,
+                            chat.AttachmentUrl,
+                            chat.Date
+                        });
+                    }
+                }
+            }
+            else
+            {
+                var connection = Users.FirstOrDefault(p => p.Value == chat.ToUserId);
+                if (connection.Key != null)
+                {
+                    await Clients.Client(connection.Key).SendAsync("ReceivePrivateMessage", new
+                    {
+                        chat.Id,
+                        chat.UserId,
+                        chat.ToUserId,
+                        chat.Message,
+                        chat.AttachmentUrl,
+                        chat.Date
+                    });
+                }
+            }
         }
     }
 }

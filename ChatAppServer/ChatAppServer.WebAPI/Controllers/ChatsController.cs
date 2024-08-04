@@ -28,13 +28,13 @@ namespace ChatAppServer.WebAPI.Controllers
                 .OrderBy(p => p.Username)
                 .Select(p => new
                 {
-                    id = p.Id,
-                    username = p.Username,
-                    fullName = p.FullName,
-                    birthday = p.Birthday,
-                    email = p.Email,
-                    avatar = p.Avatar,
-                    status = p.Status
+                    p.Id,
+                    p.Username,
+                    p.FullName,
+                    p.Birthday,
+                    p.Email,
+                    p.Avatar,
+                    p.Status
                 })
                 .ToListAsync();
 
@@ -53,8 +53,8 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.Id,
                         chat.UserId,
                         chat.ToUserId,
-                        Message = chat.Message ?? string.Empty, // Nếu null, trả về chuỗi rỗng
-                        AttachmentUrl = chat.AttachmentUrl ?? string.Empty, // Nếu null, trả về chuỗi rỗng
+                        Message = chat.Message ?? string.Empty,
+                        AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
                         chat.Date
                     })
                     .ToListAsync(cancellationToken);
@@ -72,17 +72,17 @@ namespace ChatAppServer.WebAPI.Controllers
         {
             var chats = await _context.Chats
                 .Where(p => p.GroupId == groupId)
-                .Include(p => p.User) // Eager load User để có thể lấy Username
+                .Include(p => p.User)
                 .OrderBy(p => p.Date)
-                .Select(chat => new ChatGroupDto
+                .Select(chat => new
                 {
-                    Id = chat.Id,
-                    UserId = chat.UserId,
-                    Username = chat.User.Username, // Assuming Username is a property of User
-                    GroupId = chat.GroupId,
+                    chat.Id,
+                    chat.UserId,
+                    Username = chat.User.Username,
+                    chat.GroupId,
                     Message = chat.Message ?? string.Empty,
                     AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-                    Date = chat.Date
+                    chat.Date
                 })
                 .ToListAsync(cancellationToken);
 
@@ -124,14 +124,7 @@ namespace ChatAppServer.WebAPI.Controllers
             await _context.SaveChangesAsync(cancellationToken);
 
             // Gửi tin nhắn qua SignalR
-            var connection = ChatHub.Users.FirstOrDefault(p => p.Value == chat.ToUserId);
-            if (connection.Key != null)
-            {
-                await _hubContext.Clients.Client(connection.Key).SendAsync("Messages", chat);
-            }
-
-            // Trả về các thông tin cần thiết
-            var response = new
+            await _hubContext.Clients.All.SendAsync("ReceivePrivateMessage", new
             {
                 chat.Id,
                 chat.UserId,
@@ -139,11 +132,18 @@ namespace ChatAppServer.WebAPI.Controllers
                 chat.Message,
                 chat.AttachmentUrl,
                 chat.Date
-            };
+            });
 
-            return Ok(response);
+            return Ok(new
+            {
+                chat.Id,
+                chat.UserId,
+                chat.ToUserId,
+                chat.Message,
+                chat.AttachmentUrl,
+                chat.Date
+            });
         }
-
 
         [HttpPost]
         public async Task<IActionResult> SendGroupMessage([FromForm] SendGroupMessageDto request, CancellationToken cancellationToken)
@@ -183,19 +183,7 @@ namespace ChatAppServer.WebAPI.Controllers
             await _context.SaveChangesAsync(cancellationToken);
 
             // Gửi tin nhắn qua SignalR tới tất cả các thành viên của nhóm
-            var groupMembers = await _context.GroupMembers
-                .Where(gm => gm.GroupId == request.GroupId)
-                .Select(gm => gm.UserId)
-                .ToListAsync(cancellationToken);
-
-            var connections = ChatHub.Users.Where(p => groupMembers.Contains(p.Value));
-            foreach (var connection in connections)
-            {
-                await _hubContext.Clients.Client(connection.Key).SendAsync("GroupMessages", chat);
-            }
-
-            // Trả về các thông tin cần thiết
-            var response = new
+            await _hubContext.Clients.All.SendAsync("ReceiveGroupMessage", new
             {
                 chat.Id,
                 chat.UserId,
@@ -203,12 +191,18 @@ namespace ChatAppServer.WebAPI.Controllers
                 chat.Message,
                 chat.AttachmentUrl,
                 chat.Date
-            };
+            });
 
-            return Ok(response);
+            return Ok(new
+            {
+                chat.Id,
+                chat.UserId,
+                chat.GroupId,
+                chat.Message,
+                chat.AttachmentUrl,
+                chat.Date
+            });
         }
-
-
 
         // Kiểm tra xem hai người dùng có phải là bạn bè không
         private async Task<bool> AreFriends(Guid userId1, Guid userId2, CancellationToken cancellationToken)
@@ -218,6 +212,5 @@ namespace ChatAppServer.WebAPI.Controllers
                    await _context.Users
                 .AnyAsync(u => u.Id == userId2 && u.Friends.Any(f => f.FriendId == userId1), cancellationToken);
         }
-
     }
 }
