@@ -10,15 +10,22 @@ namespace ChatAppServer.WebAPI.Controllers
     public sealed class GroupsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<GroupsController> _logger;
 
-        public GroupsController(ApplicationDbContext context)
+        public GroupsController(ApplicationDbContext context, ILogger<GroupsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateGroup([FromForm] CreateGroupDto request, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return BadRequest(new { Message = "Group name is required" });
+            }
+
             var group = new Group
             {
                 Name = request.Name
@@ -32,7 +39,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
                 if (user == null)
                 {
-                    return BadRequest(new { Message = $"User with Id {userId} not found" });
+                    return NotFound(new { Message = $"User with Id {userId} not found" });
                 }
 
                 var groupMember = new GroupMember
@@ -45,10 +52,10 @@ namespace ChatAppServer.WebAPI.Controllers
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation($"Group {group.Name} created with ID {group.Id}");
 
-            return Ok(group);
+            return CreatedAtAction(nameof(GetGroupMembers), new { groupId = group.Id }, group);
         }
-
 
         [HttpPost]
         public async Task<IActionResult> AddMember([FromForm] AddGroupMemberDto request, CancellationToken cancellationToken)
@@ -56,19 +63,19 @@ namespace ChatAppServer.WebAPI.Controllers
             var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
             if (group == null)
             {
-                return NotFound("Group not found");
+                return NotFound(new { Message = "Group not found" });
             }
 
             var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
             if (user == null)
             {
-                return NotFound("User not found");
+                return NotFound(new { Message = "User not found" });
             }
 
             var isMember = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
             if (isMember)
             {
-                return BadRequest("User is already a member of the group");
+                return Conflict(new { Message = "User is already a member of the group" });
             }
 
             var groupMember = new GroupMember
@@ -79,6 +86,8 @@ namespace ChatAppServer.WebAPI.Controllers
 
             await _context.GroupMembers.AddAsync(groupMember, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"User {user.Username} added to group {group.Name}");
 
             return Ok(groupMember);
         }
@@ -91,7 +100,7 @@ namespace ChatAppServer.WebAPI.Controllers
                                              .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
             if (group == null)
             {
-                return NotFound("Group not found");
+                return NotFound(new { Message = "Group not found" });
             }
 
             // Xóa tất cả các thành viên của nhóm
@@ -105,7 +114,9 @@ namespace ChatAppServer.WebAPI.Controllers
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            return Ok();
+            _logger.LogInformation($"Group {group.Name} deleted");
+
+            return NoContent();
         }
 
         [HttpGet]
@@ -118,7 +129,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             if (!groupMembers.Any())
             {
-                return NotFound("No members found in this group");
+                return NotFound(new { Message = "No members found in this group" });
             }
 
             var membersDto = groupMembers.Select(gm => new UserDto
@@ -136,21 +147,24 @@ namespace ChatAppServer.WebAPI.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> RemoveMember([FromBody] RemoveGroupMemberDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> RemoveMember([FromForm] RemoveGroupMemberDto request, CancellationToken cancellationToken)
         {
             var groupMember = await _context.GroupMembers
                 .FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
 
             if (groupMember == null)
             {
-                return NotFound("Group member not found");
+                return NotFound(new { Message = "Group member not found" });
             }
 
             _context.GroupMembers.Remove(groupMember);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return Ok("Member removed from the group");
+            _logger.LogInformation($"User {request.UserId} removed from group {request.GroupId}");
+
+            return Ok(new { Message = "Member removed from the group" });
         }
+
         [HttpGet]
         public async Task<IActionResult> GetUserGroups(Guid userId, CancellationToken cancellationToken)
         {
@@ -177,7 +191,5 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(userGroups);
         }
-
     }
-
 }

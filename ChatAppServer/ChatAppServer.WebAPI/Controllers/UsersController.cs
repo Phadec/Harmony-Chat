@@ -9,15 +9,24 @@ namespace ChatAppServer.WebAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(ApplicationDbContext context)
+        public UsersController(ApplicationDbContext context, ILogger<UsersController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet("search")]
         public async Task<IActionResult> SearchUserByUsername(string username, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return BadRequest(new { message = "Username is required" });
+            }
+
+            _logger.LogInformation($"Searching for user with username: {username}");
+
             var user = await _context.Users
                 .Where(u => u.Username.ToLower() == username.ToLower())
                 .Select(u => new
@@ -33,8 +42,11 @@ namespace ChatAppServer.WebAPI.Controllers
 
             if (user == null)
             {
+                _logger.LogWarning($"User with username {username} not found");
                 return NotFound(new { message = "User not found" });
             }
+
+            _logger.LogInformation($"User with username {username} found");
 
             return Ok(user);
         }

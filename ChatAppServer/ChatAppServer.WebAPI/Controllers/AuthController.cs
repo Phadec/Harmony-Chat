@@ -20,15 +20,18 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Register([FromForm] RegisterDto request, CancellationToken cancellationToken)
         {
-            bool isNameExists = await _context.Users.AnyAsync(p => p.Username == request.Username, cancellationToken);
+            if (request.Password.Length < 8)
+            {
+                return BadRequest(new { Message = "Password must be at least 8 characters long." });
+            }
 
+            bool isNameExists = await _context.Users.AnyAsync(p => p.Username == request.Username, cancellationToken);
             if (isNameExists)
             {
-                return BadRequest(new { Message = "Username existed!" });
+                return BadRequest(new { Message = "Username already exists!" });
             }
 
             string avatar = request.File != null ? ExternalFileService.FileSaveToServer(request.File, "wwwroot/avatar/") : null;
-
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             User user = new()
@@ -39,13 +42,12 @@ namespace ChatAppServer.WebAPI.Controllers
                 Email = request.Email,
                 Avatar = avatar,
                 PasswordHash = passwordHash,
-                Status = "offline" // Hoặc trạng thái mặc định khác nếu cần
+                Status = "offline"
             };
 
             await _context.AddAsync(user, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Trả về đối tượng ẩn danh chứa các trường cần thiết
             var result = new
             {
                 user.Id,
@@ -60,7 +62,6 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(result);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> Login([FromForm] LoginDto request, CancellationToken cancellationToken)
         {
@@ -74,14 +75,22 @@ namespace ChatAppServer.WebAPI.Controllers
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
             if (!isPasswordValid)
             {
-                return BadRequest(new { Message = "Password incorrect!" });
+                return BadRequest(new { Message = "Password is incorrect!" });
             }
 
             user.Status = "online";
-
             await _context.SaveChangesAsync(cancellationToken);
 
-            return Ok(user);
+            return Ok(new
+            {
+                user.Id,
+                user.Username,
+                user.FullName,
+                user.Birthday,
+                user.Email,
+                user.Avatar,
+                user.Status
+            });
         }
     }
 }

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "5X4addWObiHQQyqJmZ8dmF0BGMIfFmd1/nXampkpB78=",
+  "Hash": "EXVKtDHIE516AJzU1d2fwG9lxnSCj294cOOlF25Vxsg=",
   "Source": "ChatAppServer.WebAPI",
   "BasePath": "_content/ChatAppServer.WebAPI",
   "Mode": "Default",
@@ -34,6 +34,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\avatar\\1eb7126c-a9b1-48fe-ab4b-4ff4c085b869.jpg"
+    },
+    {
+      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\27015b00-349f-4ec8-b7e6-91e6f433f5b4.jpg",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatar/27015b00-349f-4ec8-b7e6-91e6f433f5b4.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatar\\27015b00-349f-4ec8-b7e6-91e6f433f5b4.jpg"
     },
     {
       "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\2c41ba1e-f2e4-4226-8a7b-e72fe1838be1.jpg",
@@ -606,6 +625,25 @@
       "OriginalItemSpec": "wwwroot\\avatar\\fbe77ad5-afe2-4198-b5d7-39600a4a0493.jpg"
     },
     {
+      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\fd1669c6-bbaf-4292-9cb6-cf76207fc37b.jpg",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatar/fd1669c6-bbaf-4292-9cb6-cf76207fc37b.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatar\\fd1669c6-bbaf-4292-9cb6-cf76207fc37b.jpg"
+    },
+    {
       "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\2dc1740e-1819-4ec6-a77f-7af0986d95d7.jpg",
       "SourceId": "ChatAppServer.WebAPI",
       "SourceType": "Discovered",
@@ -984,6 +1022,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\c8008c77-729c-4114-86df-28b59af88bea.jpg"
+    },
+    {
+      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\e0f13a9b-f2b3-4acd-b750-324394547e87.pdf",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "uploads/e0f13a9b-f2b3-4acd-b750-324394547e87.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\e0f13a9b-f2b3-4acd-b750-324394547e87.pdf"
     }
   ]
 }
