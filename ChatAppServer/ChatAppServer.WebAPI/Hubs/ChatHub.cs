@@ -8,15 +8,23 @@ namespace ChatAppServer.WebAPI.Hubs
     public sealed class ChatHub : Hub
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<ChatHub> _logger;
         public static ConcurrentDictionary<string, Guid> Users = new();
 
-        public ChatHub(ApplicationDbContext context)
+        public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task Connect(Guid userId)
         {
+            if (userId == Guid.Empty)
+            {
+                _logger.LogWarning("Invalid userId provided for connection.");
+                throw new HubException("Invalid userId.");
+            }
+
             Users.TryAdd(Context.ConnectionId, userId);
             User? user = await _context.Users.FindAsync(userId);
             if (user is not null)
@@ -34,11 +42,23 @@ namespace ChatAppServer.WebAPI.Hubs
                     user.Avatar,
                     user.Status
                 });
+
+                _logger.LogInformation($"User {user.Username} connected with ConnectionId {Context.ConnectionId}.");
+            }
+            else
+            {
+                _logger.LogWarning($"User with Id {userId} not found.");
             }
         }
 
         public async Task Disconnect(Guid userId)
         {
+            if (userId == Guid.Empty)
+            {
+                _logger.LogWarning("Invalid userId provided for disconnection.");
+                throw new HubException("Invalid userId.");
+            }
+
             await OnDisconnectedAsync(null);
         }
 
@@ -62,6 +82,12 @@ namespace ChatAppServer.WebAPI.Hubs
                         user.Avatar,
                         user.Status
                     });
+
+                    _logger.LogInformation($"User {user.Username} disconnected.");
+                }
+                else
+                {
+                    _logger.LogWarning($"User with Id {userId} not found.");
                 }
             }
             await base.OnDisconnectedAsync(exception);
@@ -70,6 +96,12 @@ namespace ChatAppServer.WebAPI.Hubs
         // Method to notify new message
         public async Task NotifyNewMessage(Chat chat)
         {
+            if (chat == null)
+            {
+                _logger.LogWarning("Invalid chat message.");
+                throw new HubException("Invalid chat message.");
+            }
+
             if (chat.GroupId.HasValue)
             {
                 var groupMembers = await _context.GroupMembers
@@ -94,9 +126,9 @@ namespace ChatAppServer.WebAPI.Hubs
                     }
                 }
             }
-            else
+            else if (chat.ToUserId.HasValue)
             {
-                var connection = Users.FirstOrDefault(p => p.Value == chat.ToUserId);
+                var connection = Users.FirstOrDefault(p => p.Value == chat.ToUserId.Value);
                 if (connection.Key != null)
                 {
                     await Clients.Client(connection.Key).SendAsync("ReceivePrivateMessage", new
@@ -109,6 +141,11 @@ namespace ChatAppServer.WebAPI.Hubs
                         chat.Date
                     });
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Chat message must have either GroupId or ToUserId.");
+                throw new HubException("Chat message must have either GroupId or ToUserId.");
             }
         }
     }

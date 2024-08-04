@@ -2,6 +2,7 @@
 using ChatAppServer.WebAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 namespace ChatAppServer.WebAPI.Controllers
 {
     [ApiController]
@@ -9,15 +10,21 @@ namespace ChatAppServer.WebAPI.Controllers
     public class FriendsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<FriendsController> _logger;
 
-        public FriendsController(ApplicationDbContext context)
+        public FriendsController(ApplicationDbContext context, ILogger<FriendsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
-
         [HttpPost("{userId}/add/{friendId}")]
         public async Task<IActionResult> AddFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
         {
+            if (userId == Guid.Empty || friendId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId or friendId");
+            }
+
             try
             {
                 // Kiểm tra xem người dùng có phải là bạn bè chưa
@@ -27,6 +34,15 @@ namespace ChatAppServer.WebAPI.Controllers
                 if (isAlreadyFriend)
                 {
                     return BadRequest("You are already friends with this user.");
+                }
+
+                // Kiểm tra xem đã có yêu cầu kết bạn chưa
+                bool requestAlreadyExists = await _context.FriendRequests
+                    .AnyAsync(fr => fr.SenderId == userId && fr.ReceiverId == friendId && fr.Status == "Pending", cancellationToken);
+
+                if (requestAlreadyExists)
+                {
+                    return BadRequest("Friend request already sent.");
                 }
 
                 // Tạo và lưu lời mời kết bạn cho người nhận
@@ -50,11 +66,13 @@ namespace ChatAppServer.WebAPI.Controllers
                     friendRequest.Status
                 };
 
+                _logger.LogInformation($"Friend request from {userId} to {friendId} created.");
+
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in AddFriend: {ex.Message}");
+                _logger.LogError($"Error in AddFriend: {ex.Message}");
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
@@ -63,38 +81,57 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpDelete("{userId}/remove/{friendId}")]
         public async Task<IActionResult> RemoveFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-            var friend = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == friendId, cancellationToken);
-
-            if (user == null || friend == null)
+            if (userId == Guid.Empty || friendId == Guid.Empty)
             {
-                return NotFound();
+                return BadRequest("Invalid userId or friendId");
             }
 
-            var userFriendship = user.Friends.FirstOrDefault(f => f.FriendId == friendId);
-            var friendFriendship = friend.Friends.FirstOrDefault(f => f.FriendId == userId);
-
-            if (userFriendship != null)
+            try
             {
-                user.Friends.Remove(userFriendship);
-            }
+                var user = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+                var friend = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == friendId, cancellationToken);
 
-            if (friendFriendship != null)
+                if (user == null || friend == null)
+                {
+                    return NotFound("User or friend not found.");
+                }
+
+                var userFriendship = user.Friends.FirstOrDefault(f => f.FriendId == friendId);
+                var friendFriendship = friend.Friends.FirstOrDefault(f => f.FriendId == userId);
+
+                if (userFriendship != null)
+                {
+                    user.Friends.Remove(userFriendship);
+                }
+
+                if (friendFriendship != null)
+                {
+                    friend.Friends.Remove(friendFriendship);
+                }
+
+                _context.Users.Update(user);
+                _context.Users.Update(friend);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation($"Friendship between {userId} and {friendId} removed.");
+
+                return Ok();
+            }
+            catch (Exception ex)
             {
-                friend.Friends.Remove(friendFriendship);
+                _logger.LogError($"Error in RemoveFriend: {ex.Message}");
+                return StatusCode(500, "An error occurred while processing your request.");
             }
-
-            _context.Users.Update(user);
-            _context.Users.Update(friend);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return Ok();
         }
 
         [HttpGet("{userId}/friends")]
         public async Task<IActionResult> GetFriends(Guid userId, CancellationToken cancellationToken)
         {
-            // Lấy tất cả các mối quan hệ bạn bè của người dùng
+            if (userId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId");
+            }
+
             var friendships = await _context.Friendships
                 .Where(f => f.UserId == userId || f.FriendId == userId)
                 .ToListAsync(cancellationToken);
@@ -104,18 +141,15 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("No friends found.");
             }
 
-            // Lấy tất cả các UserId của bạn bè
             var friendIds = friendships
                 .Select(f => f.UserId == userId ? f.FriendId : f.UserId)
                 .Distinct()
                 .ToList();
 
-            // Lấy thông tin chi tiết của tất cả bạn bè
             var friends = await _context.Users
                 .Where(u => friendIds.Contains(u.Id))
                 .ToListAsync(cancellationToken);
 
-            // Chuyển đổi danh sách User thành danh sách UserDto
             var friendsDto = friends.Select(u => new UserDto
             {
                 Id = u.Id,
@@ -133,6 +167,11 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpGet("{userId}/friend-requests")]
         public async Task<IActionResult> GetFriendRequests(Guid userId, CancellationToken cancellationToken)
         {
+            if (userId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId");
+            }
+
             var user = await _context.Users.Include(u => u.ReceivedFriendRequests)
                                            .ThenInclude(fr => fr.Sender)
                                            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
@@ -155,25 +194,26 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPost("{userId}/accept-friend-request/{requestId}")]
         public async Task<IActionResult> AcceptFriendRequest(Guid userId, Guid requestId, CancellationToken cancellationToken)
         {
+            if (userId == Guid.Empty || requestId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId or requestId");
+            }
+
             try
             {
-                Console.WriteLine($"Accepting friend request: UserId={userId}, RequestId={requestId}");
-
                 var friendRequest = await _context.FriendRequests
                                       .Include(fr => fr.Sender)
                                       .FirstOrDefaultAsync(fr => fr.Id == requestId && fr.ReceiverId == userId, cancellationToken);
 
                 if (friendRequest == null)
                 {
-                    Console.WriteLine($"FriendRequest with Id {requestId} and ReceiverId {userId} not found.");
-                    return NotFound($"Friend request with ID {requestId} not found or does not belong to user {userId}.");
+                    return NotFound("Friend request not found or does not belong to the user.");
                 }
 
                 var user = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
                 if (user == null)
                 {
-                    Console.WriteLine($"User with Id {userId} not found.");
-                    return NotFound($"User with ID {userId} not found.");
+                    return NotFound("User not found.");
                 }
 
                 user.AddFriend(friendRequest.SenderId);
@@ -181,8 +221,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 var sender = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == friendRequest.SenderId, cancellationToken);
                 if (sender == null)
                 {
-                    Console.WriteLine($"Sender with Id {friendRequest.SenderId} not found.");
-                    return NotFound($"Sender with ID {friendRequest.SenderId} not found.");
+                    return NotFound("Sender not found.");
                 }
 
                 sender.AddFriend(userId);
@@ -192,14 +231,15 @@ namespace ChatAppServer.WebAPI.Controllers
                 _context.Users.Update(user);
                 _context.Users.Update(sender);
 
-                var affectedRows = await _context.SaveChangesAsync(cancellationToken);
-                Console.WriteLine($"Number of rows affected: {affectedRows}");
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation($"Friend request {requestId} accepted by {userId}.");
 
                 return Ok();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in AcceptFriendRequest: {ex.Message}");
+                _logger.LogError($"Error in AcceptFriendRequest: {ex.Message}");
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
@@ -207,17 +247,32 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPost("{userId}/reject-friend-request/{requestId}")]
         public async Task<IActionResult> RejectFriendRequest(Guid userId, Guid requestId, CancellationToken cancellationToken)
         {
-            var friendRequest = await _context.FriendRequests.FirstOrDefaultAsync(fr => fr.Id == requestId && fr.ReceiverId == userId, cancellationToken);
-            if (friendRequest == null)
+            if (userId == Guid.Empty || requestId == Guid.Empty)
             {
-                return NotFound();
+                return BadRequest("Invalid userId or requestId");
             }
 
-            friendRequest.Status = "Rejected";
-            _context.FriendRequests.Update(friendRequest);
-            await _context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                var friendRequest = await _context.FriendRequests.FirstOrDefaultAsync(fr => fr.Id == requestId && fr.ReceiverId == userId, cancellationToken);
+                if (friendRequest == null)
+                {
+                    return NotFound("Friend request not found.");
+                }
 
-            return Ok();
+                friendRequest.Status = "Rejected";
+                _context.FriendRequests.Update(friendRequest);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation($"Friend request {requestId} rejected by {userId}.");
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in RejectFriendRequest: {ex.Message}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
     }
 }

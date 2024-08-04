@@ -5,6 +5,10 @@
       "PackagePath": "staticwebassets\\avatar\\1eb7126c-a9b1-48fe-ab4b-4ff4c085b869.jpg"
     },
     {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\27015b00-349f-4ec8-b7e6-91e6f433f5b4.jpg",
+      "PackagePath": "staticwebassets\\avatar\\27015b00-349f-4ec8-b7e6-91e6f433f5b4.jpg"
+    },
+    {
       "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\2c41ba1e-f2e4-4226-8a7b-e72fe1838be1.jpg",
       "PackagePath": "staticwebassets\\avatar\\2c41ba1e-f2e4-4226-8a7b-e72fe1838be1.jpg"
     },
@@ -125,6 +129,10 @@
       "PackagePath": "staticwebassets\\avatar\\fbe77ad5-afe2-4198-b5d7-39600a4a0493.jpg"
     },
     {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\fd1669c6-bbaf-4292-9cb6-cf76207fc37b.jpg",
+      "PackagePath": "staticwebassets\\avatar\\fd1669c6-bbaf-4292-9cb6-cf76207fc37b.jpg"
+    },
+    {
       "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\2dc1740e-1819-4ec6-a77f-7af0986d95d7.jpg",
       "PackagePath": "staticwebassets\\uploads\\2dc1740e-1819-4ec6-a77f-7af0986d95d7.jpg"
     },
@@ -203,6 +211,10 @@
     {
       "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\c8008c77-729c-4114-86df-28b59af88bea.jpg",
       "PackagePath": "staticwebassets\\uploads\\c8008c77-729c-4114-86df-28b59af88bea.jpg"
+    },
+    {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\e0f13a9b-f2b3-4acd-b750-324394547e87.pdf",
+      "PackagePath": "staticwebassets\\uploads\\e0f13a9b-f2b3-4acd-b750-324394547e87.pdf"
     },
     {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.ChatAppServer.WebAPI.Microsoft.AspNetCore.StaticWebAssets.props",
