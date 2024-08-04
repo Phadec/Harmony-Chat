@@ -17,7 +17,6 @@ namespace ChatAppServer.WebAPI.Controllers
             _context = context;
             _logger = logger;
         }
-
         [HttpPost("{userId}/add/{friendId}")]
         public async Task<IActionResult> AddFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
         {
@@ -35,6 +34,15 @@ namespace ChatAppServer.WebAPI.Controllers
                 if (isAlreadyFriend)
                 {
                     return BadRequest("You are already friends with this user.");
+                }
+
+                // Kiểm tra xem đã có yêu cầu kết bạn chưa
+                bool requestAlreadyExists = await _context.FriendRequests
+                    .AnyAsync(fr => fr.SenderId == userId && fr.ReceiverId == friendId && fr.Status == "Pending", cancellationToken);
+
+                if (requestAlreadyExists)
+                {
+                    return BadRequest("Friend request already sent.");
                 }
 
                 // Tạo và lưu lời mời kết bạn cho người nhận
@@ -68,6 +76,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
 
         [HttpDelete("{userId}/remove/{friendId}")]
         public async Task<IActionResult> RemoveFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
