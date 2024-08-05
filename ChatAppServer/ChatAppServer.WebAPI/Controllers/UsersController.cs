@@ -55,7 +55,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
         // Cập nhật thông tin người dùng
         [HttpPut("{userId}")]
-        public async Task<IActionResult> UpdateUser(Guid userId, [FromBody] UpdateUserDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
 
