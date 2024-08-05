@@ -19,8 +19,10 @@
         public DateTime Birthday { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Avatar { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        public string Status { get; set; } = "offline"; // Default status
         public string PasswordHash { get; set; } = string.Empty;
+        public bool ShowOnlineStatus { get; set; } = true; // Default to show online status
+
         public List<Friendship> Friends { get; set; }
         public List<FriendRequest> SentFriendRequests { get; set; }
         public List<FriendRequest> ReceivedFriendRequests { get; set; }
