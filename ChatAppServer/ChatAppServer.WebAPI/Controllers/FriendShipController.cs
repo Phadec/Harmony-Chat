@@ -225,9 +225,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 }
 
                 sender.AddFriend(userId);
-                friendRequest.Status = "Accepted";
 
-                _context.FriendRequests.Update(friendRequest);
+                _context.FriendRequests.Remove(friendRequest); // Xóa yêu cầu kết bạn
                 _context.Users.Update(user);
                 _context.Users.Update(sender);
 
@@ -260,8 +259,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     return NotFound("Friend request not found.");
                 }
 
-                friendRequest.Status = "Rejected";
-                _context.FriendRequests.Update(friendRequest);
+                _context.FriendRequests.Remove(friendRequest); // Xóa yêu cầu kết bạn
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"Friend request {requestId} rejected by {userId}.");
