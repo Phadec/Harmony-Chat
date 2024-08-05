@@ -440,7 +440,7 @@ namespace ChatAppServer.WebAPI.Controllers
             var mailMessage = new MailMessage
             {
                 From = new MailAddress("no-reply@yourapp.com"),
-                Subject = "Welcome to Harmony",
+                Subject = "Welcome",
                 Body = welcomeMessage,
                 IsBodyHtml = true, // Set IsBodyHtml to true
             };
