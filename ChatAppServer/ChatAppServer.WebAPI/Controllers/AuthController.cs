@@ -1,6 +1,7 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
 using ChatAppServer.WebAPI.Models;
 using ChatAppServer.WebAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -25,7 +26,7 @@ namespace ChatAppServer.WebAPI.Controllers
             _configuration = configuration;
         }
 
-        [HttpPost]
+        [HttpPost("RegisterUser")]
         public async Task<IActionResult> Register([FromForm] RegisterDto request, CancellationToken cancellationToken)
         {
             if (request.Password.Length < 8)
@@ -46,10 +47,12 @@ namespace ChatAppServer.WebAPI.Controllers
 
             // Xử lý avatar
             string? avatarUrl = null;
+            string? originalAvatarFileName = null;
             if (request.File != null)
             {
-                string fileName = FileService.FileSaveToServer(request.File, "wwwroot/avatar/");
-                avatarUrl = Path.Combine("avatar", fileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
+                var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.File, "wwwroot/avatar/");
+                avatarUrl = Path.Combine("avatar", savedFileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
+                originalAvatarFileName = originalFileName;
             }
 
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -61,6 +64,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 Birthday = request.Birthday,
                 Email = request.Email,
                 Avatar = avatarUrl,
+                OriginalAvatarFileName = originalAvatarFileName,
                 PasswordHash = passwordHash,
                 Status = "offline"
             };
@@ -79,16 +83,14 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.Birthday,
                 user.Email,
                 user.Avatar,
+                user.OriginalAvatarFileName,
                 user.Status
             };
 
             return Ok(result);
         }
 
-
-
-
-        [HttpPost]
+        [HttpPost("UserLogin")]
         public async Task<IActionResult> Login([FromForm] LoginDto request, CancellationToken cancellationToken)
         {
             User? user = await _context.Users.FirstOrDefaultAsync(p => p.Username == request.Username, cancellationToken);
@@ -118,10 +120,12 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.Email,
                 user.Avatar,
                 user.Status,
+                Token = token
             });
         }
 
-        [HttpPost]
+        [HttpPost("UserLogout")]
+        [Authorize]
         public async Task<IActionResult> Logout([FromForm] Guid userId, CancellationToken cancellationToken)
         {
             User? user = await _context.Users.FirstOrDefaultAsync(p => p.Id == userId, cancellationToken);
@@ -137,7 +141,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "User logged out successfully." });
         }
 
-        [HttpPost]
+        [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordDto request, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
@@ -154,7 +158,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Password reset email sent." });
         }
 
-        [HttpPost]
+        [HttpPost("ResetUserPassword")]
         public async Task<IActionResult> ResetPassword([FromForm] ResetPasswordDto request, CancellationToken cancellationToken)
         {
             var principal = GetPrincipalFromExpiredToken(request.Token);
@@ -189,6 +193,35 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Password has been reset." });
         }
 
+        [HttpPost("ChangeUserPassword")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordDto request, CancellationToken cancellationToken)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+            if (user == null)
+            {
+                return BadRequest(new { Message = "User not found." });
+            }
+
+            bool isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash);
+            if (!isCurrentPasswordValid)
+            {
+                return BadRequest(new { Message = "Current password is incorrect." });
+            }
+
+            if (request.NewPassword.Length < 8)
+            {
+                return BadRequest(new { Message = "New password must be at least 8 characters long." });
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Send email notification
+            SendPasswordChangeEmail(user.Email, user.Username);
+
+            return Ok(new { Message = "Password has been changed successfully." });
+        }
 
         private string GenerateJwtToken(User user)
         {
@@ -359,21 +392,6 @@ namespace ChatAppServer.WebAPI.Controllers
             smtpClient.Send(mailMessage);
         }
 
-
-
-        private bool IsValidEmail(string email)
-        {
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         private void SendWelcomeEmail(string email, string username)
         {
             var welcomeMessage = $@"
@@ -461,34 +479,6 @@ namespace ChatAppServer.WebAPI.Controllers
             };
 
             smtpClient.Send(mailMessage);
-        }
-        [HttpPost]
-        public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordDto request, CancellationToken cancellationToken)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
-            if (user == null)
-            {
-                return BadRequest(new { Message = "User not found." });
-            }
-
-            bool isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash);
-            if (!isCurrentPasswordValid)
-            {
-                return BadRequest(new { Message = "Current password is incorrect." });
-            }
-
-            if (request.NewPassword.Length < 8)
-            {
-                return BadRequest(new { Message = "New password must be at least 8 characters long." });
-            }
-
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            // Send email notification
-            SendPasswordChangeEmail(user.Email, user.Username);
-
-            return Ok(new { Message = "Password has been changed successfully." });
         }
 
         private void SendPasswordChangeEmail(string email, string username)
@@ -578,6 +568,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             smtpClient.Send(mailMessage);
         }
+
         private void SendResetSuccessEmail(string email, string username)
         {
             var resetSuccessMessage = $@"
@@ -665,6 +656,17 @@ namespace ChatAppServer.WebAPI.Controllers
 
             smtpClient.Send(mailMessage);
         }
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
-
 }

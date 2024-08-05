@@ -17,6 +17,27 @@ namespace ChatAppServer.WebAPI.Controllers
             _context = context;
             _logger = logger;
         }
+
+        [HttpPost("{userId}/change-nickname")]
+        public async Task<IActionResult> ChangeNickname(Guid userId, [FromForm] ChangeNicknameDto request, CancellationToken cancellationToken)
+        {
+            var friendship = await _context.Friendships
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == request.FriendId, cancellationToken);
+
+            if (friendship == null)
+            {
+                return NotFound("Friendship not found.");
+            }
+
+            friendship.Nickname = request.Nickname;
+            _context.Friendships.Update(friendship);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"Nickname for friend {request.FriendId} changed to {request.Nickname}");
+
+            return Ok(new { Message = "Nickname changed successfully." });
+        }
+
         [HttpPost("{userId}/add/{friendId}")]
         public async Task<IActionResult> AddFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
         {
@@ -133,6 +154,7 @@ namespace ChatAppServer.WebAPI.Controllers
             }
 
             var friendships = await _context.Friendships
+                .Include(f => f.Friend)
                 .Where(f => f.UserId == userId || f.FriendId == userId)
                 .ToListAsync(cancellationToken);
 
@@ -141,28 +163,25 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("No friends found.");
             }
 
-            var friendIds = friendships
-                .Select(f => f.UserId == userId ? f.FriendId : f.UserId)
-                .Distinct()
-                .ToList();
-
-            var friends = await _context.Users
-                .Where(u => friendIds.Contains(u.Id))
-                .ToListAsync(cancellationToken);
-
-            var friendsDto = friends.Select(u => new UserDto
+            var friendsDto = friendships.Select(f =>
             {
-                Id = u.Id,
-                Username = u.Username,
-                FullName = u.FullName,
-                Birthday = u.Birthday,
-                Email = u.Email,
-                Avatar = u.Avatar,
-                Status = u.Status
+                var friend = f.UserId == userId ? f.Friend : f.User;
+                return new FriendDto
+                {
+                    Id = friend.Id,
+                    Username = friend.Username,
+                    FullName = friend.FullName,
+                    Birthday = friend.Birthday,
+                    Email = friend.Email,
+                    Avatar = friend.Avatar,
+                    Status = friend.Status,
+                    Nickname = f.Nickname
+                };
             }).ToList();
 
             return Ok(friendsDto);
         }
+
 
         [HttpGet("{userId}/friend-requests")]
         public async Task<IActionResult> GetFriendRequests(Guid userId, CancellationToken cancellationToken)

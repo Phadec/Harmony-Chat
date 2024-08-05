@@ -2,15 +2,15 @@
 {
     public static class FileService
     {
-        public static string FileSaveToServer(IFormFile file, string directoryPath)
+        public static (string SavedFileName, string OriginalFileName) FileSaveToServer(IFormFile file, string directoryPath)
         {
             if (file == null || file.Length == 0)
             {
-                return null;
+                return (null, null);
             }
 
-            string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            string filePath = Path.Combine(directoryPath, fileName);
+            string savedFileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+            string filePath = Path.Combine(directoryPath, savedFileName);
 
             if (!Directory.Exists(directoryPath))
             {
@@ -22,7 +22,7 @@
                 file.CopyTo(stream);
             }
 
-            return fileName; // Chỉ trả về tên tệp
+            return (savedFileName, file.FileName);
         }
     }
 }

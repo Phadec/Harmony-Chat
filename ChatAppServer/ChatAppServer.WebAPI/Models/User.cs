@@ -19,6 +19,7 @@
         public DateTime Birthday { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Avatar { get; set; } = string.Empty;
+        public string OriginalAvatarFileName { get; set; } = string.Empty; // Thêm thuộc tính này
         public string Status { get; set; } = "offline"; // Default status
         public string PasswordHash { get; set; } = string.Empty;
         public bool ShowOnlineStatus { get; set; } = true; // Default to show online status

@@ -14,7 +14,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:4200") // Thay bằng nguồn Angular của bạn
+        builder.WithOrigins("http://localhost:4200") // Replace with your Angular app URL
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
@@ -67,9 +67,12 @@ builder.Services.AddSwaggerGen(c =>
             Reference = new OpenApiReference {
                 Type = ReferenceType.SecurityScheme,
                 Id = "Bearer"
-            }
+            },
+            Scheme = "oauth2",
+            Name = "Bearer",
+            In = ParameterLocation.Header
         },
-        new string[] { }
+        new List<string>()
     }});
 });
 
@@ -84,7 +87,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChatApp API v1");
-        c.RoutePrefix = "swagger"; // Đảm bảo c.RoutePrefix là "swagger" nếu bạn muốn truy cập /swagger/index.html
+        c.RoutePrefix = "swagger"; // Ensure c.RoutePrefix is "swagger" to access /swagger/index.html
     });
 }
 

@@ -17,6 +17,7 @@
         public Group Group { get; set; }
         public string? Message { get; set; } // Cho phép null
         public string? AttachmentUrl { get; set; } // Cho phép null
+        public string? AttachmentOriginalName { get; set; } // Cho phép null
         public DateTime Date { get; set; }
     }
 }
