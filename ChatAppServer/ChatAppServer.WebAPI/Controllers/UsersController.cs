@@ -19,6 +19,26 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
         }
 
+        [HttpGet("getusers")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var users = await _context.Users
+                .OrderBy(p => p.Username)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Username,
+                    p.FullName,
+                    p.Birthday,
+                    p.Email,
+                    p.Avatar,
+                    p.Status
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
         // Tìm kiếm người dùng theo tên người dùng
         [HttpGet("search")]
         public async Task<IActionResult> SearchUserByUsername(string username, CancellationToken cancellationToken)
@@ -64,16 +84,17 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("User not found");
             }
 
-            // Xử lý avatar
-            if (request.AvatarFile != null)
-            {
-                string fileName = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
-                user.Avatar = Path.Combine("avatar", fileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
-            }
-
             user.FullName = request.FullName;
             user.Birthday = request.Birthday;
             user.Email = request.Email;
+
+            // Xử lý avatar
+            if (request.AvatarFile != null)
+            {
+                var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                user.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
+                user.OriginalAvatarFileName = originalFileName;
+            }
 
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -87,7 +108,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.FullName,
                 user.Birthday,
                 user.Email,
-                user.Avatar
+                user.Avatar,
+                user.OriginalAvatarFileName
             });
         }
 
@@ -175,5 +197,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.ShowOnlineStatus
             });
         }
+
     }
 }
