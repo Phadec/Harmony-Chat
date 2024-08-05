@@ -129,7 +129,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 string? attachmentUrl = null;
                 if (request.Attachment != null)
                 {
-                    attachmentUrl = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
+                    string fileName = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
+                    attachmentUrl = Path.Combine("uploads", fileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
                 }
 
                 // Kiểm tra xem người dùng có phải là bạn bè hay không
@@ -178,7 +179,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
-
         [HttpPost]
         public async Task<IActionResult> SendGroupMessage([FromForm] SendGroupMessageDto request, CancellationToken cancellationToken)
         {
@@ -207,7 +207,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 string? attachmentUrl = null;
                 if (request.Attachment != null)
                 {
-                    attachmentUrl = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
+                    string fileName = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
+                    attachmentUrl = Path.Combine("uploads", fileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
                 }
 
                 // Tạo và lưu tin nhắn nhóm
@@ -250,6 +251,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
+
 
         // Kiểm tra xem hai người dùng có phải là bạn bè không
         private async Task<bool> AreFriends(Guid userId1, Guid userId2, CancellationToken cancellationToken)

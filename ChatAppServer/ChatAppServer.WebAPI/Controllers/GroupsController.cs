@@ -54,17 +54,13 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 members.Add(new
                 {
-                    id = groupMember.Id,
-                    user = new
-                    {
-                        user.Id,
-                        user.Username,
-                        user.FullName,
-                        user.Birthday,
-                        user.Email,
-                        user.Avatar,
-                        user.Status
-                    }
+                    user.Id,
+                    user.Username,
+                    user.FullName,
+                    user.Birthday,
+                    user.Email,
+                    user.Avatar,
+                    user.Status
                 });
             }
 
@@ -78,6 +74,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 members
             });
         }
+
 
         [HttpPost]
         public async Task<IActionResult> AddMember([FromForm] AddGroupMemberDto request, CancellationToken cancellationToken)
@@ -111,8 +108,18 @@ namespace ChatAppServer.WebAPI.Controllers
 
             _logger.LogInformation($"User {user.Username} added to group {group.Name}");
 
-            return Ok(groupMember);
+            return Ok(new
+            {
+                user.Id,
+                user.Username,
+                user.FullName,
+                user.Birthday,
+                user.Email,
+                user.Avatar,
+                user.Status
+            });
         }
+
 
         [HttpDelete("{groupId}")]
         public async Task<IActionResult> DeleteGroup(Guid groupId, CancellationToken cancellationToken)
@@ -192,11 +199,16 @@ namespace ChatAppServer.WebAPI.Controllers
         {
             var userGroups = await _context.GroupMembers
                 .Where(gm => gm.UserId == userId)
-                .Select(gm => gm.Group)
+                .Select(gm => new
+                {
+                    gm.Group.Id,
+                    gm.Group.Name
+                })
                 .ToListAsync(cancellationToken);
 
             return Ok(userGroups);
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetUserGroupsWithDetails(Guid userId, CancellationToken cancellationToken)
@@ -205,13 +217,43 @@ namespace ChatAppServer.WebAPI.Controllers
                 .Where(g => g.Members.Any(gm => gm.UserId == userId))
                 .Select(g => new
                 {
-                    Group = g,
-                    Members = g.Members.Select(gm => gm.User).ToList(),
-                    RecentChats = g.Chats.OrderByDescending(c => c.Date).Take(10).ToList() // lấy 10 tin nhắn gần nhất
+                    g.Id,
+                    g.Name,
+                    Members = g.Members.Select(gm => new
+                    {
+                        gm.User.Id,
+                        gm.User.Username,
+                        gm.User.FullName,
+                        gm.User.Email,
+                        gm.User.Avatar
+                    }).ToList()
                 })
                 .ToListAsync(cancellationToken);
 
             return Ok(userGroups);
         }
+
+        [HttpPut("rename")]
+        public async Task<IActionResult> RenameGroup([FromForm] RenameGroupDto request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(request.NewName))
+            {
+                return BadRequest(new { Message = "New group name is required" });
+            }
+
+            var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
+            if (group == null)
+            {
+                return NotFound(new { Message = "Group not found" });
+            }
+
+            group.Name = request.NewName;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"Group {request.GroupId} renamed to {request.NewName}");
+
+            return Ok(new { Message = "Group name updated successfully", group.Id, group.Name });
+        }
+
     }
 }

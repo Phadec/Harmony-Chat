@@ -9,7 +9,8 @@
                 return null;
             }
 
-            string filePath = Path.Combine(directoryPath, Guid.NewGuid() + Path.GetExtension(file.FileName));
+            string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+            string filePath = Path.Combine(directoryPath, fileName);
 
             if (!Directory.Exists(directoryPath))
             {
@@ -21,7 +22,7 @@
                 file.CopyTo(stream);
             }
 
-            return filePath;
+            return fileName; // Chỉ trả về tên tệp
         }
     }
 }

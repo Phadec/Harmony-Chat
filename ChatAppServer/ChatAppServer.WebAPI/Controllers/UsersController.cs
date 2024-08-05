@@ -1,5 +1,6 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
 using ChatAppServer.WebAPI.Models;
+using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,7 +54,6 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(user);
         }
 
-        // Cập nhật thông tin người dùng
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
         {
@@ -64,10 +64,16 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("User not found");
             }
 
+            // Xử lý avatar
+            if (request.AvatarFile != null)
+            {
+                string fileName = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                user.Avatar = Path.Combine("avatar", fileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
+            }
+
             user.FullName = request.FullName;
             user.Birthday = request.Birthday;
             user.Email = request.Email;
-            user.Avatar = request.Avatar;
 
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -84,6 +90,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.Avatar
             });
         }
+
+
 
         // Cập nhật trạng thái hoạt động của người dùng
         [HttpPost("{userId}/update-status")]
