@@ -280,3 +280,4 @@ D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\refint\Chat
 D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ChatAppServer.WebAPI.pdb
 D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ChatAppServer.WebAPI.genruntimeconfig.cache
 D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ref\ChatAppServer.WebAPI.dll
+D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

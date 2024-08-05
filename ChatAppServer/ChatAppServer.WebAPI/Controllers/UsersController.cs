@@ -1,4 +1,5 @@
-﻿using ChatAppServer.WebAPI.Models;
+﻿using ChatAppServer.WebAPI.Dtos;
+using ChatAppServer.WebAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
         }
 
+        // Tìm kiếm người dùng theo tên người dùng
         [HttpGet("search")]
         public async Task<IActionResult> SearchUserByUsername(string username, CancellationToken cancellationToken)
         {
@@ -49,6 +51,121 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger.LogInformation($"User with username {username} found");
 
             return Ok(user);
+        }
+
+        // Cập nhật thông tin người dùng
+        [HttpPut("{userId}")]
+        public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
+        {
+            var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            user.FullName = request.FullName;
+            user.Birthday = request.Birthday;
+            user.Email = request.Email;
+            user.Avatar = request.Avatar;
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"User {userId} information updated");
+
+            return Ok(new
+            {
+                Message = "User information updated successfully",
+                user.Id,
+                user.Username,
+                user.FullName,
+                user.Birthday,
+                user.Email,
+                user.Avatar
+            });
+        }
+
+        // Cập nhật trạng thái hoạt động của người dùng
+        [HttpPost("{userId}/update-status")]
+        public async Task<IActionResult> UpdateStatus(Guid userId, [FromForm] string status, CancellationToken cancellationToken)
+        {
+            var validStatuses = new List<string> { "online", "offline" };
+
+            if (!validStatuses.Contains(status.ToLower()))
+            {
+                return BadRequest(new { Message = "Invalid status. Status must be 'online' or 'offline'." });
+            }
+
+            var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            user.Status = status.ToLower();
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"User {userId} status updated to {status}");
+
+            return Ok(new { Message = "Status updated successfully", user.Status });
+        }
+
+        // Cập nhật hiển thị trạng thái hoạt động
+        [HttpPost("{userId}/update-status-visibility")]
+        public async Task<IActionResult> UpdateStatusVisibility(Guid userId, [FromForm] bool showOnlineStatus, CancellationToken cancellationToken)
+        {
+            var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            user.ShowOnlineStatus = showOnlineStatus;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"User {userId} show online status updated to {showOnlineStatus}");
+
+            return Ok(new { Message = "Status visibility updated successfully", user.ShowOnlineStatus });
+        }
+
+        // Lấy trạng thái hoạt động của người dùng
+        [HttpGet("{userId}/status")]
+        public async Task<IActionResult> GetStatus(Guid userId, CancellationToken cancellationToken)
+        {
+            var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            return Ok(new { user.Status });
+        }
+
+        // Lấy thông tin người dùng cùng trạng thái
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUserInfo(Guid userId, CancellationToken cancellationToken)
+        {
+            var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            return Ok(new
+            {
+                user.Id,
+                user.Username,
+                user.FullName,
+                user.Birthday,
+                user.Email,
+                user.Avatar,
+                user.Status,
+                user.ShowOnlineStatus
+            });
         }
     }
 }

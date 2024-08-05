@@ -34,6 +34,8 @@ namespace ChatAppServer.WebAPI.Controllers
             await _context.Groups.AddAsync(group, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
+            var members = new List<object>();
+
             foreach (var userId in request.MemberIds)
             {
                 var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
@@ -49,12 +51,32 @@ namespace ChatAppServer.WebAPI.Controllers
                 };
 
                 await _context.GroupMembers.AddAsync(groupMember, cancellationToken);
+
+                members.Add(new
+                {
+                    id = groupMember.Id,
+                    user = new
+                    {
+                        user.Id,
+                        user.Username,
+                        user.FullName,
+                        user.Birthday,
+                        user.Email,
+                        user.Avatar,
+                        user.Status
+                    }
+                });
             }
 
             await _context.SaveChangesAsync(cancellationToken);
             _logger.LogInformation($"Group {group.Name} created with ID {group.Id}");
 
-            return CreatedAtAction(nameof(GetGroupMembers), new { groupId = group.Id }, group);
+            return CreatedAtAction(nameof(GetGroupMembers), new { groupId = group.Id }, new
+            {
+                id = group.Id,
+                name = group.Name,
+                members
+            });
         }
 
         [HttpPost]
