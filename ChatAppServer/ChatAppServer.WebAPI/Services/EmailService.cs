@@ -7,7 +7,9 @@ public interface IEmailService
     Task SendResetEmail(string email, string token);
     Task SendPasswordChangeEmail(string email, string username);
     Task SendResetSuccessEmail(string email, string username);
+    Task SendEmailConfirmationAsync(string email, string firstName, string lastName);
 }
+
 
 public class EmailService : IEmailService
 {
@@ -41,6 +43,11 @@ public class EmailService : IEmailService
     {
         var resetSuccessMessage = GenerateResetSuccessMessage(username);
         await SendEmailAsync(email, "Password Reset Successfully", resetSuccessMessage);
+    }
+    public async Task SendEmailConfirmationAsync(string email, string firstName, string lastName)
+    {
+        var confirmationMessage = GenerateEmailConfirmationMessage(firstName, lastName);
+        await SendEmailAsync(email, "Email Confirmation", confirmationMessage);
     }
 
     private async Task SendEmailAsync(string email, string subject, string body)
@@ -214,4 +221,41 @@ public class EmailService : IEmailService
         </body>
         </html>";
     }
+    private string GenerateEmailConfirmationMessage(string firstName, string lastName)
+    {
+        return $@"
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }}
+                .container {{ width: 100%; padding: 20px; background-color: #ffffff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 10px; max-width: 600px; margin: 20px auto; }}
+                .header {{ background-color: #4CAF50; color: white; padding: 10px 0; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ padding: 20px; }}
+                .content h2 {{ color: #333333; }}
+                .content p {{ line-height: 1.6; color: #666666; }}
+                .footer {{ margin-top: 20px; text-align: center; font-size: 12px; color: #999999; }}
+                .footer a {{ color: #4CAF50; text-decoration: none; }}
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Email Confirmation</h1>
+                </div>
+                <div class='content'>
+                    <h2>Hello {firstName} {lastName},</h2>
+                    <p>Your email has been changed successfully. If you did not make this change, please contact our support team immediately.</p>
+                    <br>
+                    <p>Best regards,</p>
+                    <p>The Harmony Team</p>
+                </div>
+                <div class='footer'>
+                    <p>&copy; {DateTime.Now.Year} Harmony. All rights reserved.</p>
+                    <p><a href='https://yourapp.com/privacy'>Privacy Policy</a> | <a href='https://yourapp.com/terms'>Terms of Service</a></p>
+                </div>
+            </div>
+        </body>
+        </html>";
+    }
 }
+
