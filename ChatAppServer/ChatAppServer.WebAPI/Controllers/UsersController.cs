@@ -1,13 +1,16 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
 using ChatAppServer.WebAPI.Models;
 using ChatAppServer.WebAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -19,8 +22,9 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("getusers")]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers(CancellationToken cancellationToken)
         {
             var users = await _context.Users
                 .OrderBy(p => p.Username)
@@ -28,24 +32,30 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     p.Id,
                     p.Username,
-                    p.FullName,
+                    p.FirstName,
+                    p.LastName,
                     p.Birthday,
                     p.Email,
                     p.Avatar,
                     p.Status
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return Ok(users);
         }
 
-        // Tìm kiếm người dùng theo tên người dùng
         [HttpGet("search")]
         public async Task<IActionResult> SearchUserByUsername(string username, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
                 return BadRequest(new { message = "Username is required" });
+            }
+
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to search users.");
             }
 
             _logger.LogInformation($"Searching for user with username: {username}");
@@ -56,7 +66,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     u.Id,
                     u.Username,
-                    u.FullName,
+                    u.FirstName,
+                    u.LastName,
                     u.Email,
                     u.Avatar,
                     u.Status
@@ -77,6 +88,12 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to update this user.");
+            }
+
             var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
 
             if (user == null)
@@ -84,15 +101,15 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("User not found");
             }
 
-            user.FullName = request.FullName;
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
             user.Birthday = request.Birthday;
             user.Email = request.Email;
 
-            // Xử lý avatar
             if (request.AvatarFile != null)
             {
                 var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
-                user.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
+                user.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/");
                 user.OriginalAvatarFileName = originalFileName;
             }
 
@@ -105,7 +122,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 Message = "User information updated successfully",
                 user.Id,
                 user.Username,
-                user.FullName,
+                user.FirstName,
+                user.LastName,
                 user.Birthday,
                 user.Email,
                 user.Avatar,
@@ -114,11 +132,15 @@ namespace ChatAppServer.WebAPI.Controllers
         }
 
 
-
-        // Cập nhật trạng thái hoạt động của người dùng
         [HttpPost("{userId}/update-status")]
         public async Task<IActionResult> UpdateStatus(Guid userId, [FromForm] string status, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to update this user's status.");
+            }
+
             var validStatuses = new List<string> { "online", "offline" };
 
             if (!validStatuses.Contains(status.ToLower()))
@@ -141,10 +163,15 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Status updated successfully", user.Status });
         }
 
-        // Cập nhật hiển thị trạng thái hoạt động
         [HttpPost("{userId}/update-status-visibility")]
         public async Task<IActionResult> UpdateStatusVisibility(Guid userId, [FromForm] bool showOnlineStatus, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to update this user's status visibility.");
+            }
+
             var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
 
             if (user == null)
@@ -160,10 +187,15 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Status visibility updated successfully", user.ShowOnlineStatus });
         }
 
-        // Lấy trạng thái hoạt động của người dùng
         [HttpGet("{userId}/status")]
         public async Task<IActionResult> GetStatus(Guid userId, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to view this user's status.");
+            }
+
             var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
 
             if (user == null)
@@ -174,10 +206,15 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { user.Status });
         }
 
-        // Lấy thông tin người dùng cùng trạng thái
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserInfo(Guid userId, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to view this user's info.");
+            }
+
             var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
 
             if (user == null)
@@ -189,7 +226,8 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 user.Id,
                 user.Username,
-                user.FullName,
+                user.FirstName,
+                user.LastName,
                 user.Birthday,
                 user.Email,
                 user.Avatar,
@@ -197,6 +235,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.ShowOnlineStatus
             });
         }
-
     }
+
 }

@@ -15,6 +15,7 @@ namespace ChatAppServer.WebAPI.Models
         public DbSet<GroupMember> GroupMembers { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
+        public DbSet<UserToken> Tokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,6 +25,9 @@ namespace ChatAppServer.WebAPI.Models
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
 
                 entity.HasMany(e => e.SentFriendRequests)
                     .WithOne(fr => fr.Sender)
@@ -51,6 +55,7 @@ namespace ChatAppServer.WebAPI.Models
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+
             // Configure Group entity
             modelBuilder.Entity<Group>(entity =>
             {
@@ -72,6 +77,7 @@ namespace ChatAppServer.WebAPI.Models
             modelBuilder.Entity<GroupMember>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.IsAdmin).HasDefaultValue(false); // Đặt giá trị mặc định
             });
 
             // Configure Chat entity

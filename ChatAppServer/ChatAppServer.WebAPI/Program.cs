@@ -1,10 +1,12 @@
 ﻿using ChatAppServer.WebAPI.Hubs;
 using ChatAppServer.WebAPI.Models;
+using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,8 +23,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
+
+// Register Background Task Queue
+builder.Services.AddSingleton<IBackgroundTaskQueue>(_ => new BackgroundTaskQueue(100));
+builder.Services.AddHostedService<QueuedHostedService>();
 
 // Configure JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -38,7 +45,52 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                context.NoResult();
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "text/plain";
+                return context.Response.WriteAsync(context.Exception.ToString());
+            },
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.StatusCode = 401;
+                    context.Response.ContentType = "application/json";
+                    var result = JsonSerializer.Serialize(new { error = "You are not authorized" });
+                    return context.Response.WriteAsync(result);
+                }
+                return Task.CompletedTask;
+            },
+            OnForbidden = context =>
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+                var result = JsonSerializer.Serialize(new { error = "You are not authorized to access this resource" });
+                return context.Response.WriteAsync(result);
+            },
+            OnTokenValidated = context =>
+            {
+                var claims = context.Principal?.Claims;
+                if (claims != null)
+                {
+                    foreach (var claim in claims)
+                    {
+                        Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+                    }
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
+
+
+
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

@@ -2,10 +2,10 @@
 {
     public class UpdateUserDto
     {
-        public string FullName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
         public DateTime Birthday { get; set; }
-        public string Email { get; set; }
-        public IFormFile AvatarFile { get; set; } // Đảm bảo bạn sử dụng IFormFile để nhận tệp tải lên
+        public string Email { get; set; } = string.Empty;
+        public IFormFile? AvatarFile { get; set; }
     }
-
 }
