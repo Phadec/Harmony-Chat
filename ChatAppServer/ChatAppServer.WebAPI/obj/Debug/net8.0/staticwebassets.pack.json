@@ -1,12 +1,32 @@
 {
   "Files": [
     {
-      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\37b27207-8629-47cd-83c3-def5964094c7.jpg",
-      "PackagePath": "staticwebassets\\avatar\\37b27207-8629-47cd-83c3-def5964094c7.jpg"
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\04af60b1-fc22-4e5a-a113-0e3c503e56d5.jpg",
+      "PackagePath": "staticwebassets\\avatar\\04af60b1-fc22-4e5a-a113-0e3c503e56d5.jpg"
+    },
+    {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\259a7452-7bc7-42cb-a219-49f4e90387fb.jpg",
+      "PackagePath": "staticwebassets\\avatar\\259a7452-7bc7-42cb-a219-49f4e90387fb.jpg"
+    },
+    {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\3e7baeec-8b3a-467e-860a-51a849382cfb.jpg",
+      "PackagePath": "staticwebassets\\avatar\\3e7baeec-8b3a-467e-860a-51a849382cfb.jpg"
     },
     {
       "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\avatar-trang-4.jpg",
       "PackagePath": "staticwebassets\\avatar\\avatar-trang-4.jpg"
+    },
+    {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\b16077db-467e-4931-a396-a65ea7df098d.jpg",
+      "PackagePath": "staticwebassets\\avatar\\b16077db-467e-4931-a396-a65ea7df098d.jpg"
+    },
+    {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\c5170045-bc1c-4298-8869-099b24b2c9e3.jpg",
+      "PackagePath": "staticwebassets\\avatar\\c5170045-bc1c-4298-8869-099b24b2c9e3.jpg"
+    },
+    {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatar\\e4a10f80-35d1-402e-8af4-c0e247cae7e3.jpg",
+      "PackagePath": "staticwebassets\\avatar\\e4a10f80-35d1-402e-8af4-c0e247cae7e3.jpg"
     },
     {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.ChatAppServer.WebAPI.Microsoft.AspNetCore.StaticWebAssets.props",
