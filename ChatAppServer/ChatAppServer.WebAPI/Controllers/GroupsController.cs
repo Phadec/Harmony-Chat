@@ -430,9 +430,31 @@ namespace ChatAppServer.WebAPI.Controllers
                     _logger.LogInformation($"User {remainingMember.UserId} promoted to admin in group {request.GroupId} as no admins were left.");
                 }
             }
+            else
+            {
+                // Check if there is only one admin left and it's the user revoking their own admin rights
+                var adminCount = await _context.GroupMembers.CountAsync(gm => gm.GroupId == request.GroupId && gm.IsAdmin, cancellationToken);
+                if (adminCount == 1 && groupMember.UserId == Guid.Parse(authenticatedUserId))
+                {
+                    // Promote a random member to admin
+                    var randomMember = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && !gm.IsAdmin, cancellationToken);
+                    if (randomMember != null)
+                    {
+                        randomMember.IsAdmin = true;
+                        await _context.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogInformation($"User {randomMember.UserId} promoted to admin in group {request.GroupId} as the last admin revoked their own admin rights.");
+                    }
+                    else
+                    {
+                        return BadRequest(new { Message = "Cannot revoke admin rights because there are no other members to promote to admin." });
+                    }
+                }
+            }
 
             return Ok(new { Message = "Admin rights revoked successfully" });
         }
+
         [HttpPost("update-avatar")]
         public async Task<IActionResult> UpdateGroupAvatar([FromForm] UpdateAvatarGroupDto request, CancellationToken cancellationToken)
         {

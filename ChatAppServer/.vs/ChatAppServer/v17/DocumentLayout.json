@@ -114,21 +114,8 @@
       "DocumentGroups": [
         {
           "DockedHeight": 349,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 4,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "UpdateAvatarGroupDto.cs",
-              "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
-              "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
-              "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
-              "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T17:08:21.018Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 5,
@@ -139,8 +126,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\ChatsController.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T16:30:13.915Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T16:30:13.915Z"
             },
             {
               "$type": "Document",
@@ -176,8 +162,32 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Models\\Group.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAABMAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:30:58.766Z",
+              "WhenOpened": "2024-08-06T15:30:58.766Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "GroupsController.cs",
+              "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
+              "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
+              "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
+              "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
+              "ViewState": "AQIAAG4AAAAAAAAAAAAuwMgBAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-08-06T15:13:57.991Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UpdateAvatarGroupDto.cs",
+              "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
+              "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
+              "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
+              "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-08-06T17:08:21.018Z"
             },
             {
               "$type": "Document",
@@ -189,8 +199,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Models\\GroupMember.cs",
               "ViewState": "AQIAAAgAAAAAAAAAAAAkwAoAAAAkAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:14:07.99Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:14:07.99Z"
             },
             {
               "$type": "Document",
@@ -202,21 +211,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Models\\UserToken.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:14:07.145Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "GroupsController.cs",
-              "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
-              "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
-              "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
-              "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
-              "ViewState": "AQIAAKwBAAAAAAAAAAAkwNoBAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:13:57.991Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:14:07.145Z"
             },
             {
               "$type": "Document",
@@ -264,8 +259,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\FriendsController.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:51:15.5Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:51:15.5Z"
             },
             {
               "$type": "Document",
@@ -289,8 +283,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Program.cs",
               "ViewState": "AQIAAIkAAAAAAAAAAAAowJ8AAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:35:22.34Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:35:22.34Z"
             },
             {
               "$type": "Document",
@@ -302,8 +295,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\UpdateRoleDto.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:34:20.198Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:34:20.198Z"
             },
             {
               "$type": "Document",
@@ -315,8 +307,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\AdminController.cs",
               "ViewState": "AQIAABMAAAAAAAAAAAAQwB8AAAANAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:33:53.859Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:33:53.859Z"
             },
             {
               "$type": "Document",
@@ -340,8 +331,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Models\\User.cs",
               "ViewState": "AQIAADoAAAAAAAAAAAAAADoAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:23:55.701Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:23:55.701Z"
             },
             {
               "$type": "Document",
@@ -365,8 +355,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\UsersController.cs",
               "ViewState": "AQIAAHEAAAAAAAAAAAAmwH0AAAANAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:18:00.841Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:18:00.841Z"
             },
             {
               "$type": "Document",
@@ -378,8 +367,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\AuthController.cs",
               "ViewState": "AQIAAAkAAAAAAAAAAAAkwBYAAABaAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:06:46.137Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:06:46.137Z"
             }
           ]
         },
