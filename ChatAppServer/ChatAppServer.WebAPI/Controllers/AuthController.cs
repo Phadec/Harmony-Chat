@@ -36,6 +36,11 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "Password must be at least 8 characters long." });
             }
 
+            if (request.Password != request.RetypePassword)
+            {
+                return BadRequest(new { Message = "Passwords do not match." });
+            }
+
             if (!IsValidEmail(request.Email))
             {
                 return BadRequest(new { Message = "Invalid email format." });
@@ -97,7 +102,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(result);
         }
-
 
         [HttpPost("UserLogin")]
         public async Task<IActionResult> Login([FromForm] LoginDto request, CancellationToken cancellationToken)
