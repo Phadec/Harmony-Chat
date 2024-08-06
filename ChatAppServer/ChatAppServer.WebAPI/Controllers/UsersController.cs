@@ -15,11 +15,13 @@ namespace ChatAppServer.WebAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<UsersController> _logger;
+        private readonly IEmailService _emailService;
 
-        public UsersController(ApplicationDbContext context, ILogger<UsersController> logger)
+        public UsersController(ApplicationDbContext context, ILogger<UsersController> logger, IEmailService emailService)
         {
             _context = context;
             _logger = logger;
+            _emailService = emailService;
         }
 
         [Authorize(Roles = "Admin")]
@@ -101,6 +103,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("User not found");
             }
 
+            bool emailChanged = user.Email != request.Email;
+
             user.FirstName = request.FirstName;
             user.LastName = request.LastName;
             user.Birthday = request.Birthday;
@@ -117,6 +121,12 @@ namespace ChatAppServer.WebAPI.Controllers
 
             _logger.LogInformation($"User {userId} information updated");
 
+            // Nếu email đã thay đổi, gửi email xác nhận tới email mới
+            if (emailChanged)
+            {
+                await _emailService.SendEmailConfirmationAsync(user.Email, user.FirstName, user.LastName);
+            }
+
             return Ok(new
             {
                 Message = "User information updated successfully",
@@ -130,6 +140,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.OriginalAvatarFileName
             });
         }
+
 
 
         [HttpPost("{userId}/update-status")]
