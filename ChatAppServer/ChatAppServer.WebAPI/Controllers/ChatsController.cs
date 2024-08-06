@@ -2,14 +2,17 @@
 using ChatAppServer.WebAPI.Hubs;
 using ChatAppServer.WebAPI.Models;
 using ChatAppServer.WebAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [Authorize] // Ensure all endpoints require authorization
     public sealed class ChatsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -29,6 +32,13 @@ namespace ChatAppServer.WebAPI.Controllers
             if (userId == Guid.Empty || toUserId == Guid.Empty)
             {
                 return BadRequest("Invalid userId or toUserId");
+            }
+
+            // Check if the authenticated user is the sender or recipient
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || (userId.ToString() != authenticatedUserId && toUserId.ToString() != authenticatedUserId))
+            {
+                return Forbid("You are not authorized to view these chats.");
             }
 
             try
@@ -61,6 +71,16 @@ namespace ChatAppServer.WebAPI.Controllers
             if (groupId == Guid.Empty)
             {
                 return BadRequest("Invalid groupId");
+            }
+
+            // Check if the authenticated user is a member of the group
+            var authenticatedUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var isMember = await _context.GroupMembers
+                .AnyAsync(gm => gm.GroupId == groupId && gm.UserId == authenticatedUserId, cancellationToken);
+
+            if (!isMember)
+            {
+                return Forbid("You are not authorized to view these group chats.");
             }
 
             try
@@ -101,6 +121,13 @@ namespace ChatAppServer.WebAPI.Controllers
             if (request.UserId == Guid.Empty || request.ToUserId == Guid.Empty)
             {
                 return BadRequest("Invalid userId or toUserId");
+            }
+
+            // Check if the authenticated user is the sender
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || request.UserId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to send this message.");
             }
 
             try
@@ -176,6 +203,13 @@ namespace ChatAppServer.WebAPI.Controllers
             if (request.UserId == Guid.Empty || request.GroupId == Guid.Empty)
             {
                 return BadRequest("Invalid userId or groupId");
+            }
+
+            // Check if the authenticated user is the sender
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || request.UserId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to send this message.");
             }
 
             try

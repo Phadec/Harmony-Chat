@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
@@ -19,11 +18,14 @@ namespace ChatAppServer.WebAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
-
-        public AuthController(ApplicationDbContext context, IConfiguration configuration)
+        private readonly IEmailService _emailService;
+        private readonly IBackgroundTaskQueue _taskQueue;
+        public AuthController(ApplicationDbContext context, IConfiguration configuration, IEmailService emailService, IBackgroundTaskQueue taskQueue)
         {
             _context = context;
             _configuration = configuration;
+            _emailService = emailService;
+            _taskQueue = taskQueue;
         }
 
         [HttpPost("RegisterUser")]
@@ -51,7 +53,7 @@ namespace ChatAppServer.WebAPI.Controllers
             if (request.File != null)
             {
                 var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.File, "wwwroot/avatar/");
-                avatarUrl = Path.Combine("avatar", savedFileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
+                avatarUrl = Path.Combine("avatar", savedFileName).Replace("\\", "/");
                 originalAvatarFileName = originalFileName;
             }
 
@@ -60,42 +62,49 @@ namespace ChatAppServer.WebAPI.Controllers
             User user = new()
             {
                 Username = request.Username,
-                FullName = request.FullName,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
                 Birthday = request.Birthday,
                 Email = request.Email,
                 Avatar = avatarUrl,
                 OriginalAvatarFileName = originalAvatarFileName,
                 PasswordHash = passwordHash,
-                Status = "offline"
+                Status = "offline",
+                Role = "User" // Thiết lập vai trò mặc định là "User"
             };
 
             await _context.AddAsync(user, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Gửi email chào mừng cho người dùng
-            SendWelcomeEmail(user.Email, user.Username);
+            _taskQueue.QueueBackgroundWorkItem(async token =>
+            {
+                await _emailService.SendWelcomeEmail(user.Email, user.Username);
+            });
 
             var result = new
             {
                 user.Id,
                 user.Username,
-                user.FullName,
+                user.FirstName,
+                user.LastName,
                 user.Birthday,
                 user.Email,
                 user.Avatar,
                 user.OriginalAvatarFileName,
-                user.Status
+                user.Status,
+                user.Role
             };
 
             return Ok(result);
         }
 
+
         [HttpPost("UserLogin")]
         public async Task<IActionResult> Login([FromForm] LoginDto request, CancellationToken cancellationToken)
         {
-            User? user = await _context.Users.FirstOrDefaultAsync(p => p.Username == request.Username, cancellationToken);
+            var user = await _context.Users.FirstOrDefaultAsync(p => p.Username == request.Username, cancellationToken);
 
-            if (user is null)
+            if (user == null)
             {
                 return BadRequest(new { Message = "Username not found!" });
             }
@@ -115,7 +124,8 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 user.Id,
                 user.Username,
-                user.FullName,
+                user.FirstName,
+                user.LastName,
                 user.Birthday,
                 user.Email,
                 user.Avatar,
@@ -124,18 +134,37 @@ namespace ChatAppServer.WebAPI.Controllers
             });
         }
 
+
+
         [HttpPost("UserLogout")]
         [Authorize]
         public async Task<IActionResult> Logout([FromForm] Guid userId, CancellationToken cancellationToken)
         {
-            User? user = await _context.Users.FirstOrDefaultAsync(p => p.Id == userId, cancellationToken);
+            var authenticatedUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Sẽ trả về UserId sau khi sửa
+            var username = User.FindFirstValue(ClaimTypes.Name); // Trả về Username
 
-            if (user is null)
+            // In ra console để kiểm tra
+            Console.WriteLine($"Authenticated UserId: {authenticatedUserId}");
+            Console.WriteLine($"Authenticated Username: {username}");
+            Console.WriteLine($"Request UserId: {userId}");
+
+            // So sánh UserId từ token và UserId từ yêu cầu
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid();
+            }
+
+            User? user = await _context.Users.FirstOrDefaultAsync(p => p.Id == userId, cancellationToken);
+            if (user == null)
             {
                 return BadRequest(new { Message = "User not found!" });
             }
 
             user.Status = "offline";
+            await _context.SaveChangesAsync(cancellationToken);
+
+            var tokens = await _context.Tokens.Where(t => t.UserId == user.Id).ToListAsync(cancellationToken);
+            _context.Tokens.RemoveRange(tokens);
             await _context.SaveChangesAsync(cancellationToken);
 
             return Ok(new { Message = "User logged out successfully." });
@@ -153,8 +182,10 @@ namespace ChatAppServer.WebAPI.Controllers
             var token = GenerateResetToken(user);
 
             // Send the email with the token
-            SendResetEmail(user.Email, token);
-
+            _taskQueue.QueueBackgroundWorkItem(async ct =>
+            {
+                await _emailService.SendResetEmail(user.Email, token);
+            });
             return Ok(new { Message = "Password reset email sent." });
         }
 
@@ -188,7 +219,10 @@ namespace ChatAppServer.WebAPI.Controllers
             await _context.SaveChangesAsync(cancellationToken);
 
             // Gửi email thông báo đặt lại mật khẩu thành công
-            SendResetSuccessEmail(user.Email, user.Username);
+            _taskQueue.QueueBackgroundWorkItem(async token =>
+            {
+                await _emailService.SendResetSuccessEmail(user.Email, user.Username);
+            });
 
             return Ok(new { Message = "Password has been reset." });
         }
@@ -197,6 +231,13 @@ namespace ChatAppServer.WebAPI.Controllers
         [Authorize]
         public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordDto request, CancellationToken cancellationToken)
         {
+            // Lấy userId từ token đã xác thực
+            var authenticatedUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (authenticatedUserId == null || request.UserId.ToString() != authenticatedUserId)
+            {
+                return Forbid();
+            }
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
             if (user == null)
             {
@@ -218,7 +259,10 @@ namespace ChatAppServer.WebAPI.Controllers
             await _context.SaveChangesAsync(cancellationToken);
 
             // Send email notification
-            SendPasswordChangeEmail(user.Email, user.Username);
+            _taskQueue.QueueBackgroundWorkItem(async token =>
+            {
+                await _emailService.SendPasswordChangeEmail(user.Email, user.Username);
+            });
 
             return Ok(new { Message = "Password has been changed successfully." });
         }
@@ -230,16 +274,17 @@ namespace ChatAppServer.WebAPI.Controllers
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            };
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Name, user.Username),
+        new Claim(ClaimTypes.Role, user.Role), // Thêm vai trò của người dùng vào claim
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+    };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Issuer"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(3),
+                expires: DateTime.UtcNow.AddHours(3),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
@@ -286,381 +331,20 @@ namespace ChatAppServer.WebAPI.Controllers
             if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 throw new SecurityTokenException("Invalid token");
 
+            // Logging các claims để kiểm tra
+            foreach (var claim in principal.Claims)
+            {
+                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+            }
+
             return principal;
         }
 
-        private void SendResetEmail(string email, string token)
-        {
-            var resetLink = $"{_configuration["AppSettings:ClientURL"]}/reset-password?token={token}";
-
-            var resetMessage = $@"
-    <html>
-    <head>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f4f4f4;
-            }}
-            .container {{
-                width: 100%;
-                padding: 20px;
-                background-color: #ffffff;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-                max-width: 600px;
-                margin: 20px auto;
-            }}
-            .header {{
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 0;
-                text-align: center;
-                border-radius: 10px 10px 0 0;
-            }}
-            .content {{
-                padding: 20px;
-            }}
-            .content h2 {{
-                color: #333333;
-            }}
-            .content p {{
-                line-height: 1.6;
-                color: #666666;
-            }}
-            .footer {{
-                margin-top: 20px;
-                text-align: center;
-                font-size: 12px;
-                color: #999999;
-            }}
-            .footer a {{
-                color: #4CAF50;
-                text-decoration: none;
-            }}
-            .button {{
-                display: inline-block;
-                padding: 10px 20px;
-                margin: 20px 0;
-                font-size: 16px;
-                color: #ffffff;
-                background-color: #4CAF50;
-                border-radius: 5px;
-                text-decoration: none;
-                color: white; /* Make sure the text color is white */
-            }}
-        </style>
-    </head>
-    <body>
-        <div class='container'>
-            <div class='header'>
-                <h1>Password Reset Request</h1>
-            </div>
-            <div class='content'>
-                <h2>Hello,</h2>
-                <p>We received a request to reset your password. Click the button below to reset your password.</p>
-                <p><a href='{resetLink}' class='button' style='color: white;'>Reset Password</a></p>
-                <p>If you did not request a password reset, please ignore this email.</p>
-                <br>
-                <p>Best regards,</p>
-                <p>The Harmony Team</p>
-            </div>
-            <div class='footer'>
-                <p>&copy; {DateTime.Now.Year} Harmony. All rights reserved.</p>
-                <p><a href='https://yourapp.com/privacy'>Privacy Policy</a> | <a href='https://yourapp.com/terms'>Terms of Service</a></p>
-            </div>
-        </div>
-    </body>
-    </html>";
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress("no-reply@yourapp.com"),
-                Subject = "Password Reset",
-                Body = resetMessage,
-                IsBodyHtml = true, // Set IsBodyHtml to true
-            };
-            mailMessage.To.Add(email);
-
-            using var smtpClient = new SmtpClient(_configuration["Smtp:Host"], int.Parse(_configuration["Smtp:Port"]))
-            {
-                Credentials = new NetworkCredential(_configuration["Smtp:Username"], _configuration["Smtp:Password"]),
-                EnableSsl = true
-            };
-
-            smtpClient.Send(mailMessage);
-        }
-
-        private void SendWelcomeEmail(string email, string username)
-        {
-            var welcomeMessage = $@"
-    <html>
-    <head>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f4f4f4;
-            }}
-            .container {{
-                width: 100%;
-                padding: 20px;
-                background-color: #ffffff;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-                max-width: 600px;
-                margin: 20px auto;
-            }}
-            .header {{
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 0;
-                text-align: center;
-                border-radius: 10px 10px 0 0;
-            }}
-            .content {{
-                padding: 20px;
-            }}
-            .content h2 {{
-                color: #333333;
-            }}
-            .content p {{
-                line-height: 1.6;
-                color: #666666;
-            }}
-            .footer {{
-                margin-top: 20px;
-                text-align: center;
-                font-size: 12px;
-                color: #999999;
-            }}
-            .footer a {{
-                color: #4CAF50;
-                text-decoration: none;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class='container'>
-            <div class='header'>
-                <h1>Welcome to Harmony Chat</h1>
-            </div>
-            <div class='content'>
-                <h2>Hello {username},</h2>
-                <p>Thank you for registering at our site! We're excited to have you on board.</p>
-                <p>If you have any questions, feel free to <a href='mailto:vietpha157@gmail.com'>contact us</a>.</p>
-                <br>
-                <p>Best regards,</p>
-                <p>The Harmony Team</p>
-            </div>
-            <div class='footer'>
-                <p>&copy; {DateTime.Now.Year} Harmony. All rights reserved.</p>
-                <p><a href='https://yourapp.com/privacy'>Privacy Policy</a> | <a href='https://yourapp.com/terms'>Terms of Service</a></p>
-            </div>
-        </div>
-    </body>
-    </html>";
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress("no-reply@yourapp.com"),
-                Subject = "Welcome",
-                Body = welcomeMessage,
-                IsBodyHtml = true, // Set IsBodyHtml to true
-            };
-            mailMessage.To.Add(email);
-
-            using var smtpClient = new SmtpClient(_configuration["Smtp:Host"], int.Parse(_configuration["Smtp:Port"]))
-            {
-                Credentials = new NetworkCredential(_configuration["Smtp:Username"], _configuration["Smtp:Password"]),
-                EnableSsl = true
-            };
-
-            smtpClient.Send(mailMessage);
-        }
-
-        private void SendPasswordChangeEmail(string email, string username)
-        {
-            var changePasswordMessage = $@"
-    <html>
-    <head>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f4f4f4;
-            }}
-            .container {{
-                width: 100%;
-                padding: 20px;
-                background-color: #ffffff;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-                max-width: 600px;
-                margin: 20px auto;
-            }}
-            .header {{
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 0;
-                text-align: center;
-                border-radius: 10px 10px 0 0;
-            }}
-            .content {{
-                padding: 20px;
-            }}
-            .content h2 {{
-                color: #333333;
-            }}
-            .content p {{
-                line-height: 1.6;
-                color: #666666;
-            }}
-            .footer {{
-                margin-top: 20px;
-                text-align: center;
-                font-size: 12px;
-                color: #999999;
-            }}
-            .footer a {{
-                color: #4CAF50;
-                text-decoration: none;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class='container'>
-            <div class='header'>
-                <h1>Password Changed</h1>
-            </div>
-            <div class='content'>
-                <h2>Hello {username},</h2>
-                <p>Your password has been changed successfully. If you did not make this change, please contact our support team immediately.</p>
-                <br>
-                <p>Best regards,</p>
-                <p>The Harmony Team</p>
-            </div>
-            <div class='footer'>
-                <p>&copy; {DateTime.Now.Year} Harmony. All rights reserved.</p>
-                <p><a href='https://yourapp.com/privacy'>Privacy Policy</a> | <a href='https://yourapp.com/terms'>Terms of Service</a></p>
-            </div>
-        </div>
-    </body>
-    </html>";
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress("no-reply@yourapp.com"),
-                Subject = "Password Changed",
-                Body = changePasswordMessage,
-                IsBodyHtml = true,
-            };
-            mailMessage.To.Add(email);
-
-            using var smtpClient = new SmtpClient(_configuration["Smtp:Host"], int.Parse(_configuration["Smtp:Port"]))
-            {
-                Credentials = new NetworkCredential(_configuration["Smtp:Username"], _configuration["Smtp:Password"]),
-                EnableSsl = true
-            };
-
-            smtpClient.Send(mailMessage);
-        }
-
-        private void SendResetSuccessEmail(string email, string username)
-        {
-            var resetSuccessMessage = $@"
-    <html>
-    <head>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f4f4f4;
-            }}
-            .container {{
-                width: 100%;
-                padding: 20px;
-                background-color: #ffffff;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-                max-width: 600px;
-                margin: 20px auto;
-            }}
-            .header {{
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 0;
-                text-align: center;
-                border-radius: 10px 10px 0 0;
-            }}
-            .content {{
-                padding: 20px;
-            }}
-            .content h2 {{
-                color: #333333;
-            }}
-            .content p {{
-                line-height: 1.6;
-                color: #666666;
-            }}
-            .footer {{
-                margin-top: 20px;
-                text-align: center;
-                font-size: 12px;
-                color: #999999;
-            }}
-            .footer a {{
-                color: #4CAF50;
-                text-decoration: none;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class='container'>
-            <div class='header'>
-                <h1>Password Reset Successfully</h1>
-            </div>
-            <div class='content'>
-                <h2>Hello {username},</h2>
-                <p>Your password has been reset successfully. If you did not request this change, please contact our support team immediately.</p>
-                <br>
-                <p>Best regards,</p>
-                <p>The Harmony Team</p>
-            </div>
-            <div class='footer'>
-                <p>&copy; {DateTime.Now.Year} Harmony. All rights reserved.</p>
-                <p><a href='https://yourapp.com/privacy'>Privacy Policy</a> | <a href='https://yourapp.com/terms'>Terms of Service</a></p>
-            </div>
-        </div>
-    </body>
-    </html>";
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress("no-reply@yourapp.com"),
-                Subject = "Password Reset Successfully",
-                Body = resetSuccessMessage,
-                IsBodyHtml = true,
-            };
-            mailMessage.To.Add(email);
-
-            using var smtpClient = new SmtpClient(_configuration["Smtp:Host"], int.Parse(_configuration["Smtp:Port"]))
-            {
-                Credentials = new NetworkCredential(_configuration["Smtp:Username"], _configuration["Smtp:Password"]),
-                EnableSsl = true
-            };
-
-            smtpClient.Send(mailMessage);
-        }
         private bool IsValidEmail(string email)
         {
             try
             {
-                var addr = new System.Net.Mail.MailAddress(email);
+                var addr = new MailAddress(email);
                 return addr.Address == email;
             }
             catch

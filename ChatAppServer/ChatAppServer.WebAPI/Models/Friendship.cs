@@ -8,7 +8,7 @@ namespace ChatAppServer.WebAPI.Models
         public User User { get; set; }
         public Guid FriendId { get; set; }
         public User Friend { get; set; }
-        public string Nickname { get; set; } // Add this line
+        public string Nickname { get; set; }
 
         public static void Configure(ModelBuilder modelBuilder)
         {
@@ -26,7 +26,9 @@ namespace ChatAppServer.WebAPI.Models
                     .HasForeignKey(e => e.FriendId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.Property(e => e.Nickname).HasMaxLength(100); // Add this line
+                entity.Property(e => e.Nickname)
+                    .HasMaxLength(100)
+                    .HasDefaultValue(""); // Set default value to empty string
             });
         }
     }

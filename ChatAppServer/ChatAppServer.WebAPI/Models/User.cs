@@ -15,14 +15,16 @@
 
         public Guid Id { get; set; }
         public string Username { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
         public DateTime Birthday { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Avatar { get; set; } = string.Empty;
-        public string OriginalAvatarFileName { get; set; } = string.Empty; // Thêm thuộc tính này
-        public string Status { get; set; } = "offline"; // Default status
+        public string OriginalAvatarFileName { get; set; } = string.Empty;
+        public string Status { get; set; } = "offline";
         public string PasswordHash { get; set; } = string.Empty;
-        public bool ShowOnlineStatus { get; set; } = true; // Default to show online status
+        public bool ShowOnlineStatus { get; set; } = true;
+        public string Role { get; set; } = "User"; // Thêm thuộc tính này và đặt giá trị mặc định là "User"
 
         public List<Friendship> Friends { get; set; }
         public List<FriendRequest> SentFriendRequests { get; set; }

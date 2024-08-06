@@ -1,12 +1,15 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
 using ChatAppServer.WebAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [Authorize]
     public sealed class GroupsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -24,6 +27,22 @@ namespace ChatAppServer.WebAPI.Controllers
             if (string.IsNullOrWhiteSpace(request.Name))
             {
                 return BadRequest(new { Message = "Group name is required" });
+            }
+
+            if (request.MemberIds == null || request.MemberIds.Count < 3)
+            {
+                return BadRequest(new { Message = "A group must have at least 3 members." });
+            }
+
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to create this group.");
+            }
+
+            if (!request.MemberIds.Contains(Guid.Parse(authenticatedUserId)))
+            {
+                return BadRequest(new { Message = "The group creator must be a member of the group." });
             }
 
             var group = new Group
@@ -47,7 +66,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 var groupMember = new GroupMember
                 {
                     GroupId = group.Id,
-                    UserId = userId
+                    UserId = userId,
+                    IsAdmin = userId == Guid.Parse(authenticatedUserId) // Set the group creator as admin
                 };
 
                 await _context.GroupMembers.AddAsync(groupMember, cancellationToken);
@@ -56,7 +76,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     user.Id,
                     user.Username,
-                    user.FullName,
+                    user.FirstName,
+                    user.LastName,
                     user.Birthday,
                     user.Email,
                     user.Avatar,
@@ -75,14 +96,25 @@ namespace ChatAppServer.WebAPI.Controllers
             });
         }
 
-
         [HttpPost]
         public async Task<IActionResult> AddMember([FromForm] AddGroupMemberDto request, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to add members to this group.");
+            }
+
             var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
             if (group == null)
             {
                 return NotFound(new { Message = "Group not found" });
+            }
+
+            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            if (!isAdmin)
+            {
+                return Forbid("You are not authorized to add members to this group.");
             }
 
             var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
@@ -112,7 +144,8 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 user.Id,
                 user.Username,
-                user.FullName,
+                user.FirstName,
+                user.LastName,
                 user.Birthday,
                 user.Email,
                 user.Avatar,
@@ -120,10 +153,15 @@ namespace ChatAppServer.WebAPI.Controllers
             });
         }
 
-
         [HttpDelete("{groupId}")]
         public async Task<IActionResult> DeleteGroup(Guid groupId, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to delete this group.");
+            }
+
             var group = await _context.Groups.Include(g => g.Members)
                                              .Include(g => g.Chats)
                                              .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
@@ -132,13 +170,14 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group not found" });
             }
 
-            // Xóa tất cả các thành viên của nhóm
+            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == groupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            if (!isAdmin)
+            {
+                return Forbid("You are not authorized to delete this group.");
+            }
+
             _context.GroupMembers.RemoveRange(group.Members);
-
-            // Xóa tất cả các tin nhắn trong nhóm
             _context.Chats.RemoveRange(group.Chats);
-
-            // Xóa nhóm
             _context.Groups.Remove(group);
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -148,9 +187,15 @@ namespace ChatAppServer.WebAPI.Controllers
             return NoContent();
         }
 
-        [HttpGet]
+        [HttpGet("{groupId}")]
         public async Task<IActionResult> GetGroupMembers(Guid groupId, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to view the members of this group.");
+            }
+
             var groupMembers = await _context.GroupMembers
                 .Where(gm => gm.GroupId == groupId)
                 .Include(gm => gm.User)
@@ -161,11 +206,18 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "No members found in this group" });
             }
 
+            var isMember = groupMembers.Any(gm => gm.UserId == Guid.Parse(authenticatedUserId));
+            if (!isMember)
+            {
+                return Forbid("You are not authorized to view the members of this group.");
+            }
+
             var membersDto = groupMembers.Select(gm => new UserDto
             {
                 Id = gm.User.Id,
                 Username = gm.User.Username,
-                FullName = gm.User.FullName,
+                FirstName = gm.User.FirstName,
+                LastName = gm.User.LastName,
                 Birthday = gm.User.Birthday,
                 Email = gm.User.Email,
                 Avatar = gm.User.Avatar,
@@ -178,6 +230,12 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpDelete]
         public async Task<IActionResult> RemoveMember([FromForm] RemoveGroupMemberDto request, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to remove members from this group.");
+            }
+
             var groupMember = await _context.GroupMembers
                 .FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
 
@@ -186,33 +244,45 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group member not found" });
             }
 
+            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            if (!isAdmin)
+            {
+                return Forbid("You are not authorized to remove members from this group.");
+            }
+
+            var wasAdmin = groupMember.IsAdmin;
             _context.GroupMembers.Remove(groupMember);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Check if there are any admins left
+            var anyAdminsLeft = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.IsAdmin, cancellationToken);
+            if (!anyAdminsLeft)
+            {
+                // Promote a random member to admin if no admins are left
+                var remainingMember = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId, cancellationToken);
+                if (remainingMember != null)
+                {
+                    remainingMember.IsAdmin = true;
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    _logger.LogInformation($"User {remainingMember.UserId} promoted to admin in group {request.GroupId} as no admins were left.");
+                }
+            }
 
             _logger.LogInformation($"User {request.UserId} removed from group {request.GroupId}");
 
             return Ok(new { Message = "Member removed from the group" });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetUserGroups(Guid userId, CancellationToken cancellationToken)
-        {
-            var userGroups = await _context.GroupMembers
-                .Where(gm => gm.UserId == userId)
-                .Select(gm => new
-                {
-                    gm.Group.Id,
-                    gm.Group.Name
-                })
-                .ToListAsync(cancellationToken);
-
-            return Ok(userGroups);
-        }
-
-
-        [HttpGet]
+        [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserGroupsWithDetails(Guid userId, CancellationToken cancellationToken)
         {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to view this user's groups.");
+            }
+
             var userGroups = await _context.Groups
                 .Where(g => g.Members.Any(gm => gm.UserId == userId))
                 .Select(g => new
@@ -223,7 +293,8 @@ namespace ChatAppServer.WebAPI.Controllers
                     {
                         gm.User.Id,
                         gm.User.Username,
-                        gm.User.FullName,
+                        gm.User.FirstName,
+                        gm.User.LastName,
                         gm.User.Email,
                         gm.User.Avatar
                     }).ToList()
@@ -241,10 +312,22 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "New group name is required" });
             }
 
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to rename this group.");
+            }
+
             var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
             if (group == null)
             {
                 return NotFound(new { Message = "Group not found" });
+            }
+
+            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            if (!isAdmin)
+            {
+                return Forbid("You are not authorized to rename this group.");
             }
 
             group.Name = request.NewName;
@@ -255,5 +338,89 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Group name updated successfully", group.Id, group.Name });
         }
 
+        [HttpPost("update-admin")]
+        public async Task<IActionResult> UpdateGroupAdmin([FromForm] UpdateGroupAdminDto request, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to update group admin.");
+            }
+
+            var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
+            if (group == null)
+            {
+                return NotFound(new { Message = "Group not found" });
+            }
+
+            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            if (!isAdmin)
+            {
+                return Forbid("You are not authorized to update group admin.");
+            }
+
+            var groupMember = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
+            if (groupMember == null)
+            {
+                return NotFound(new { Message = "Group member not found" });
+            }
+
+            groupMember.IsAdmin = true; // Tự động đặt IsAdmin thành true
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"User {request.UserId} admin status updated to true in group {request.GroupId}");
+
+            return Ok(new { Message = "Admin status updated successfully" });
+        }
+
+        [HttpPost("revoke-admin")]
+        public async Task<IActionResult> RevokeGroupAdmin([FromForm] RevokeGroupAdminDto request, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to revoke admin rights.");
+            }
+
+            var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
+            if (group == null)
+            {
+                return NotFound(new { Message = "Group not found" });
+            }
+
+            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            if (!isAdmin)
+            {
+                return Forbid("You are not authorized to revoke admin rights.");
+            }
+
+            var groupMember = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
+            if (groupMember == null)
+            {
+                return NotFound(new { Message = "Group member not found" });
+            }
+
+            groupMember.IsAdmin = false;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"Admin rights revoked for user {request.UserId} in group {request.GroupId}");
+
+            // Check if there are any admins left
+            var anyAdminsLeft = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.IsAdmin, cancellationToken);
+            if (!anyAdminsLeft)
+            {
+                // Promote a random member to admin if no admins are left
+                var remainingMember = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId, cancellationToken);
+                if (remainingMember != null)
+                {
+                    remainingMember.IsAdmin = true;
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    _logger.LogInformation($"User {remainingMember.UserId} promoted to admin in group {request.GroupId} as no admins were left.");
+                }
+            }
+
+            return Ok(new { Message = "Admin rights revoked successfully" });
+        }
     }
 }

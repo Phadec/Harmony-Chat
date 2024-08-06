@@ -281,3 +281,5 @@ D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ChatAppServ
 D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ChatAppServer.WebAPI.genruntimeconfig.cache
 D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ref\ChatAppServer.WebAPI.dll
 D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\bin\Debug\net8.0\Newtonsoft.Json.dll
+D:\ProjectDotNet\ChatAppServer\ChatAppServer.WebAPI\bin\Debug\net8.0\System.Text.Json.dll

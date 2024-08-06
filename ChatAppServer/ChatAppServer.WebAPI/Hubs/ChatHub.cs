@@ -36,7 +36,8 @@ namespace ChatAppServer.WebAPI.Hubs
                 {
                     user.Id,
                     user.Username,
-                    user.FullName,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
                     user.Birthday,
                     user.Email,
                     user.Avatar,
@@ -76,7 +77,8 @@ namespace ChatAppServer.WebAPI.Hubs
                     {
                         user.Id,
                         user.Username,
-                        user.FullName,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
                         user.Birthday,
                         user.Email,
                         user.Avatar,
@@ -93,7 +95,6 @@ namespace ChatAppServer.WebAPI.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        // Method to notify new message
         public async Task NotifyNewMessage(Chat chat)
         {
             if (chat == null)
