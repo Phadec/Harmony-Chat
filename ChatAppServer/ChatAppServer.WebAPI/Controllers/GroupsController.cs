@@ -348,6 +348,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Group name updated successfully", group.Id, group.Name });
         }
 
+
         [HttpPost("update-admin")]
         public async Task<IActionResult> UpdateGroupAdmin([FromForm] UpdateGroupAdminDto request, CancellationToken cancellationToken)
         {
@@ -432,5 +433,46 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(new { Message = "Admin rights revoked successfully" });
         }
+        [HttpPost("update-avatar")]
+        public async Task<IActionResult> UpdateGroupAvatar([FromForm] UpdateAvatarGroupDto request, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to update this group avatar.");
+            }
+
+            var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
+            if (group == null)
+            {
+                return NotFound("Group not found");
+            }
+
+            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            if (!isAdmin)
+            {
+                return Forbid("You are not authorized to update this group avatar.");
+            }
+
+            if (request.AvatarFile != null)
+            {
+                var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                group.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"Group {request.GroupId} avatar updated");
+
+            return Ok(new
+            {
+                Message = "Group avatar updated successfully",
+                group.Id,
+                group.Name,
+                group.Avatar
+            });
+        }
+
     }
+
 }
