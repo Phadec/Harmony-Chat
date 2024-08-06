@@ -3,20 +3,68 @@
   "WorkspaceRootPath": "D:\\ProjectDotNet\\ChatAppServer\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\migrations\\20240806103552_addroleintouser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\migrations\\20240806103552_addroleintouser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\groupscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\groupscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\migrations\\20240806160256_addisadminandavatartogroupmembersandgroup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\migrations\\20240806160256_addisadminandavatartogroupmembersandgroup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\dtos\\updateavatargroupdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\dtos\\updateavatargroupdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\dtos\\updateroledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\dtos\\updateroledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\chatscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\chatscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\models\\group.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\models\\group.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\models\\groupmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\models\\groupmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\models\\usertoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\models\\usertoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\models\\usertoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\models\\usertoken.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\context\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\context\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\migrations\\20240806160256_addisadminandavatartogroupmembersandgroup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\migrations\\20240806160256_addisadminandavatartogroupmembersandgroup.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\migrations\\20240806103552_addroleintouser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\migrations\\20240806103552_addroleintouser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\migrations\\20240805040140_updateshowstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -31,32 +79,12 @@
       "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\dtos\\addgroupmemberdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\context\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\context\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\dtos\\creategroupdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\dtos\\creategroupdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\models\\group.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\models\\group.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\models\\groupmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\models\\groupmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\groupscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\groupscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\migrations\\applicationdbcontextmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\migrations\\applicationdbcontextmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\dtos\\revokegroupadmindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -71,28 +99,8 @@
       "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\controllers\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\controllers\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\dtos\\updateroledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|solutionrelative:chatappserver.webapi\\dtos\\updateroledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{33DA9B9A-E4D0-4E05-9E44-12960192A42F}|ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj|d:\\projectdotnet\\chatappserver\\chatappserver.webapi\\dtos\\registerdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -105,12 +113,38 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedHeight": 211,
-          "SelectedChildIndex": 15,
+          "DockedHeight": 349,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 1,
+              "Title": "UpdateAvatarGroupDto.cs",
+              "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
+              "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
+              "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
+              "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\UpdateAvatarGroupDto.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-08-06T17:08:21.018Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ChatsController.cs",
+              "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\ChatsController.cs",
+              "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Controllers\\ChatsController.cs",
+              "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\ChatsController.cs",
+              "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\ChatsController.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-08-06T16:30:13.915Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
               "Title": "20240805040140_UpdateShowStatus.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Migrations\\20240805040140_UpdateShowStatus.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Migrations\\20240805040140_UpdateShowStatus.cs",
@@ -118,12 +152,11 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Migrations\\20240805040140_UpdateShowStatus.cs",
               "ViewState": "AQIAAA4AAAAAAAAAAAAkwA8AAAAcAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:57:49.305Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:57:49.305Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 17,
               "Title": "20240803135932_UpdateChatsTable.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Migrations\\20240803135932_UpdateChatsTable.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Migrations\\20240803135932_UpdateChatsTable.cs",
@@ -131,8 +164,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Migrations\\20240803135932_UpdateChatsTable.cs",
               "ViewState": "AQIAAAgAAAAAAAAAAAAAwAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:57:46.975Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:57:46.975Z"
             },
             {
               "$type": "Document",
@@ -142,7 +174,7 @@
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Models\\Group.cs",
               "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Models\\Group.cs",
               "RelativeToolTip": "ChatAppServer.WebAPI\\Models\\Group.cs",
-              "ViewState": "AQIAAAYAAAAAAAAAAAAYwBMAAAAAAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABMAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-08-06T15:30:58.766Z",
               "EditorCaption": ""
@@ -162,7 +194,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 11,
               "Title": "UserToken.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Models\\UserToken.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Models\\UserToken.cs",
@@ -175,20 +207,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 0,
               "Title": "GroupsController.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
               "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\GroupsController.cs",
-              "ViewState": "AQIAACkAAAAAAAAAAAAowDMAAABNAAAA",
+              "ViewState": "AQIAAKwBAAAAAAAAAAAkwNoBAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-08-06T15:13:57.991Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 21,
               "Title": "RevokeGroupAdminDto.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\RevokeGroupAdminDto.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\RevokeGroupAdminDto.cs",
@@ -196,12 +228,11 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\RevokeGroupAdminDto.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:13:04.302Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:13:04.302Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 22,
               "Title": "SendMessageDto.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\SendMessageDto.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\SendMessageDto.cs",
@@ -209,12 +240,11 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\SendMessageDto.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:13:03.184Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:13:03.184Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 23,
               "Title": "EmailService.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Services\\EmailService.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Services\\EmailService.cs",
@@ -222,12 +252,11 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Services\\EmailService.cs",
               "ViewState": "AQIAAOAAAAAAAAAAAAAAAPcAAAAYAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:51:19.041Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:51:19.041Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 4,
               "Title": "FriendsController.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\FriendsController.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Controllers\\FriendsController.cs",
@@ -235,11 +264,12 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\FriendsController.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:51:15.5Z"
+              "WhenOpened": "2024-08-06T10:51:15.5Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 24,
               "Title": "appsettings.json",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\appsettings.json",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\appsettings.json",
@@ -251,19 +281,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 8,
               "Title": "Program.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Program.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Program.cs",
               "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Program.cs",
               "RelativeToolTip": "ChatAppServer.WebAPI\\Program.cs",
-              "ViewState": "AQIAADMAAAAAAAAAAAAAAFoAAAAAAAAA",
+              "ViewState": "AQIAAIkAAAAAAAAAAAAowJ8AAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:35:22.34Z"
+              "WhenOpened": "2024-08-06T10:35:22.34Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 2,
               "Title": "UpdateRoleDto.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\UpdateRoleDto.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\UpdateRoleDto.cs",
@@ -271,11 +302,12 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\UpdateRoleDto.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:34:20.198Z"
+              "WhenOpened": "2024-08-06T10:34:20.198Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 7,
               "Title": "AdminController.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\AdminController.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Controllers\\AdminController.cs",
@@ -283,11 +315,12 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\AdminController.cs",
               "ViewState": "AQIAABMAAAAAAAAAAAAQwB8AAAANAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:33:53.859Z"
+              "WhenOpened": "2024-08-06T10:33:53.859Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 25,
               "Title": "RegisterDto.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\RegisterDto.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\RegisterDto.cs",
@@ -299,33 +332,32 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 12,
               "Title": "User.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Models\\User.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Models\\User.cs",
               "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Models\\User.cs",
               "RelativeToolTip": "ChatAppServer.WebAPI\\Models\\User.cs",
-              "ViewState": "AQIAADkAAAAAAAAAAAAmwDoAAAAAAAAA",
+              "ViewState": "AQIAADoAAAAAAAAAAAAAADoAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-08-06T10:23:55.701Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 13,
               "Title": "ApplicationDbContext.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Context\\ApplicationDbContext.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Context\\ApplicationDbContext.cs",
               "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Context\\ApplicationDbContext.cs",
               "RelativeToolTip": "ChatAppServer.WebAPI\\Context\\ApplicationDbContext.cs",
-              "ViewState": "AQIAADcAAAAAAAAAAAAwwEsAAAArAAAA",
+              "ViewState": "AQIAABUAAAAAAAAAAAAUwEsAAAArAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:20:33.702Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:20:33.702Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 3,
               "Title": "UsersController.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\UsersController.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Controllers\\UsersController.cs",
@@ -338,7 +370,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 6,
               "Title": "AuthController.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Controllers\\AuthController.cs",
@@ -346,27 +378,15 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\AuthController.cs",
               "ViewState": "AQIAAAkAAAAAAAAAAAAkwBYAAABaAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:06:46.137Z"
+              "WhenOpened": "2024-08-06T10:06:46.137Z",
+              "EditorCaption": ""
             }
           ]
         },
         {
-          "DockedHeight": 189,
-          "SelectedChildIndex": 7,
+          "DockedHeight": 51,
+          "SelectedChildIndex": 3,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
-              "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Migrations\\20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
-              "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Migrations\\20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
-              "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Migrations\\20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
-              "RelativeToolTip": "ChatAppServer.WebAPI\\Migrations\\20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAACYAAAABAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T16:02:56.375Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
@@ -381,7 +401,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 14,
+              "Title": "20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
+              "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Migrations\\20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
+              "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Migrations\\20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
+              "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Migrations\\20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
+              "RelativeToolTip": "ChatAppServer.WebAPI\\Migrations\\20240806160256_AddIsAdminAndAvatarToGroupMembersAndGroup.cs",
+              "ViewState": "AQIAAA0AAAAAAAAAAAAQwCYAAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-08-06T16:02:56.375Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
               "Title": "CreateGroupDto.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\CreateGroupDto.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\CreateGroupDto.cs",
@@ -389,12 +422,11 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\CreateGroupDto.cs",
               "ViewState": "AQIAAAUAAAAAAAAAAAA7wAkAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:33:15.259Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:33:15.259Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 20,
               "Title": "ApplicationDbContextModelSnapshot.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Migrations\\ApplicationDbContextModelSnapshot.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Migrations\\ApplicationDbContextModelSnapshot.cs",
@@ -402,12 +434,11 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Migrations\\ApplicationDbContextModelSnapshot.cs",
               "ViewState": "AQIAABMAAAAAAAAAAAAQwAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:24:51.305Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:24:51.305Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 18,
               "Title": "AddGroupMemberDto.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Dtos\\AddGroupMemberDto.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Dtos\\AddGroupMemberDto.cs",
@@ -415,12 +446,11 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Dtos\\AddGroupMemberDto.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T15:24:47.44Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T15:24:47.44Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 15,
               "Title": "20240806103552_AddRoleIntoUser.cs",
               "DocumentMoniker": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Migrations\\20240806103552_AddRoleIntoUser.cs",
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Migrations\\20240806103552_AddRoleIntoUser.cs",
@@ -428,8 +458,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Migrations\\20240806103552_AddRoleIntoUser.cs",
               "ViewState": "AQIAAA0AAAAAAAAAAAAQwBsAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-06T10:35:53.074Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-06T10:35:53.074Z"
             }
           ]
         }
