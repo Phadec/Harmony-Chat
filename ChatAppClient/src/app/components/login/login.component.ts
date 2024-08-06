@@ -16,9 +16,10 @@ export class LoginComponent {
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  login() {
+  sendprivate() {
     // Tạo FormData để gửi dữ liệu dưới dạng form-data
     const formData = new FormData();
+
     formData.append('Username', this.name);
     formData.append('Password', this.password);
 

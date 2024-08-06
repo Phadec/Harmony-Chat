@@ -4,19 +4,24 @@
 
 namespace ChatAppServer.WebAPI.Migrations
 {
-    /// <inheritdoc />
     public partial class AddRoleIntoUser : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-
+            // Thêm cột Role vào bảng Users
+            migrationBuilder.AddColumn<string>(
+                name: "Role",
+                table: "Users",
+                type: "nvarchar(max)",
+                nullable: true);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-
+            // Xóa cột Role khỏi bảng Users nếu rollback migration
+            migrationBuilder.DropColumn(
+                name: "Role",
+                table: "Users");
         }
     }
 }

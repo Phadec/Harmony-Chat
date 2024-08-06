@@ -1,5 +1,6 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
 using ChatAppServer.WebAPI.Models;
+using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -45,9 +46,17 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "The group creator must be a member of the group." });
             }
 
+            string avatarUrl = null;
+            if (request.AvatarFile != null)
+            {
+                (string savedFileName, string originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                avatarUrl = Path.Combine("avatar", savedFileName).Replace("\\", "/"); // Tạo đường dẫn tương đối từ tên tệp và thay thế gạch chéo ngược bằng gạch chéo
+            }
+
             var group = new Group
             {
-                Name = request.Name
+                Name = request.Name,
+                Avatar = avatarUrl
             };
 
             await _context.Groups.AddAsync(group, cancellationToken);
@@ -92,6 +101,7 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 id = group.Id,
                 name = group.Name,
+                avatar = group.Avatar,
                 members
             });
         }
