@@ -21,6 +21,43 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
         }
 
+        [HttpGet("{userId}/get-sent-friend-requests")]
+        public async Task<IActionResult> GetSentFriendRequests(Guid userId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to view this user's sent friend requests.");
+            }
+
+            if (userId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId");
+            }
+
+            var sentRequests = await _context.FriendRequests
+                .Where(fr => fr.SenderId == userId)
+                .Include(fr => fr.Receiver)
+                .ToListAsync(cancellationToken);
+
+            if (!sentRequests.Any())
+            {
+                return NotFound("No sent friend requests found.");
+            }
+
+            var sentRequestsDto = sentRequests.Select(fr => new SentFriendRequestDto
+            {
+                Id = fr.Id,
+                ReceiverId = fr.ReceiverId,
+                RequestDate = fr.RequestDate,
+                Status = fr.Status
+            }).ToList();
+
+            return Ok(sentRequestsDto);
+        }
+
+        // Các phương thức khác trong FriendsController
+
         [HttpPost("{userId}/change-nickname")]
         public async Task<IActionResult> ChangeNickname(Guid userId, [FromForm] ChangeNicknameDto request, CancellationToken cancellationToken)
         {
@@ -342,6 +379,44 @@ namespace ChatAppServer.WebAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"Error in RejectFriendRequest: {ex.Message}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
+        [HttpDelete("{userId}/cancel-friend-request/{requestId}")]
+        public async Task<IActionResult> CancelFriendRequest(Guid userId, Guid requestId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to cancel this friend request.");
+            }
+
+            if (userId == Guid.Empty || requestId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId or requestId");
+            }
+
+            try
+            {
+                var friendRequest = await _context.FriendRequests
+                                      .FirstOrDefaultAsync(fr => fr.Id == requestId && fr.SenderId == userId, cancellationToken);
+
+                if (friendRequest == null)
+                {
+                    return NotFound("Friend request not found or does not belong to the user.");
+                }
+
+                _context.FriendRequests.Remove(friendRequest); // Xóa yêu cầu kết bạn
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation($"Friend request {requestId} canceled by {userId}.");
+
+                return Ok(new { Message = "Friend request canceled successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in CancelFriendRequest: {ex.Message}");
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
