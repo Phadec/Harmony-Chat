@@ -81,9 +81,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(user);
         }
 
-
-
-        [HttpPut("{userId}")]
+        [HttpPut("{userId}/update-user")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -210,7 +208,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { user.Status });
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("{userId}/get-user-info")]
         public async Task<IActionResult> GetUserInfo(Guid userId, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
