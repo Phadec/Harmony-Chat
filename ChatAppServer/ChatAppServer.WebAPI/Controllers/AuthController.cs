@@ -12,7 +12,7 @@ using System.Text;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     public sealed class AuthController : ControllerBase
     {
@@ -29,7 +29,7 @@ namespace ChatAppServer.WebAPI.Controllers
             _taskQueue = taskQueue;
         }
 
-        [HttpPost("RegisterUser")]
+        [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] RegisterDto request, CancellationToken cancellationToken)
         {
             if (request.Password.Length < 8)
@@ -47,7 +47,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "Invalid email format." });
             }
 
-            bool isNameExists = await _context.Users.AnyAsync(p => p.Username == request.Username, cancellationToken);
+            string usernameLowerCase = request.Username.ToLower();
+            bool isNameExists = await _context.Users.AnyAsync(p => p.Username == usernameLowerCase, cancellationToken);
             if (isNameExists)
             {
                 return BadRequest(new { Message = "Username already exists!" });
@@ -70,7 +71,7 @@ namespace ChatAppServer.WebAPI.Controllers
             PendingUser pendingUser = new()
             {
                 Id = Guid.NewGuid(),
-                Username = request.Username,
+                Username = usernameLowerCase,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Birthday = request.Birthday,
@@ -94,7 +95,8 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Registration successful. Please check your email to confirm your account." });
         }
 
-        [HttpGet("ConfirmEmail")]
+
+        [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(string token)
         {
             var principal = GetPrincipalFromExpiredToken(token);
@@ -157,14 +159,20 @@ namespace ChatAppServer.WebAPI.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        [HttpPost("UserLogin")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromForm] LoginDto request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(p => p.Username == request.Username, cancellationToken);
+            string usernameLowerCase = request.Username.ToLower();
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(p => p.Username == usernameLowerCase, cancellationToken);
 
             if (user == null)
             {
                 return BadRequest(new { Message = "Username not found!" });
+            }
+
+            if (user.IsLocked)
+            {
+                return Unauthorized(new { Message = "Your account has been locked." });
             }
 
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
@@ -193,7 +201,7 @@ namespace ChatAppServer.WebAPI.Controllers
             });
         }
 
-        [HttpPost("UserLogout")]
+        [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout([FromForm] Guid userId, CancellationToken cancellationToken)
         {
@@ -222,7 +230,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "User logged out successfully." });
         }
 
-        [HttpPost("ForgotPassword")]
+        [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordDto request, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
@@ -240,7 +248,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Password reset email sent." });
         }
 
-        [HttpPost("ResetUserPassword")]
+        [HttpPost("reset-user-password")]
         public async Task<IActionResult> ResetPassword([FromForm] ResetPasswordDto request, CancellationToken cancellationToken)
         {
             var principal = GetPrincipalFromExpiredToken(request.Token);
@@ -277,7 +285,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Password has been reset." });
         }
 
-        [HttpPost("ChangeUserPassword")]
+        [HttpPost("change-user-password")]
         [Authorize]
         public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordDto request, CancellationToken cancellationToken)
         {

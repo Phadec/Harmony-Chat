@@ -4,6 +4,7 @@ using ChatAppServer.WebAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatAppServer.WebAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240807151013_AddIsLockedIntoUser")]
+    partial class AddIsLockedIntoUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -270,24 +273,6 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ChatAppServer.WebAPI.Models.UserBlock", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BlockedUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("BlockedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("UserId", "BlockedUserId");
-
-                    b.HasIndex("BlockedUserId");
-
-                    b.ToTable("UserBlocks");
-                });
-
             modelBuilder.Entity("ChatAppServer.WebAPI.Models.UserToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -389,25 +374,6 @@ namespace ChatAppServer.WebAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Group");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ChatAppServer.WebAPI.Models.UserBlock", b =>
-                {
-                    b.HasOne("ChatAppServer.WebAPI.Models.User", "BlockedUser")
-                        .WithMany()
-                        .HasForeignKey("BlockedUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ChatAppServer.WebAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("BlockedUser");
 
                     b.Navigation("User");
                 });

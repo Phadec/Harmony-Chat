@@ -17,6 +17,7 @@ namespace ChatAppServer.WebAPI.Models
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<UserToken> Tokens { get; set; }
+        public DbSet<UserBlock> UserBlocks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +31,7 @@ namespace ChatAppServer.WebAPI.Models
                 entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.IsEmailConfirmed).HasDefaultValue(false);  // Set default value
+                entity.Property(e => e.IsLocked).HasDefaultValue(false); // Set default value for IsLocked
 
                 entity.HasMany(e => e.SentFriendRequests)
                     .WithOne(fr => fr.Sender)
@@ -54,6 +56,21 @@ namespace ChatAppServer.WebAPI.Models
                 entity.HasMany(e => e.Groups)
                     .WithOne(gm => gm.User)
                     .HasForeignKey(gm => gm.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            // Configure UserBlock entity
+            modelBuilder.Entity<UserBlock>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.BlockedUserId });
+
+                entity.HasOne(ub => ub.User)
+                    .WithMany()
+                    .HasForeignKey(ub => ub.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(ub => ub.BlockedUser)
+                    .WithMany()
+                    .HasForeignKey(ub => ub.BlockedUserId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -128,6 +145,29 @@ namespace ChatAppServer.WebAPI.Models
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+        }
+        public static void SeedData(IServiceProvider serviceProvider)
+        {
+            using (var context = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            {
+                if (!context.Users.Any(u => u.Role == "Admin"))
+                {
+                    var adminUser = new User
+                    {
+                        Username = "admin",
+                        FirstName = "Admin",
+                        LastName = "User",
+                        Email = "admin@example.com",
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                        Role = "Admin",
+                        IsEmailConfirmed = true,
+                        Status = "offline"
+                    };
+
+                    context.Users.Add(adminUser);
+                    context.SaveChanges();
+                }
+            }
         }
     }
 }

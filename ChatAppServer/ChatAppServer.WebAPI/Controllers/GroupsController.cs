@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public sealed class GroupsController : ControllerBase
@@ -22,7 +22,7 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
+        [HttpPost("create-group-chat")]
         public async Task<IActionResult> CreateGroup([FromForm] CreateGroupDto request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
@@ -105,7 +105,7 @@ namespace ChatAppServer.WebAPI.Controllers
             });
         }
 
-        [HttpPost]
+        [HttpPost("add-group-chat-member")]
         public async Task<IActionResult> AddMember([FromForm] AddGroupMemberDto request, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -162,7 +162,7 @@ namespace ChatAppServer.WebAPI.Controllers
             });
         }
 
-        [HttpDelete("{groupId}")]
+        [HttpDelete("{groupId}/delete")]
         public async Task<IActionResult> DeleteGroup(Guid groupId, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -196,7 +196,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return NoContent();
         }
 
-        [HttpGet("{groupId}")]
+        [HttpGet("{groupId}/members")]
         public async Task<IActionResult> GetGroupMembers(Guid groupId, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -236,7 +236,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(membersDto);
         }
 
-        [HttpDelete]
+        [HttpDelete("remove-member")]
         public async Task<IActionResult> RemoveMember([FromForm] RemoveGroupMemberDto request, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -306,7 +306,7 @@ namespace ChatAppServer.WebAPI.Controllers
         }
 
 
-        [HttpGet("{userId}")]
+        [HttpGet("user-groups-with-details/{userId}")]
         public async Task<IActionResult> GetUserGroupsWithDetails(Guid userId, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

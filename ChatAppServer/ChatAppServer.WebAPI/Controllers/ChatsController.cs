@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize] // Ensure all endpoints require authorization
     public sealed class ChatsController : ControllerBase
@@ -26,7 +26,7 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
+        [HttpGet("get-private-chats")]
         public async Task<IActionResult> GetPrivateChats(Guid userId, Guid toUserId, CancellationToken cancellationToken)
         {
             if (userId == Guid.Empty || toUserId == Guid.Empty)
@@ -40,20 +40,32 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to view these chats.");
             }
 
+            var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
+
+            // Kiểm tra xem người dùng đã bị chặn hay đã chặn người dùng khác
+            var isBlocked = await _context.UserBlocks
+                .AnyAsync(ub => (ub.UserId == authenticatedUserIdGuid && ub.BlockedUserId == toUserId) ||
+                                (ub.UserId == toUserId && ub.BlockedUserId == authenticatedUserIdGuid), cancellationToken);
+
+            if (isBlocked)
+            {
+                return Forbid("You are not authorized to view these chats.");
+            }
+
             try
             {
                 var chats = await _context.Chats
-          .Where(c => (c.UserId == userId && c.ToUserId == toUserId) || (c.UserId == toUserId && c.ToUserId == userId))
-          .OrderBy(c => c.Date) // Sắp xếp theo thời gian gửi tin nhắn
-          .Select(chat => new
-          {
-              chat.Id,
-              chat.UserId,
-              chat.ToUserId,
-              Message = chat.Message ?? string.Empty,
-              AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-              chat.Date
-          })
+                    .Where(c => (c.UserId == userId && c.ToUserId == toUserId) || (c.UserId == toUserId && c.ToUserId == userId))
+                    .OrderBy(c => c.Date) // Sắp xếp theo thời gian gửi tin nhắn
+                    .Select(chat => new
+                    {
+                        chat.Id,
+                        chat.UserId,
+                        chat.ToUserId,
+                        Message = chat.Message ?? string.Empty,
+                        AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
+                        chat.Date
+                    })
                     .ToListAsync(cancellationToken);
 
                 return Ok(chats);
@@ -65,7 +77,7 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("get-group-chats")]
         public async Task<IActionResult> GetGroupChats(Guid groupId, CancellationToken cancellationToken)
         {
             if (groupId == Guid.Empty)
@@ -84,22 +96,21 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
-
                 var chats = await _context.Chats
-        .Where(p => p.GroupId == groupId)
-        .Include(p => p.User)
-        .OrderBy(p => p.Date) // Sắp xếp theo thời gian gửi tin nhắn
-        .Select(chat => new
-        {
-            chat.Id,
-            chat.UserId,
-            Username = chat.User.Username,
-            chat.GroupId,
-            Message = chat.Message ?? string.Empty,
-            AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-            chat.Date
-        })
-                .ToListAsync(cancellationToken);
+                    .Where(p => p.GroupId == groupId)
+                    .Include(p => p.User)
+                    .OrderBy(p => p.Date) // Sắp xếp theo thời gian gửi tin nhắn
+                    .Select(chat => new
+                    {
+                        chat.Id,
+                        chat.UserId,
+                        Username = chat.User.Username,
+                        chat.GroupId,
+                        Message = chat.Message ?? string.Empty,
+                        AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
+                        chat.Date
+                    })
+                    .ToListAsync(cancellationToken);
 
                 return Ok(chats);
             }
@@ -110,7 +121,8 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
-        [HttpPost]
+
+        [HttpPost("send-private-message")]
         public async Task<IActionResult> SendPrivateChatMessage([FromForm] SendMessageDto request, CancellationToken cancellationToken)
         {
             if (request == null || (string.IsNullOrEmpty(request.Message) && request.Attachment == null))
@@ -129,6 +141,12 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to send this message.");
             }
 
+            var isBlocked = await _context.UserBlocks.AnyAsync(ub => ub.UserId == request.ToUserId && ub.BlockedUserId == request.UserId, cancellationToken);
+            if (isBlocked)
+            {
+                return Forbid("You cannot send messages to this user as they have blocked you.");
+            }
+
             try
             {
                 string? attachmentUrl = null;
@@ -138,11 +156,6 @@ namespace ChatAppServer.WebAPI.Controllers
                     var (savedFileName, originalName) = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
                     attachmentUrl = Path.Combine("uploads", savedFileName).Replace("\\", "/");
                     originalFileName = originalName;
-                }
-
-                if (!await AreFriends(request.UserId, request.ToUserId.Value, cancellationToken))
-                {
-                    return BadRequest("You can only send messages to users who are your friends.");
                 }
 
                 Chat chat = new()
@@ -187,7 +200,7 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("send-message-group")]
         public async Task<IActionResult> SendGroupChatMessage([FromForm] SendGroupMessageDto request, CancellationToken cancellationToken)
         {
             if (request == null || (string.IsNullOrEmpty(request.Message) && request.Attachment == null))

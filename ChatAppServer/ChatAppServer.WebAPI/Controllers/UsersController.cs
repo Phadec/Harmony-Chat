@@ -24,28 +24,6 @@ namespace ChatAppServer.WebAPI.Controllers
             _emailService = emailService;
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpGet("getusers")]
-        public async Task<IActionResult> GetUsers(CancellationToken cancellationToken)
-        {
-            var users = await _context.Users
-                .OrderBy(p => p.Username)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Username,
-                    p.FirstName,
-                    p.LastName,
-                    p.Birthday,
-                    p.Email,
-                    p.Avatar,
-                    p.Status
-                })
-                .ToListAsync(cancellationToken);
-
-            return Ok(users);
-        }
-
         [HttpGet("search")]
         public async Task<IActionResult> SearchUserByUsername(string username, CancellationToken cancellationToken)
         {
@@ -62,6 +40,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             _logger.LogInformation($"Searching for user with username: {username}");
 
+            // Tìm kiếm người dùng theo tên người dùng
             var user = await _context.Users
                 .Where(u => u.Username.ToLower() == username.ToLower())
                 .Select(u => new
@@ -82,10 +61,27 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { message = "User not found" });
             }
 
+            var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
+
+            // Kiểm tra xem người tìm kiếm có bị chặn bởi người dùng được tìm kiếm hoặc ngược lại hay không
+            var isBlockedByUser = await _context.UserBlocks
+                .AnyAsync(ub => ub.UserId == authenticatedUserIdGuid && ub.BlockedUserId == user.Id, cancellationToken);
+
+            var isBlockedByTarget = await _context.UserBlocks
+                .AnyAsync(ub => ub.UserId == user.Id && ub.BlockedUserId == authenticatedUserIdGuid, cancellationToken);
+
+            if (isBlockedByUser || isBlockedByTarget)
+            {
+                _logger.LogWarning($"User with username {username} has blocked the authenticated user or vice versa");
+                return NotFound(new { message = "User not found" });
+            }
+
             _logger.LogInformation($"User with username {username} found");
 
             return Ok(user);
         }
+
+
 
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)

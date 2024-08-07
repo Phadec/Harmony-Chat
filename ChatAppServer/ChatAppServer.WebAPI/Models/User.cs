@@ -24,7 +24,9 @@
         public string Status { get; set; } = "offline";
         public string PasswordHash { get; set; } = string.Empty;
         public bool ShowOnlineStatus { get; set; } = true;
-        public string Role { get; set; } = "User"; // Thêm thuộc tính này và đặt giá trị mặc định là "User"
+        public string Role { get; set; } = "User";
+        public bool IsEmailConfirmed { get; set; } = false;
+        public bool IsLocked { get; set; } = false; // Thêm thuộc tính này
 
         public List<Friendship> Friends { get; set; }
         public List<FriendRequest> SentFriendRequests { get; set; }
@@ -32,7 +34,6 @@
         public List<Chat> SentChats { get; set; }
         public List<Chat> ReceivedChats { get; set; }
         public List<GroupMember> Groups { get; set; }
-        public bool IsEmailConfirmed { get; set; } = false; // Thêm thuộc tính này
 
         public void AddFriend(Guid friendId)
         {

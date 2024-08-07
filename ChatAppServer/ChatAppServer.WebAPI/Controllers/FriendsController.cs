@@ -88,12 +88,36 @@ namespace ChatAppServer.WebAPI.Controllers
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
             {
-                return Forbid("You are not authorized to add this friend.");
+                return Forbid();
             }
 
             if (userId == Guid.Empty || friendId == Guid.Empty)
             {
                 return BadRequest("Invalid userId or friendId");
+            }
+
+            // Kiểm tra xem userId có đang cố gắng tự thêm mình làm bạn bè không
+            if (userId == friendId)
+            {
+                return BadRequest("You cannot add yourself as a friend.");
+            }
+
+            // Kiểm tra nếu userId bị chặn bởi friendId
+            var isBlocked = await _context.UserBlocks
+                .AnyAsync(ub => ub.UserId == friendId && ub.BlockedUserId == userId, cancellationToken);
+
+            if (isBlocked)
+            {
+                return BadRequest("You cannot send a friend request to this user.");
+            }
+
+            // Kiểm tra nếu friendId bị chặn bởi userId
+            var isBlockedReverse = await _context.UserBlocks
+                .AnyAsync(ub => ub.UserId == userId && ub.BlockedUserId == friendId, cancellationToken);
+
+            if (isBlockedReverse)
+            {
+                return BadRequest("You cannot send a friend request to this user.");
             }
 
             try
@@ -143,6 +167,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
+
 
         [HttpDelete("{userId}/remove/{friendId}")]
         public async Task<IActionResult> RemoveFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
@@ -410,6 +436,103 @@ namespace ChatAppServer.WebAPI.Controllers
                 _logger.LogError($"Error in CancelFriendRequest: {ex.Message}");
                 return StatusCode(500, "An error occurred while processing your request.");
             }
+        }
+
+        [HttpPost("{userId}/block/{blockedUserId}")]
+        public async Task<IActionResult> BlockUser(Guid userId, Guid blockedUserId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to block this user.");
+            }
+
+            if (userId == blockedUserId)
+            {
+                return BadRequest("You cannot block yourself.");
+            }
+
+            // Xóa kết bạn nếu họ là bạn bè
+            var friendships = await _context.Friendships
+                .Where(f => (f.UserId == userId && f.FriendId == blockedUserId) || (f.UserId == blockedUserId && f.FriendId == userId))
+                .ToListAsync(cancellationToken);
+
+            if (friendships.Any())
+            {
+                _context.Friendships.RemoveRange(friendships);
+            }
+
+            // Xóa tất cả yêu cầu kết bạn liên quan đến người dùng bị chặn
+            var friendRequests = await _context.FriendRequests
+                .Where(fr => (fr.SenderId == userId && fr.ReceiverId == blockedUserId) || (fr.SenderId == blockedUserId && fr.ReceiverId == userId))
+                .ToListAsync(cancellationToken);
+
+            if (friendRequests.Any())
+            {
+                _context.FriendRequests.RemoveRange(friendRequests);
+            }
+
+            // Thêm người dùng bị chặn vào bảng chặn
+            var userBlock = new UserBlock
+            {
+                UserId = userId,
+                BlockedUserId = blockedUserId,
+                BlockedDate = DateTime.UtcNow
+            };
+
+            _context.UserBlocks.Add(userBlock);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"User {userId} blocked user {blockedUserId}");
+
+            return Ok(new { Message = "User blocked successfully" });
+        }
+
+
+        [HttpPost("{userId}/unblock/{blockedUserId}")]
+        public async Task<IActionResult> UnblockUser(Guid userId, Guid blockedUserId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to unblock this user.");
+            }
+
+            var userBlock = await _context.UserBlocks
+                .FirstOrDefaultAsync(ub => ub.UserId == userId && ub.BlockedUserId == blockedUserId, cancellationToken);
+
+            if (userBlock == null)
+            {
+                return NotFound(new { Message = "User block not found" });
+            }
+
+            _context.UserBlocks.Remove(userBlock);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation($"User {userId} unblocked user {blockedUserId}");
+
+            return Ok(new { Message = "User unblocked successfully" });
+        }
+
+        [HttpGet("{userId}/blocked-users")]
+        public async Task<IActionResult> GetBlockedUsers(Guid userId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to view blocked users.");
+            }
+
+            var blockedUsers = await _context.UserBlocks
+                .Where(ub => ub.UserId == userId)
+                .Select(ub => new
+                {
+                    ub.BlockedUserId,
+                    BlockedDate = ub.BlockedDate.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                })
+                .ToListAsync(cancellationToken);
+
+            return Ok(blockedUsers);
         }
     }
 }
