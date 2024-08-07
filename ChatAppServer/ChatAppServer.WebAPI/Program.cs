@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:4200") // Replace with your Angular app URL
+        builder.WithOrigins("http://localhost:4200") // Ensure this is the correct Angular app URL
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
@@ -30,6 +30,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register Background Task Queue
 builder.Services.AddSingleton<IBackgroundTaskQueue>(_ => new BackgroundTaskQueue(100));
 builder.Services.AddHostedService<QueuedHostedService>();
+
+// Register ExpiredPendingUserCleanupService
+builder.Services.AddHostedService<ExpiredPendingUserCleanupService>();
 
 // Configure JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -89,9 +92,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
-
-
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
@@ -131,6 +131,12 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddSignalR();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    ApplicationDbContext.SeedData(services);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

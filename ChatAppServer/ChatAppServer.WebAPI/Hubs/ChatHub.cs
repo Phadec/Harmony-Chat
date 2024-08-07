@@ -26,10 +26,11 @@ namespace ChatAppServer.WebAPI.Hubs
             }
 
             Users.TryAdd(Context.ConnectionId, userId);
-            User? user = await _context.Users.FindAsync(userId);
+            User? user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
             if (user is not null)
             {
                 user.Status = "online";
+                _context.Users.Update(user);
                 await _context.SaveChangesAsync();
 
                 await Clients.All.SendAsync("Users", new
@@ -71,6 +72,7 @@ namespace ChatAppServer.WebAPI.Hubs
                 if (user is not null)
                 {
                     user.Status = "offline";
+                    _context.Users.Update(user);
                     await _context.SaveChangesAsync();
 
                     await Clients.All.SendAsync("Users", new

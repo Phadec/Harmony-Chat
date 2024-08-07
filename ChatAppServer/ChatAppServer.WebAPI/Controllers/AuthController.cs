@@ -12,7 +12,7 @@ using System.Text;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     public sealed class AuthController : ControllerBase
     {
@@ -20,6 +20,7 @@ namespace ChatAppServer.WebAPI.Controllers
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly IBackgroundTaskQueue _taskQueue;
+
         public AuthController(ApplicationDbContext context, IConfiguration configuration, IEmailService emailService, IBackgroundTaskQueue taskQueue)
         {
             _context = context;
@@ -28,7 +29,7 @@ namespace ChatAppServer.WebAPI.Controllers
             _taskQueue = taskQueue;
         }
 
-        [HttpPost("RegisterUser")]
+        [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] RegisterDto request, CancellationToken cancellationToken)
         {
             if (request.Password.Length < 8)
@@ -46,13 +47,14 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "Invalid email format." });
             }
 
-            bool isNameExists = await _context.Users.AnyAsync(p => p.Username == request.Username, cancellationToken);
+            string usernameLowerCase = request.Username.ToLower();
+            bool isNameExists = await _context.Users.AnyAsync(p => p.Username == usernameLowerCase, cancellationToken);
             if (isNameExists)
             {
                 return BadRequest(new { Message = "Username already exists!" });
             }
 
-            // Xử lý avatar
+            // Handle avatar
             string? avatarUrl = null;
             string? originalAvatarFileName = null;
             if (request.File != null)
@@ -64,9 +66,12 @@ namespace ChatAppServer.WebAPI.Controllers
 
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            User user = new()
+            var token = GenerateEmailVerificationToken(request.Email);
+
+            PendingUser pendingUser = new()
             {
-                Username = request.Username,
+                Id = Guid.NewGuid(),
+                Username = usernameLowerCase,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Birthday = request.Birthday,
@@ -74,43 +79,100 @@ namespace ChatAppServer.WebAPI.Controllers
                 Avatar = avatarUrl,
                 OriginalAvatarFileName = originalAvatarFileName,
                 PasswordHash = passwordHash,
-                Status = "offline",
-                Role = "User" // Thiết lập vai trò mặc định là "User"
+                Token = token,
+                TokenExpiration = DateTime.UtcNow.AddHours(3)
             };
 
-            await _context.AddAsync(user, cancellationToken);
+            await _context.PendingUsers.AddAsync(pendingUser, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            _taskQueue.QueueBackgroundWorkItem(async token =>
+            // Queue background email task for sending the verification email
+            _taskQueue.QueueBackgroundWorkItem(async tokenCancellationToken =>
             {
-                await _emailService.SendWelcomeEmail(user.Email, user.Username);
+                await _emailService.SendEmailConfirmationTokenAsync(pendingUser.Email, pendingUser.FirstName, pendingUser.LastName, token);
             });
 
-            var result = new
-            {
-                user.Id,
-                user.Username,
-                user.FirstName,
-                user.LastName,
-                user.Birthday,
-                user.Email,
-                user.Avatar,
-                user.OriginalAvatarFileName,
-                user.Status,
-                user.Role
-            };
-
-            return Ok(result);
+            return Ok(new { Message = "Registration successful. Please check your email to confirm your account." });
         }
 
-        [HttpPost("UserLogin")]
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(string token)
+        {
+            var principal = GetPrincipalFromExpiredToken(token);
+            if (principal == null)
+            {
+                return BadRequest(new { Message = "Invalid token." });
+            }
+
+            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+            if (email == null)
+            {
+                return BadRequest(new { Message = "Invalid token." });
+            }
+
+            var pendingUser = await _context.PendingUsers.FirstOrDefaultAsync(u => u.Token == token && u.TokenExpiration >= DateTime.UtcNow);
+            if (pendingUser == null)
+            {
+                return BadRequest(new { Message = "User not found." });
+            }
+
+            User user = new()
+            {
+                Username = pendingUser.Username,
+                FirstName = pendingUser.FirstName,
+                LastName = pendingUser.LastName,
+                Birthday = pendingUser.Birthday,
+                Email = pendingUser.Email,
+                Avatar = pendingUser.Avatar,
+                OriginalAvatarFileName = pendingUser.OriginalAvatarFileName,
+                PasswordHash = pendingUser.PasswordHash,
+                Status = "offline",
+                Role = "User",
+                IsEmailConfirmed = true
+            };
+
+            await _context.Users.AddAsync(user);
+            _context.PendingUsers.Remove(pendingUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Email confirmed successfully." });
+        }
+
+        private string GenerateEmailVerificationToken(string email)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+        new Claim(ClaimTypes.Email, email)
+    };
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Issuer"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(3),
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromForm] LoginDto request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(p => p.Username == request.Username, cancellationToken);
+            string usernameLowerCase = request.Username.ToLower();
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(p => p.Username == usernameLowerCase, cancellationToken);
 
             if (user == null)
             {
                 return BadRequest(new { Message = "Username not found!" });
+            }
+
+            if (user.IsLocked)
+            {
+                return Unauthorized(new { Message = "Your account has been locked." });
             }
 
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
@@ -120,6 +182,7 @@ namespace ChatAppServer.WebAPI.Controllers
             }
 
             user.Status = "online";
+            _context.Users.Update(user);
             await _context.SaveChangesAsync(cancellationToken);
 
             var token = GenerateJwtToken(user);
@@ -138,21 +201,13 @@ namespace ChatAppServer.WebAPI.Controllers
             });
         }
 
-
-
-        [HttpPost("UserLogout")]
+        [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout([FromForm] Guid userId, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Sẽ trả về UserId sau khi sửa
-            var username = User.FindFirstValue(ClaimTypes.Name); // Trả về Username
+            var authenticatedUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var username = User.FindFirstValue(ClaimTypes.Name);
 
-            // In ra console để kiểm tra
-            Console.WriteLine($"Authenticated UserId: {authenticatedUserId}");
-            Console.WriteLine($"Authenticated Username: {username}");
-            Console.WriteLine($"Request UserId: {userId}");
-
-            // So sánh UserId từ token và UserId từ yêu cầu
             if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
             {
                 return Forbid();
@@ -165,6 +220,7 @@ namespace ChatAppServer.WebAPI.Controllers
             }
 
             user.Status = "offline";
+            _context.Users.Update(user);
             await _context.SaveChangesAsync(cancellationToken);
 
             var tokens = await _context.Tokens.Where(t => t.UserId == user.Id).ToListAsync(cancellationToken);
@@ -174,7 +230,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "User logged out successfully." });
         }
 
-        [HttpPost("ForgotPassword")]
+        [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordDto request, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
@@ -185,7 +241,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
             var token = GenerateResetToken(user);
 
-            // Send the email with the token
             _taskQueue.QueueBackgroundWorkItem(async ct =>
             {
                 await _emailService.SendResetEmail(user.Email, token);
@@ -193,7 +248,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Password reset email sent." });
         }
 
-        [HttpPost("ResetUserPassword")]
+        [HttpPost("reset-user-password")]
         public async Task<IActionResult> ResetPassword([FromForm] ResetPasswordDto request, CancellationToken cancellationToken)
         {
             var principal = GetPrincipalFromExpiredToken(request.Token);
@@ -222,7 +277,6 @@ namespace ChatAppServer.WebAPI.Controllers
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Gửi email thông báo đặt lại mật khẩu thành công
             _taskQueue.QueueBackgroundWorkItem(async token =>
             {
                 await _emailService.SendResetSuccessEmail(user.Email, user.Username);
@@ -231,11 +285,10 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Password has been reset." });
         }
 
-        [HttpPost("ChangeUserPassword")]
+        [HttpPost("change-user-password")]
         [Authorize]
         public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordDto request, CancellationToken cancellationToken)
         {
-            // Lấy userId từ token đã xác thực
             var authenticatedUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (authenticatedUserId == null || request.UserId.ToString() != authenticatedUserId)
             {
@@ -262,7 +315,6 @@ namespace ChatAppServer.WebAPI.Controllers
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Send email notification
             _taskQueue.QueueBackgroundWorkItem(async token =>
             {
                 await _emailService.SendPasswordChangeEmail(user.Email, user.Username);
@@ -278,11 +330,11 @@ namespace ChatAppServer.WebAPI.Controllers
 
             var claims = new[]
             {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.Username),
-        new Claim(ClaimTypes.Role, user.Role), // Thêm vai trò của người dùng vào claim
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -335,7 +387,6 @@ namespace ChatAppServer.WebAPI.Controllers
             if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 throw new SecurityTokenException("Invalid token");
 
-            // Logging các claims để kiểm tra
             foreach (var claim in principal.Claims)
             {
                 Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
