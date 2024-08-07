@@ -1,12 +1,11 @@
 # ProjectDotNet
-Ứng Dụng Chat Thời Gian Thực
-Công Nghệ Sử Dụng
+Framework và Library đã sử dụng
 + ASP.NET Core
 + Entity Framework Core
++ JWT Authentication
 + SignalR
-+ Entity Framework Core
-+ SQL Server
-+ ASP.Net Identity
-+ Bootstrap
-
-  
++ BCrypt.Net-Next  
++ Microsoft.Extensions.Logging
++ Cors Policy
++ File Service
++ Swagger / Swashbuckle

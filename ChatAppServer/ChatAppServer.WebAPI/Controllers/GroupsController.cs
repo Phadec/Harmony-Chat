@@ -259,27 +259,52 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to remove members from this group.");
             }
 
-            var wasAdmin = groupMember.IsAdmin;
-            _context.GroupMembers.Remove(groupMember);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            var anyAdminsLeft = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.IsAdmin, cancellationToken);
-            if (!anyAdminsLeft)
+            try
             {
-                var remainingMember = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId, cancellationToken);
-                if (remainingMember != null)
-                {
-                    remainingMember.IsAdmin = true;
-                    await _context.SaveChangesAsync(cancellationToken);
+                var wasAdmin = groupMember.IsAdmin;
+                _context.GroupMembers.Remove(groupMember);
+                await _context.SaveChangesAsync(cancellationToken);
 
-                    _logger.LogInformation($"User {remainingMember.UserId} promoted to admin in group {request.GroupId} as no admins were left.");
+                var anyMembersLeft = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId, cancellationToken);
+                if (!anyMembersLeft)
+                {
+                    var group = await _context.Groups.FirstOrDefaultAsync(g => g.Id == request.GroupId, cancellationToken);
+                    if (group != null)
+                    {
+                        _context.Groups.Remove(group);
+                        await _context.SaveChangesAsync(cancellationToken);
+                        _logger.LogInformation($"Group {request.GroupId} deleted as no members were left.");
+                        return Ok(new { Message = "Member removed and group deleted as no members were left." });
+                    }
+                }
+                else
+                {
+                    var anyAdminsLeft = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.IsAdmin, cancellationToken);
+                    if (!anyAdminsLeft)
+                    {
+                        var remainingMember = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId, cancellationToken);
+                        if (remainingMember != null)
+                        {
+                            remainingMember.IsAdmin = true;
+                            await _context.SaveChangesAsync(cancellationToken);
+
+                            _logger.LogInformation($"User {remainingMember.UserId} promoted to admin in group {request.GroupId} as no admins were left.");
+                        }
+                    }
+
+                    _logger.LogInformation($"User {request.UserId} removed from group {request.GroupId}");
+                    return Ok(new { Message = "Member removed from the group" });
                 }
             }
-
-            _logger.LogInformation($"User {request.UserId} removed from group {request.GroupId}");
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in RemoveMember: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
 
             return Ok(new { Message = "Member removed from the group" });
         }
+
 
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserGroupsWithDetails(Guid userId, CancellationToken cancellationToken)

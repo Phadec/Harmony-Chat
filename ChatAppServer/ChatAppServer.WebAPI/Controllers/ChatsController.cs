@@ -43,16 +43,17 @@ namespace ChatAppServer.WebAPI.Controllers
             try
             {
                 var chats = await _context.Chats
-                    .Where(c => (c.UserId == userId && c.ToUserId == toUserId) || (c.UserId == toUserId && c.ToUserId == userId))
-                    .Select(chat => new
-                    {
-                        chat.Id,
-                        chat.UserId,
-                        chat.ToUserId,
-                        Message = chat.Message ?? string.Empty,
-                        AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-                        chat.Date
-                    })
+          .Where(c => (c.UserId == userId && c.ToUserId == toUserId) || (c.UserId == toUserId && c.ToUserId == userId))
+          .OrderBy(c => c.Date) // Sắp xếp theo thời gian gửi tin nhắn
+          .Select(chat => new
+          {
+              chat.Id,
+              chat.UserId,
+              chat.ToUserId,
+              Message = chat.Message ?? string.Empty,
+              AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
+              chat.Date
+          })
                     .ToListAsync(cancellationToken);
 
                 return Ok(chats);
@@ -83,21 +84,22 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
+
                 var chats = await _context.Chats
-                    .Where(p => p.GroupId == groupId)
-                    .Include(p => p.User)
-                    .OrderBy(p => p.Date)
-                    .Select(chat => new
-                    {
-                        chat.Id,
-                        chat.UserId,
-                        Username = chat.User.Username,
-                        chat.GroupId,
-                        Message = chat.Message ?? string.Empty,
-                        AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-                        chat.Date
-                    })
-                    .ToListAsync(cancellationToken);
+        .Where(p => p.GroupId == groupId)
+        .Include(p => p.User)
+        .OrderBy(p => p.Date) // Sắp xếp theo thời gian gửi tin nhắn
+        .Select(chat => new
+        {
+            chat.Id,
+            chat.UserId,
+            Username = chat.User.Username,
+            chat.GroupId,
+            Message = chat.Message ?? string.Empty,
+            AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
+            chat.Date
+        })
+                .ToListAsync(cancellationToken);
 
                 return Ok(chats);
             }
