@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:4200") // Replace with your Angular app URL
+        builder.WithOrigins("http://localhost:4200") // Ensure this is the correct Angular app URL
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
@@ -88,9 +88,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
-
-
-
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {

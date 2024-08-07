@@ -12,6 +12,7 @@
           "DefaultCorsPolicy": "8.0.0",
           "GenericFileService": "8.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.7",
+          "Microsoft.EntityFrameworkCore.InMemory": "8.0.7",
           "Microsoft.EntityFrameworkCore.SqlServer": "8.0.7",
           "Microsoft.EntityFrameworkCore.Tools": "8.0.7",
           "Microsoft.Extensions.Logging": "8.0.0",
@@ -458,6 +459,17 @@
         },
         "runtime": {
           "lib/net8.0/Microsoft.EntityFrameworkCore.Design.dll": {
+            "assemblyVersion": "8.0.7.0",
+            "fileVersion": "8.0.724.31404"
+          }
+        }
+      },
+      "Microsoft.EntityFrameworkCore.InMemory/8.0.7": {
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "8.0.7"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.EntityFrameworkCore.InMemory.dll": {
             "assemblyVersion": "8.0.7.0",
             "fileVersion": "8.0.724.31404"
           }
@@ -1154,6 +1166,13 @@
       "sha512": "sha512-EUPY49Hi5BbpnkiX9ik/2fD9GPEbvKx6wvDmDNZTHZGlXAg1kcR9vt2QA2af1mIoa7gG1wqEvyQRWf9/A8gWqQ==",
       "path": "microsoft.entityframeworkcore.design/8.0.7",
       "hashPath": "microsoft.entityframeworkcore.design.8.0.7.nupkg.sha512"
+    },
+    "Microsoft.EntityFrameworkCore.InMemory/8.0.7": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-LMboWsjFFD+i24pvKwxEz24D0NUPlE7+M6gHYcSLioShxKhsPs/OXcB2E6kWTXHK/HIOM88e0rVNyZylCI81FA==",
+      "path": "microsoft.entityframeworkcore.inmemory/8.0.7",
+      "hashPath": "microsoft.entityframeworkcore.inmemory.8.0.7.nupkg.sha512"
     },
     "Microsoft.EntityFrameworkCore.Relational/8.0.7": {
       "type": "package",

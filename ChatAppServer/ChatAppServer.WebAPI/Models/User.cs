@@ -32,6 +32,7 @@
         public List<Chat> SentChats { get; set; }
         public List<Chat> ReceivedChats { get; set; }
         public List<GroupMember> Groups { get; set; }
+        public bool IsEmailConfirmed { get; set; } = false; // Thêm thuộc tính này
 
         public void AddFriend(Guid friendId)
         {

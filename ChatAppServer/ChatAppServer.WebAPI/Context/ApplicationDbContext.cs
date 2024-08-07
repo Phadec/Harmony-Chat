@@ -10,6 +10,7 @@ namespace ChatAppServer.WebAPI.Models
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<PendingUser> PendingUsers { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupMember> GroupMembers { get; set; }
@@ -28,6 +29,7 @@ namespace ChatAppServer.WebAPI.Models
 
                 entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.IsEmailConfirmed).HasDefaultValue(false);  // Set default value
 
                 entity.HasMany(e => e.SentFriendRequests)
                     .WithOne(fr => fr.Sender)
@@ -55,7 +57,6 @@ namespace ChatAppServer.WebAPI.Models
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-
             // Configure Group entity
             modelBuilder.Entity<Group>(entity =>
             {
@@ -77,7 +78,7 @@ namespace ChatAppServer.WebAPI.Models
             modelBuilder.Entity<GroupMember>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.IsAdmin).HasDefaultValue(false); // Đặt giá trị mặc định
+                entity.Property(e => e.IsAdmin).HasDefaultValue(false);
             });
 
             // Configure Chat entity
@@ -106,6 +107,26 @@ namespace ChatAppServer.WebAPI.Models
 
             // Configure Friendship entity
             Friendship.Configure(modelBuilder);
+
+            // Configure PendingUser entity
+            modelBuilder.Entity<PendingUser>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            // Configure Token entity
+            modelBuilder.Entity<UserToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Token).IsRequired();
+                entity.Property(e => e.Expiration).IsRequired();
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

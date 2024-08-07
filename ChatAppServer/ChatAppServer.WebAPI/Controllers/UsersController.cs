@@ -121,7 +121,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
             _logger.LogInformation($"User {userId} information updated");
 
-            // Nếu email đã thay đổi, gửi email xác nhận tới email mới
             if (emailChanged)
             {
                 await _emailService.SendEmailConfirmationAsync(user.Email, user.FirstName, user.LastName);
@@ -140,8 +139,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.OriginalAvatarFileName
             });
         }
-
-
 
         [HttpPost("{userId}/update-status")]
         public async Task<IActionResult> UpdateStatus(Guid userId, [FromForm] string status, CancellationToken cancellationToken)
@@ -247,5 +244,4 @@ namespace ChatAppServer.WebAPI.Controllers
             });
         }
     }
-
 }

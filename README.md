@@ -6,7 +6,7 @@ Công Nghệ Sử Dụng
 + SignalR
 + Entity Framework Core
 + SQL Server
-+ JWT (JSON Web Tokens):
++ ASP.Net Identity
 + Bootstrap
 
   
