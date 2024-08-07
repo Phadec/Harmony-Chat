@@ -112,6 +112,7 @@ namespace ChatAppServer.WebAPI.Models
             modelBuilder.Entity<PendingUser>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.TokenExpiration).IsRequired();
             });
 
             // Configure Token entity
