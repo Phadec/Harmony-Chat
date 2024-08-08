@@ -95,7 +95,6 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Registration successful. Please check your email to confirm your account." });
         }
 
-
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(string token)
         {
@@ -129,7 +128,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 PasswordHash = pendingUser.PasswordHash,
                 Status = "offline",
                 Role = "User",
-                IsEmailConfirmed = true
+                IsEmailConfirmed = true,
+                TagName = GenerateUniqueTagName(pendingUser.FirstName, pendingUser.LastName) // Generate unique TagName
             };
 
             await _context.Users.AddAsync(user);
@@ -137,6 +137,21 @@ namespace ChatAppServer.WebAPI.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { Message = "Email confirmed successfully." });
+        }
+
+        private string GenerateUniqueTagName(string firstName, string lastName)
+        {
+            string baseTagName = $"@{firstName}{lastName}".ToLower();
+            string tagName = baseTagName;
+            int counter = 100;
+
+            while (_context.Users.Any(u => u.TagName == tagName))
+            {
+                tagName = $"{baseTagName}{counter}".ToLower();
+                counter++;
+            }
+
+            return tagName;
         }
 
         private string GenerateEmailVerificationToken(string email)
@@ -197,6 +212,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.Email,
                 user.Avatar,
                 user.Status,
+                user.TagName,
                 Token = token
             });
         }
