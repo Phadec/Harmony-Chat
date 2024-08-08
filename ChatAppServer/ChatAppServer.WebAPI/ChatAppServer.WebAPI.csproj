@@ -10,8 +10,6 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="DefaultCorsPolicy" Version="8.0.0" />
     <PackageReference Include="GenericFileService" Version="8.0.0" />
-	  <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="5.0.0" />
-	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.7" />

@@ -161,6 +161,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapHub<ChatHub>("/chat-hub");
-app.MapHub<CallHub>("/call-hub"); // Add this line to map the CallHub
 
 app.Run();

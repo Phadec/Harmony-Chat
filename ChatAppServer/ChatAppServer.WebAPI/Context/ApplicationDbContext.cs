@@ -151,26 +151,24 @@ namespace ChatAppServer.WebAPI.Models
         {
             using (var context = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                if (!context.Users.Any(u => u.Role == "Admin"))
+                // Add admin user
+                var adminUser = new User
                 {
-                    var adminUser = new User
-                    {
-                        Username = "admin",
-                        FirstName = "Admin",
-                        LastName = "User",
-                        Email = "admin@example.com",
-                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                        Role = "Admin",
-                        IsEmailConfirmed = true,
-                        Status = "offline"
-                    };
+                    Id = Guid.NewGuid(),
+                    Username = "admin",
+                    FirstName = "Admin",
+                    LastName = "User",
+                    Email = "admin@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                    Role = "Admin",
+                    IsEmailConfirmed = true,
+                    Status = "offline"
+                };
 
-                    context.Users.Add(adminUser);
-                }
-
-                // Thêm ba người dùng để test
+                // Add users
                 var user1 = new User
                 {
+                    Id = Guid.NewGuid(),
                     Username = "user1",
                     FirstName = "User",
                     LastName = "One",
@@ -183,6 +181,7 @@ namespace ChatAppServer.WebAPI.Models
 
                 var user2 = new User
                 {
+                    Id = Guid.NewGuid(),
                     Username = "user2",
                     FirstName = "User",
                     LastName = "Two",
@@ -195,6 +194,7 @@ namespace ChatAppServer.WebAPI.Models
 
                 var user3 = new User
                 {
+                    Id = Guid.NewGuid(),
                     Username = "user3",
                     FirstName = "User",
                     LastName = "Three",
@@ -205,54 +205,33 @@ namespace ChatAppServer.WebAPI.Models
                     Status = "offline"
                 };
 
-                if (!context.Users.Any(u => u.Username == user1.Username))
-                    context.Users.Add(user1);
-
-                if (!context.Users.Any(u => u.Username == user2.Username))
-                    context.Users.Add(user2);
-
-                if (!context.Users.Any(u => u.Username == user3.Username))
-                    context.Users.Add(user3);
-
+                context.Users.AddRange(adminUser, user1, user2, user3);
                 context.SaveChanges();
 
-                // Tạo nhóm và thêm thành viên
+                // Create friendships
+                var friendship1 = new Friendship { UserId = user1.Id, FriendId = user2.Id };
+                var friendship2 = new Friendship { UserId = user1.Id, FriendId = user3.Id };
+                var friendship3 = new Friendship { UserId = user2.Id, FriendId = user3.Id };
+
+                context.Friendships.AddRange(friendship1, friendship2, friendship3);
+                context.SaveChanges();
+
+                // Create a group
                 var group = new Group
                 {
-                    Name = "Test Group",
+                    Id = Guid.NewGuid(),
+                    Name = "Group1",
                     Avatar = "default.png"
                 };
-
                 context.Groups.Add(group);
                 context.SaveChanges();
 
-                var groupMember1 = new GroupMember
-                {
-                    GroupId = group.Id,
-                    UserId = user1.Id,
-                    IsAdmin = true
-                };
+                // Add members to the group
+                var groupMember1 = new GroupMember { GroupId = group.Id, UserId = user1.Id, IsAdmin = true };
+                var groupMember2 = new GroupMember { GroupId = group.Id, UserId = user2.Id, IsAdmin = false };
+                var groupMember3 = new GroupMember { GroupId = group.Id, UserId = user3.Id, IsAdmin = false };
 
-                var groupMember2 = new GroupMember
-                {
-                    GroupId = group.Id,
-                    UserId = user2.Id,
-                    IsAdmin = false
-                };
-
-                context.GroupMembers.Add(groupMember1);
-                context.GroupMembers.Add(groupMember2);
-
-                // Tạo mối quan hệ bạn bè
-                var friendship = new Friendship
-                {
-                    UserId = user1.Id,
-                    FriendId = user2.Id
-                };
-
-                if (!context.Friendships.Any(f => f.UserId == user1.Id && f.FriendId == user2.Id))
-                    context.Friendships.Add(friendship);
-
+                context.GroupMembers.AddRange(groupMember1, groupMember2, groupMember3);
                 context.SaveChanges();
             }
         }
