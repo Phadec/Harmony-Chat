@@ -62,6 +62,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(new { Message = "User role updated successfully" });
         }
+
         [HttpPost("lock-user")]
         public async Task<IActionResult> LockUser([FromForm] Guid userId, CancellationToken cancellationToken)
         {
@@ -95,6 +96,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(new { Message = "User has been unlocked successfully." });
         }
+
         [HttpGet("get-friend-requests")]
         public async Task<IActionResult> GetFriendRequests(CancellationToken cancellationToken)
         {
@@ -114,6 +116,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(friendRequests);
         }
+
         [HttpGet("get-all-chats")]
         public async Task<IActionResult> GetAllChats(CancellationToken cancellationToken)
         {
@@ -127,13 +130,13 @@ namespace ChatAppServer.WebAPI.Controllers
                     c.Id,
                     UserId = c.User.Id,
                     Username = c.User.Username,
-                    ToUserId = c.ToUser != null ? c.ToUser.Id : (Guid?)null,
+                    ToUserId = c.ToUserId,
                     ToUsername = c.ToUser != null ? c.ToUser.Username : null,
-                    GroupId = c.Group != null ? c.Group.Id : (Guid?)null,
+                    GroupId = c.GroupId,
                     GroupName = c.Group != null ? c.Group.Name : null,
-                    c.Message,
-                    c.AttachmentUrl,
-                    c.Date
+                    Message = c.Message ?? string.Empty,
+                    AttachmentUrl = c.AttachmentUrl ?? string.Empty,
+                    Date = c.Date
                 })
                 .ToListAsync(cancellationToken);
 
@@ -142,5 +145,69 @@ namespace ChatAppServer.WebAPI.Controllers
 
 
 
+        [HttpGet("get-groups")]
+        public async Task<IActionResult> GetGroups(CancellationToken cancellationToken)
+        {
+            var groups = await _context.Groups
+                .Include(g => g.Members)
+                .ThenInclude(m => m.User)
+                .Include(g => g.Chats)
+                .ThenInclude(c => c.User)
+                .OrderBy(g => g.Name)
+                .Select(g => new
+                {
+                    g.Id,
+                    g.Name,
+                    Members = g.Members.Select(m => new
+                    {
+                        m.User.Id,
+                        m.User.Username
+                    }),
+                    Chats = g.Chats.Select(c => new
+                    {
+                        c.Id,
+                        c.Message,
+                        c.AttachmentUrl,
+                        c.AttachmentOriginalName,
+                        c.Date,
+                        UserId = c.User.Id,
+                        Username = c.User.Username
+                    })
+                })
+                .ToListAsync(cancellationToken);
+
+            return Ok(groups);
+        }
+
+
+        [HttpGet("get-user-blocks")]
+        public async Task<IActionResult> GetUserBlocks(CancellationToken cancellationToken)
+        {
+            var userBlocks = await _context.UserBlocks
+                .Include(ub => ub.User)
+                .Include(ub => ub.BlockedUser)
+                .Select(ub => new
+                {
+                    UserId = ub.User.Id,
+                    UserUsername = ub.User.Username,
+                    BlockedUserId = ub.BlockedUser.Id,
+                    BlockedUserUsername = ub.BlockedUser.Username,
+                    ub.BlockedDate
+                })
+                .OrderBy(ub => ub.BlockedDate)
+                .ToListAsync(cancellationToken);
+
+            return Ok(userBlocks);
+        }
+
+        [HttpGet("get-pending-users")]
+        public async Task<IActionResult> GetPendingUsers(CancellationToken cancellationToken)
+        {
+            var pendingUsers = await _context.PendingUsers
+                .OrderBy(pu => pu.Email)
+                .ToListAsync(cancellationToken);
+
+            return Ok(pendingUsers);
+        }
     }
 }

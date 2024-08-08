@@ -146,6 +146,7 @@ namespace ChatAppServer.WebAPI.Models
                     .OnDelete(DeleteBehavior.Cascade);
             });
         }
+
         public static void SeedData(IServiceProvider serviceProvider)
         {
             using (var context = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -165,8 +166,94 @@ namespace ChatAppServer.WebAPI.Models
                     };
 
                     context.Users.Add(adminUser);
-                    context.SaveChanges();
                 }
+
+                // Thêm ba người dùng để test
+                var user1 = new User
+                {
+                    Username = "user1",
+                    FirstName = "User",
+                    LastName = "One",
+                    Email = "user1@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password1"),
+                    Role = "User",
+                    IsEmailConfirmed = true,
+                    Status = "offline"
+                };
+
+                var user2 = new User
+                {
+                    Username = "user2",
+                    FirstName = "User",
+                    LastName = "Two",
+                    Email = "user2@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password2"),
+                    Role = "User",
+                    IsEmailConfirmed = true,
+                    Status = "offline"
+                };
+
+                var user3 = new User
+                {
+                    Username = "user3",
+                    FirstName = "User",
+                    LastName = "Three",
+                    Email = "user3@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password3"),
+                    Role = "User",
+                    IsEmailConfirmed = true,
+                    Status = "offline"
+                };
+
+                if (!context.Users.Any(u => u.Username == user1.Username))
+                    context.Users.Add(user1);
+
+                if (!context.Users.Any(u => u.Username == user2.Username))
+                    context.Users.Add(user2);
+
+                if (!context.Users.Any(u => u.Username == user3.Username))
+                    context.Users.Add(user3);
+
+                context.SaveChanges();
+
+                // Tạo nhóm và thêm thành viên
+                var group = new Group
+                {
+                    Name = "Test Group",
+                    Avatar = "default.png"
+                };
+
+                context.Groups.Add(group);
+                context.SaveChanges();
+
+                var groupMember1 = new GroupMember
+                {
+                    GroupId = group.Id,
+                    UserId = user1.Id,
+                    IsAdmin = true
+                };
+
+                var groupMember2 = new GroupMember
+                {
+                    GroupId = group.Id,
+                    UserId = user2.Id,
+                    IsAdmin = false
+                };
+
+                context.GroupMembers.Add(groupMember1);
+                context.GroupMembers.Add(groupMember2);
+
+                // Tạo mối quan hệ bạn bè
+                var friendship = new Friendship
+                {
+                    UserId = user1.Id,
+                    FriendId = user2.Id
+                };
+
+                if (!context.Friendships.Any(f => f.UserId == user1.Id && f.FriendId == user2.Id))
+                    context.Friendships.Add(friendship);
+
+                context.SaveChanges();
             }
         }
     }

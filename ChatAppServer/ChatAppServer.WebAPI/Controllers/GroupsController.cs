@@ -245,6 +245,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to remove members from this group.");
             }
 
+            var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
+
             var groupMember = await _context.GroupMembers
                 .FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
 
@@ -253,8 +255,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group member not found" });
             }
 
-            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
-            if (!isAdmin)
+            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == authenticatedUserIdGuid && gm.IsAdmin, cancellationToken);
+            if (!isAdmin && request.UserId != authenticatedUserIdGuid)
             {
                 return Forbid("You are not authorized to remove members from this group.");
             }
