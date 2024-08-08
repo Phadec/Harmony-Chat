@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "9VTLK1qu1V25GXM6QlUTR+2a+zRriyXqUZJN0IAq+XA=",
+  "Hash": "g7PJgxZfKOjKGccyoMECndr97FBbL6gcFCcikeL1KZ8=",
   "Source": "ChatAppServer.WebAPI",
   "BasePath": "_content/ChatAppServer.WebAPI",
   "Mode": "Default",
@@ -36,12 +36,12 @@
       "OriginalItemSpec": "wwwroot\\avatar\\avatar-trang-4.jpg"
     },
     {
-      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\51fcf7b0-64c0-4167-8506-46cf4c057e8d.pdf",
+      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\43269bd2-691c-4b5d-9193-b9953849b9ac.pdf",
       "SourceId": "ChatAppServer.WebAPI",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
       "BasePath": "_content/ChatAppServer.WebAPI",
-      "RelativePath": "uploads/51fcf7b0-64c0-4167-8506-46cf4c057e8d.pdf",
+      "RelativePath": "uploads/43269bd2-691c-4b5d-9193-b9953849b9ac.pdf",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -52,15 +52,15 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\51fcf7b0-64c0-4167-8506-46cf4c057e8d.pdf"
+      "OriginalItemSpec": "wwwroot\\uploads\\43269bd2-691c-4b5d-9193-b9953849b9ac.pdf"
     },
     {
-      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\99cbb809-7e2f-4ab2-8206-e60978c0b2f6.pdf",
+      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\756fb4f3-167c-4557-acc4-0ce4c4f3938b.jpg",
       "SourceId": "ChatAppServer.WebAPI",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
       "BasePath": "_content/ChatAppServer.WebAPI",
-      "RelativePath": "uploads/99cbb809-7e2f-4ab2-8206-e60978c0b2f6.pdf",
+      "RelativePath": "uploads/756fb4f3-167c-4557-acc4-0ce4c4f3938b.jpg",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -71,45 +71,7 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\99cbb809-7e2f-4ab2-8206-e60978c0b2f6.pdf"
-    },
-    {
-      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\a2b63d05-000f-4d1f-a63e-e4db93e27faf.jpg",
-      "SourceId": "ChatAppServer.WebAPI",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
-      "BasePath": "_content/ChatAppServer.WebAPI",
-      "RelativePath": "uploads/a2b63d05-000f-4d1f-a63e-e4db93e27faf.jpg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\a2b63d05-000f-4d1f-a63e-e4db93e27faf.jpg"
-    },
-    {
-      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\f362e59c-c29a-4dfa-a6a8-5ade4a18235f.jpg",
-      "SourceId": "ChatAppServer.WebAPI",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
-      "BasePath": "_content/ChatAppServer.WebAPI",
-      "RelativePath": "uploads/f362e59c-c29a-4dfa-a6a8-5ade4a18235f.jpg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\f362e59c-c29a-4dfa-a6a8-5ade4a18235f.jpg"
+      "OriginalItemSpec": "wwwroot\\uploads\\756fb4f3-167c-4557-acc4-0ce4c4f3938b.jpg"
     }
   ]
 }

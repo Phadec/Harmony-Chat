@@ -41,38 +41,84 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
-                // Lấy tất cả tin nhắn liên quan đến user
-                var chats = await _context.Chats
-                    .Where(c => c.UserId == userId || c.ToUserId == userId || c.Group.Members.Any(m => m.UserId == userId))
-                    .Include(c => c.User)
-                    .Include(c => c.ToUser)
-                    .Include(c => c.Group)
-                    .ThenInclude(g => g.Members)
-                    .Select(c => new
-                    {
-                        ChatId = c.Id,
-                        ChatDate = c.Date,
-                        IsGroup = c.GroupId != null,
-                        RecipientId = c.GroupId != null ? c.GroupId : (c.UserId == userId ? c.ToUserId : c.UserId),
-                        RecipientName = c.GroupId != null ? c.Group.Name : (c.UserId == userId ? c.ToUser.Username : c.User.Username),
-                        LastMessage = c.Message ?? string.Empty,
-                        LastAttachmentUrl = c.AttachmentUrl ?? string.Empty,
-                        IsSentByUser = c.UserId == userId,
-                        SenderId = c.UserId,
-                        SenderName = c.User.Username
-                    })
+                var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
+
+                // Lấy danh sách các liên hệ riêng tư (ToUserId) không trùng lặp
+                var privateContactIds = await _context.Chats
+                    .Where(c => (c.UserId == userId && c.ToUserId.HasValue) || (c.ToUserId == userId))
+                    .Select(c => c.UserId == userId ? c.ToUserId.Value : c.UserId)
+                    .Distinct()
                     .ToListAsync(cancellationToken);
 
-                // Phân loại tin nhắn theo cá nhân và nhóm
-                var privateChats = chats.Where(c => !c.IsGroup).ToList();
-                var groupChats = chats.Where(c => c.IsGroup).ToList();
+                // Lấy danh sách các GroupId không trùng lặp
+                var groupIds = await _context.Chats
+                    .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
+                    .Select(c => c.GroupId.Value)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
 
-                // Sắp xếp tin nhắn theo thời gian nhận được
-                var sortedChats = privateChats.Concat(groupChats)
-                    .OrderByDescending(c => c.ChatDate)
+                // Lấy tin nhắn mới nhất từ mỗi liên hệ riêng tư
+                var latestPrivateChats = new List<object>();
+                foreach (var contactId in privateContactIds)
+                {
+                    var latestChat = await _context.Chats
+                        .Where(c => (c.UserId == userId && c.ToUserId == contactId) || (c.ToUserId == userId && c.UserId == contactId))
+                        .OrderByDescending(c => c.Date)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    if (latestChat != null)
+                    {
+                        var recipient = latestChat.ToUserId == userId ? latestChat.User : await _context.Users.FirstOrDefaultAsync(u => u.Id == latestChat.ToUserId, cancellationToken);
+                        latestPrivateChats.Add(new
+                        {
+                            ChatId = latestChat.Id,
+                            ChatDate = latestChat.Date,
+                            IsGroup = false,
+                            RecipientId = recipient.Id,
+                            RecipientName = recipient.Username,
+                            LastMessage = latestChat.Message ?? string.Empty,
+                            LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
+                            IsSentByUser = latestChat.UserId == userId,
+                            SenderId = latestChat.UserId,
+                            SenderName = latestChat.User.Username
+                        });
+                    }
+                }
+
+                // Lấy tin nhắn mới nhất từ mỗi nhóm
+                var latestGroupChats = new List<object>();
+                foreach (var groupId in groupIds)
+                {
+                    var latestChat = await _context.Chats
+                        .Where(c => c.GroupId == groupId)
+                        .OrderByDescending(c => c.Date)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    if (latestChat != null)
+                    {
+                        var group = await _context.Groups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+                        latestGroupChats.Add(new
+                        {
+                            ChatId = latestChat.Id,
+                            ChatDate = latestChat.Date,
+                            IsGroup = true,
+                            RecipientId = group.Id,
+                            RecipientName = group.Name,
+                            LastMessage = latestChat.Message ?? string.Empty,
+                            LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
+                            IsSentByUser = latestChat.UserId == userId,
+                            SenderId = latestChat.UserId,
+                            SenderName = latestChat.User.Username
+                        });
+                    }
+                }
+
+                // Kết hợp các kết quả và sắp xếp theo thời gian
+                var combinedChats = latestPrivateChats.Concat(latestGroupChats)
+                    .OrderByDescending(chat => ((dynamic)chat).ChatDate)
                     .ToList();
 
-                return Ok(sortedChats);
+                return Ok(combinedChats);
             }
             catch (Exception ex)
             {
@@ -80,6 +126,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
 
         [HttpGet("get-chats")]
         public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
