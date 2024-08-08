@@ -26,7 +26,8 @@
         public bool ShowOnlineStatus { get; set; } = true;
         public string Role { get; set; } = "User";
         public bool IsEmailConfirmed { get; set; } = false;
-        public bool IsLocked { get; set; } = false; // Thêm thuộc tính này
+        public bool IsLocked { get; set; } = false;
+        public string TagName { get; set; } = string.Empty;
 
         public List<Friendship> Friends { get; set; }
         public List<FriendRequest> SentFriendRequests { get; set; }

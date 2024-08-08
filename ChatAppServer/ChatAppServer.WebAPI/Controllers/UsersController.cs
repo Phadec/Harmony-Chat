@@ -25,11 +25,11 @@ namespace ChatAppServer.WebAPI.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchUserByUsername(string username, CancellationToken cancellationToken)
+        public async Task<IActionResult> SearchUserByTagName(string tagName, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(username))
+            if (string.IsNullOrWhiteSpace(tagName))
             {
-                return BadRequest(new { message = "Username is required" });
+                return BadRequest(new { message = "TagName is required" });
             }
 
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -38,11 +38,17 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to search users.");
             }
 
-            _logger.LogInformation($"Searching for user with username: {username}");
+            _logger.LogInformation($"Searching for user with tagName: {tagName}");
 
-            // Tìm kiếm người dùng theo tên người dùng
+            // Ensure tagName starts with '@'
+            if (!tagName.StartsWith("@"))
+            {
+                tagName = "@" + tagName;
+            }
+
+            // Tìm kiếm người dùng theo TagName
             var user = await _context.Users
-                .Where(u => u.Username.ToLower() == username.ToLower())
+                .Where(u => u.TagName.ToLower() == tagName.ToLower())
                 .Select(u => new
                 {
                     u.Id,
@@ -51,13 +57,14 @@ namespace ChatAppServer.WebAPI.Controllers
                     u.LastName,
                     u.Email,
                     u.Avatar,
-                    u.Status
+                    u.Status,
+                    u.TagName // Include TagName in the response
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (user == null)
             {
-                _logger.LogWarning($"User with username {username} not found");
+                _logger.LogWarning($"User with tagName {tagName} not found");
                 return NotFound(new { message = "User not found" });
             }
 
@@ -72,14 +79,15 @@ namespace ChatAppServer.WebAPI.Controllers
 
             if (isBlockedByUser || isBlockedByTarget)
             {
-                _logger.LogWarning($"User with username {username} has blocked the authenticated user or vice versa");
+                _logger.LogWarning($"User with tagName {tagName} has blocked the authenticated user or vice versa");
                 return NotFound(new { message = "User not found" });
             }
 
-            _logger.LogInformation($"User with username {username} found");
+            _logger.LogInformation($"User with tagName {tagName} found");
 
             return Ok(user);
         }
+
 
         [HttpPut("{userId}/update-user")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
@@ -98,6 +106,7 @@ namespace ChatAppServer.WebAPI.Controllers
             }
 
             bool emailChanged = user.Email != request.Email;
+            bool tagNameChanged = user.TagName != request.TagName;
 
             user.FirstName = request.FirstName;
             user.LastName = request.LastName;
@@ -109,6 +118,27 @@ namespace ChatAppServer.WebAPI.Controllers
                 var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
                 user.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/");
                 user.OriginalAvatarFileName = originalFileName;
+            }
+
+            if (tagNameChanged)
+            {
+                var newTagName = request.TagName.ToLower();
+                if (!newTagName.StartsWith("@"))
+                {
+                    newTagName = "@" + newTagName;
+                }
+
+                // Check if the newTagName contains more than one '@'
+                if (newTagName.Count(c => c == '@') > 1)
+                {
+                    return BadRequest(new { Message = "TagName can only contain one '@' at the beginning." });
+                }
+
+                if (await _context.Users.AnyAsync(u => u.TagName == newTagName, cancellationToken))
+                {
+                    return BadRequest(new { Message = "TagName already exists. Please choose a different TagName." });
+                }
+                user.TagName = newTagName;
             }
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -130,9 +160,11 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.Birthday,
                 user.Email,
                 user.Avatar,
-                user.OriginalAvatarFileName
+                user.OriginalAvatarFileName,
+                user.TagName
             });
         }
+
 
         [HttpPost("{userId}/update-status")]
         public async Task<IActionResult> UpdateStatus(Guid userId, [FromForm] string status, CancellationToken cancellationToken)
