@@ -1,0 +1,42 @@
+<div class="register-container">
+  <h2>Register</h2>
+  <form (submit)="onRegister()">
+    <div>
+      <label for="username">Username:</label>
+      <input type="text" id="username" [(ngModel)]="username" name="username" required>
+    </div>
+    <div>
+      <label for="firstName">First Name:</label>
+      <input type="text" id="firstName" [(ngModel)]="firstName" name="firstName" required>
+    </div>
+    <div>
+      <label for="lastName">Last Name:</label>
+      <input type="text" id="lastName" [(ngModel)]="lastName" name="lastName" required>
+    </div>
+    <div>
+      <label for="birthday">Birthday:</label>
+      <input type="date" id="birthday" [(ngModel)]="birthday" name="birthday" required>
+    </div>
+    <div>
+      <label for="email">Email:</label>
+      <input type="email" id="email" [(ngModel)]="email" name="email" required>
+    </div>
+    <div>
+      <label for="password">Password:</label>
+      <input type="password" id="password" [(ngModel)]="password" name="password" required>
+    </div>
+    <div>
+      <label for="retypePassword">Retype Password:</label>
+      <input type="password" id="retypePassword" [(ngModel)]="retypePassword" name="retypePassword" required>
+    </div>
+    <div>
+      <label for="file">Avatar:</label>
+      <input type="file" id="file" (change)="onFileSelected($event)">
+    </div>
+    <button type="submit">Register</button>
+  </form>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+</div>

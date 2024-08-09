@@ -247,7 +247,7 @@ namespace ChatAppServer.WebAPI.Controllers
         }
 
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto request, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
             if (user == null)

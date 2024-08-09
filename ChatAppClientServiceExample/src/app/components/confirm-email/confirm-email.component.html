@@ -1,0 +1,6 @@
+<div class="confirm-email-container">
+  <h2>Email Confirmation</h2>
+  <div *ngIf="isLoading">Confirming your email...</div>
+  <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+</div>

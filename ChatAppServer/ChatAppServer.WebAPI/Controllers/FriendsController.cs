@@ -49,6 +49,7 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 Id = fr.Id,
                 ReceiverId = fr.ReceiverId,
+                TagName = fr.Sender.TagName,
                 RequestDate = fr.RequestDate,
                 Status = fr.Status
             }).ToList();
@@ -299,12 +300,14 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 fr.Id,
                 SenderId = fr.SenderId,
-                SenderUsername = fr.Sender.Username,
+                SenderName = $"{fr.Sender.FirstName} {fr.Sender.LastName}",
+                TagName = fr.Sender.TagName,
                 fr.Status
             }).ToList();
 
             return Ok(friendRequests);
         }
+
 
         [HttpPost("{userId}/accept-friend-request/{requestId}")]
         public async Task<IActionResult> AcceptFriendRequest(Guid userId, Guid requestId, CancellationToken cancellationToken)
