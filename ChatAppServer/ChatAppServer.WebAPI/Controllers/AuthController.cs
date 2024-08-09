@@ -59,8 +59,8 @@ namespace ChatAppServer.WebAPI.Controllers
             string? originalAvatarFileName = null;
             if (request.File != null)
             {
-                var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.File, "wwwroot/avatar/");
-                avatarUrl = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+                var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.File, "wwwroot/avatars/");
+                avatarUrl = Path.Combine("avatars", savedFileName).Replace("\\", "/");
                 originalAvatarFileName = originalFileName;
             }
 
@@ -290,6 +290,12 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "Password must be at least 8 characters long." });
             }
 
+            // Kiểm tra ConfirmPassword
+            if (request.NewPassword != request.ConfirmPassword)
+            {
+                return BadRequest(new { Message = "Passwords do not match." });
+            }
+
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -300,6 +306,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(new { Message = "Password has been reset." });
         }
+
 
         [HttpPost("change-user-password")]
         [Authorize]

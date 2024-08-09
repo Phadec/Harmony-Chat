@@ -43,6 +43,7 @@ export class ResetPasswordComponent implements OnInit {
     const formData = new FormData();
     formData.append('token', this.token);
     formData.append('newPassword', this.newPassword);
+    formData.append('confirmPassword', this.confirmPassword);
 
     this.authService.resetPassword(formData).subscribe({
       next: response => {
