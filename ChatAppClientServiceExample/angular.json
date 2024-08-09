@@ -77,9 +77,11 @@
           },
           "defaultConfiguration": "development"
         },
+
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n"
         },
+
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
@@ -103,6 +105,7 @@
       }
     }
   },
+
   "cli": {
     "analytics": "1fef1029-1716-40a8-bf03-8cba5167edbd"
   }

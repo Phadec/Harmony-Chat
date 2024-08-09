@@ -1,29 +1,38 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import * as signalR from '@microsoft/signalr';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
+  private hubConnection: signalR.HubConnection;
   private apiUrl = 'https://localhost:7267/api/chats';
-  private currentRecipientId: string | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor() {
+    this.hubConnection = new signalR.HubConnectionBuilder()
+      .withUrl(`${this.apiUrl}/hubs/chat`) // Đường dẫn tới SignalR Hub trên server
+      .build();
 
-  getCurrentRecipientId(): string | null {
-    return this.currentRecipientId;
+    this.hubConnection.start().then(() => {
+      console.log('SignalR Connected');
+    }).catch(err => console.error('SignalR Connection Error: ', err));
   }
 
-  setCurrentRecipientId(recipientId: string): void {
-    this.currentRecipientId = recipientId;
-  }
-
-  getChats(userId: string, recipientId: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/get-chats?userId=${userId}&recipientId=${recipientId}`);
+  public onMessageReceived(callback: (message: any) => void): void {
+    this.hubConnection.on('ReceiveMessage', callback);
   }
 
   sendMessage(formData: FormData): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/send-message`, formData);
+  }
+
+  getRelationships(): Observable<any> {
+    const userId = localStorage.getItem('userId');
+    return this.http.get(`${this.apiUrl}/get-relationships`, { params: { userId: userId || '' } });
+  }
+
+  getChats(recipientId: string): Observable<any> {
+    const userId = localStorage.getItem('userId');
+    return this.http.get<any>(`${this.apiUrl}/get-chats?userId=${userId}&recipientId=${recipientId}`);
   }
 }

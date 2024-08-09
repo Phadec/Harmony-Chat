@@ -43,48 +43,52 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
 
-                // Get distinct private contact IDs
-                var privateContactIds = await _context.Chats
-                    .Where(c => (c.UserId == userId && c.ToUserId.HasValue) || (c.ToUserId == userId))
-                    .Select(c => c.UserId == userId ? c.ToUserId.Value : c.UserId)
-                    .Distinct()
-                    .ToListAsync(cancellationToken);
-
-                // Get distinct group IDs
-                var groupIds = await _context.Chats
-                    .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
-                    .Select(c => c.GroupId.Value)
-                    .Distinct()
-                    .ToListAsync(cancellationToken);
-
                 // Get the latest message for each private contact
-                var latestPrivateChats = new List<object>();
-                foreach (var contactId in privateContactIds)
-                {
-                    var latestChat = await _context.Chats
-                        .Where(c => (c.UserId == userId && c.ToUserId == contactId) || (c.ToUserId == userId && c.UserId == contactId))
-                        .OrderByDescending(c => c.Date)
-                        .FirstOrDefaultAsync(cancellationToken);
+                var latestPrivateChats = await _context.Chats
+                    .Where(c => (c.UserId == userId && c.ToUserId.HasValue) || (c.ToUserId == userId))
+                    .GroupBy(c => c.UserId == userId ? c.ToUserId : c.UserId)
+                    .Select(g => g.OrderByDescending(c => c.Date).FirstOrDefault())
+                    .ToListAsync(cancellationToken);
 
+                var privateChatResults = new List<object>();
+                foreach (var latestChat in latestPrivateChats)
+                {
                     if (latestChat != null)
                     {
-                        var sender = await _context.Users.FirstOrDefaultAsync(u => u.Id == latestChat.UserId, cancellationToken);
-                        var senderFullName = sender != null ? $"{sender.FirstName} {sender.LastName}" : string.Empty;
-                        latestPrivateChats.Add(new
+                        // Xác định IsSentByUser
+                        bool isSentByUser = latestChat.UserId == userId;
+
+                        // Truy vấn thông tin của user dựa trên contactId
+                        var contact = await _context.Users.FirstOrDefaultAsync(u => u.Id == (isSentByUser ? latestChat.ToUserId : latestChat.UserId), cancellationToken);
+
+                        // Xác định tên và tag name của contact
+                        string contactFullName = contact != null ? $"{contact.FirstName} {contact.LastName}" : "Unknown Contact";
+                        string contactTagName = contact?.TagName ?? string.Empty;
+
+                        var result = new
                         {
                             RelationshipType = "Private",
                             ChatId = latestChat.Id,
                             ChatDate = latestChat.Date,
+                            ContactId = isSentByUser ? latestChat.ToUserId : latestChat.UserId,
+                            ContactFullName = contactFullName,  // Sử dụng thông tin từ contact
+                            ContactTagName = contactTagName,  // Sử dụng thông tin từ contact
                             LastMessage = latestChat.Message ?? string.Empty,
                             LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
-                            IsSentByUser = latestChat.UserId == userId,
-                            SenderId = latestChat.UserId,
-                            SenderFullName = senderFullName,
-                            SenderName = sender.TagName,
+                            IsSentByUser = isSentByUser,
+                        };
 
-                        });
+                        privateChatResults.Add(result);
                     }
+
                 }
+
+                // Get distinct group IDs
+                var groupIds = await _context.Chats
+                .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
+                .Select(c => c.GroupId.Value)
+                .Distinct()
+                .ToListAsync(cancellationToken);
 
                 // Get the latest message for each group
                 var latestGroupChats = new List<object>();
@@ -99,26 +103,26 @@ namespace ChatAppServer.WebAPI.Controllers
                     {
                         var group = await _context.Groups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
                         var sender = await _context.Users.FirstOrDefaultAsync(u => u.Id == latestChat.UserId, cancellationToken);
-                        var senderFullName = sender != null ? $"{sender.FirstName} {sender.LastName}" : string.Empty;
+
                         latestGroupChats.Add(new
                         {
                             RelationshipType = "Group",
-                            GroupId = group.Id,
-                            GroupName = group.Name,
+                            GroupId = group?.Id ?? Guid.Empty,
+                            GroupName = group?.Name ?? string.Empty,
                             ChatId = latestChat.Id,
                             ChatDate = latestChat.Date,
                             LastMessage = latestChat.Message ?? string.Empty,
                             LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
                             IsSentByUser = latestChat.UserId == userId,
                             SenderId = latestChat.UserId,
-                            SenderFullName = senderFullName,
-                            SenderName = sender.TagName,
+                            SenderFullName = $"{sender.FirstName} {sender.LastName}",
+                            SenderTagName = sender?.TagName ?? string.Empty,
                         });
                     }
                 }
 
                 // Combine results and sort by the latest message date
-                var combinedChats = latestPrivateChats.Concat(latestGroupChats)
+                var combinedChats = privateChatResults.Concat(latestGroupChats)
                     .OrderByDescending(chat => ((dynamic)chat).ChatDate)
                     .ToList();
 
@@ -130,6 +134,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
 
 
         [HttpGet("get-chats")]

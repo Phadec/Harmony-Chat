@@ -1,0 +1,91 @@
+/* chat-relationships.component.css */
+
+/* Container for the relationship list */
+.relationship-list {
+  width: 100%;
+  max-height: 100vh;
+  overflow-y: auto;
+  background-color: #f4f6f9;
+  border-right: 1px solid #ddd;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Individual relationship item */
+.relationship-item {
+  padding: 15px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover effect */
+.relationship-item:hover {
+  background-color: #e8f4ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Highlight the selected relationship */
+.relationship-item.selected {
+  background-color: #cce6ff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  transform: translateY(-4px);
+}
+
+/* Relationship name (group or contact) */
+.relationship-item strong {
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-transform: capitalize;
+}
+
+/* Tag name or last message */
+.relationship-item p {
+  font-size: 15px;
+  color: #666;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Date of last message */
+.relationship-item small {
+  font-size: 12px;
+  color: #999;
+  margin-top: 10px;
+  align-self: flex-end;
+}
+
+/* Improve spacing and alignment */
+.relationship-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 80px;
+  padding: 15px;
+}
+
+/* Add a subtle gradient background */
+.relationship-list {
+  background: linear-gradient(to bottom right, #f0f8ff, #e0e7ff);
+}
+
+/* Increase shadow on hover */
+.relationship-item:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Bold and underline the name for emphasis */
+.relationship-item strong {
+  text-decoration: underline;
+}
