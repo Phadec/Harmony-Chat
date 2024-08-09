@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { RegisterComponent } from './components/register/register.component';
@@ -20,6 +21,10 @@ import { ChatDetailComponent } from './components/chat-detail/chat-detail.compon
 import { ChatHeaderComponent } from './components/chat-header/chat-header.component';
 import { GroupListComponent } from './components/group-list/group-list.component';
 import { GroupDetailComponent } from './components/group-detail/group-detail.component';
+import { ChatMessagesComponent } from './components/chat-messages/chat-messages.component';
+import { SendMessageComponent } from './components/send-message/send-message.component';
+import { ChatLayoutComponent } from './layouts/chat-layout/chat-layout.component';
+import {ChatRelationshipsComponent} from "./components/chat-relationships/chat-relationships.component";
 
 @NgModule({
   declarations: [
@@ -37,13 +42,20 @@ import { GroupDetailComponent } from './components/group-detail/group-detail.com
     ChatDetailComponent,
     ChatHeaderComponent,
     GroupListComponent,
-    GroupDetailComponent
+    GroupDetailComponent,
+    ChatRelationshipsComponent,
+    ChatMessagesComponent,
+    SendMessageComponent,
+    ChatLayoutComponent,
+
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     FormsModule,
-    AppRoutingModule
+    AppRoutingModule,
+    RouterModule,
+    ReactiveFormsModule
   ],
   providers: [
     FriendsService,

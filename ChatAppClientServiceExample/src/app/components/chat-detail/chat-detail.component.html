@@ -1,1 +1,8 @@
-<p>chat-detail works!</p>
+<div *ngIf="messages.length">
+  <div *ngFor="let message of messages" class="message">
+    <strong>{{ message.senderFullName }}</strong>
+    <p>{{ message.content }}</p>
+    <small>{{ message.timestamp | date:'short' }}</small>
+  </div>
+</div>
+<app-send-message [recipientId]="recipientId" (messageSent)="onMessageSent()"></app-send-message>
