@@ -1,0 +1,21 @@
+.confirm-email-container {
+  width: 300px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.confirm-email-container h2 {
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: red;
+}
+
+.success-message {
+  color: green;
+}

@@ -1,0 +1,17 @@
+<div *ngIf="friends.length > 0; else noFriends">
+  <ul>
+    <li *ngFor="let friend of friends">
+      <img [src]="'https://localhost:7267/' + friend.avatar" alt="{{ friend.username }}'s avatar" width="50" height="50">
+      <div>
+        <span>{{ friend.firstName }} {{ friend.lastName }}</span><br>
+        <span>Birthday: {{ friend.birthday | date }}</span><br>
+        <span>Nickname: {{ friend.nickname }}</span>
+      </div>
+      <button (click)="removeFriend(friend.id)">Remove</button>
+    </li>
+  </ul>
+</div>
+
+<ng-template #noFriends>
+  <p>No friends found.</p>
+</ng-template>
