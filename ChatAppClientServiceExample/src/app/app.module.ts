@@ -16,8 +16,6 @@ import { BlockedUsersComponent } from './components/blocked-users/blocked-users.
 import { FriendsService } from './services/friends.service';
 import { AuthInterceptor } from './auth.interceptor';
 import { FriendRequestsComponent } from './components/friend-requests/friend-requests.component';
-import { ChatListComponent } from './components/chat-list/chat-list.component';
-import { SendMessageComponent } from './components/send-message/send-message.component';
 import { ChatDetailComponent } from './components/chat-detail/chat-detail.component';
 import { ChatHeaderComponent } from './components/chat-header/chat-header.component';
 import { GroupListComponent } from './components/group-list/group-list.component';
@@ -36,8 +34,6 @@ import { GroupDetailComponent } from './components/group-detail/group-detail.com
     AddFriendComponent,
     BlockedUsersComponent,
     FriendRequestsComponent,
-    ChatListComponent,
-    SendMessageComponent,
     ChatDetailComponent,
     ChatHeaderComponent,
     GroupListComponent,
