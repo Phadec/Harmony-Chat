@@ -1,7 +1,0 @@
-<form [formGroup]="messageForm" (ngSubmit)="sendMessage()" enctype="multipart/form-data">
-  <div class="input-container">
-    <input formControlName="message" placeholder="Type your message..." />
-    <input type="file" (change)="onFileSelected($event)" />
-    <button type="submit" [disabled]="!messageForm.valid">Send</button>
-  </div>
-</form>

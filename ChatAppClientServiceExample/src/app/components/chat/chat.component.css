@@ -1,0 +1,27 @@
+.container-fluid {
+  height: 100vh; /* Ensure the container takes up full height */
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  flex: 1;
+  display: flex;
+  overflow: hidden; /* Prevents overflow of content */
+}
+
+.chat-list-container {
+  padding: 0; /* Remove padding/margin if any */
+  border-right: 1px solid #ddd; /* Separate the chat list from the chat window */
+}
+
+.chat-window-container {
+  padding: 0; /* Remove padding/margin if any */
+}
+
+@media (max-width: 768px) {
+  .chat-list-container,
+  .chat-window-container {
+    width: 100%;
+  }
+}

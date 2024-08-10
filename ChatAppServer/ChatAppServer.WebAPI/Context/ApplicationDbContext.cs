@@ -125,8 +125,24 @@ namespace ChatAppServer.WebAPI.Models
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Configure Friendship entity
-            Friendship.Configure(modelBuilder);
+            modelBuilder.Entity<Friendship>(entity =>
+            {
+                entity.HasKey(e => new { e.UserId, e.FriendId });
+
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.Friends)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Friend)
+                    .WithMany()
+                    .HasForeignKey(e => e.FriendId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(e => e.Nickname)
+                    .HasMaxLength(100)
+                    .HasDefaultValue(""); // Set default value to empty string
+            });
 
             // Configure PendingUser entity
             modelBuilder.Entity<PendingUser>(entity =>
