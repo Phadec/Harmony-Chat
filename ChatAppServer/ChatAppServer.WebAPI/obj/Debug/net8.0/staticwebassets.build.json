@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "Aq5DcOW4rAFAJ3r6+wVn/3MCHosCkEPrXSRK/bWF0oQ=",
+  "Hash": "h3YI75mhGU6F0qyhSOlp1NVpAUxz5zirOspLT9uPNL4=",
   "Source": "ChatAppServer.WebAPI",
   "BasePath": "_content/ChatAppServer.WebAPI",
   "Mode": "Default",
@@ -17,12 +17,12 @@
   ],
   "Assets": [
     {
-      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\avatar-trang-4.jpg",
+      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\aaf2491f-daa6-4a28-8ba4-e385539c4208.jpg",
       "SourceId": "ChatAppServer.WebAPI",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
       "BasePath": "_content/ChatAppServer.WebAPI",
-      "RelativePath": "avatars/avatar-trang-4.jpg",
+      "RelativePath": "avatars/aaf2491f-daa6-4a28-8ba4-e385539c4208.jpg",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -33,7 +33,26 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\avatars\\avatar-trang-4.jpg"
+      "OriginalItemSpec": "wwwroot\\avatars\\aaf2491f-daa6-4a28-8ba4-e385539c4208.jpg"
+    },
+    {
+      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\example.jpg",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatars/example.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\example.jpg"
     }
   ]
 }

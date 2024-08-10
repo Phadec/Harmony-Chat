@@ -242,6 +242,9 @@ namespace ChatAppServer.WebAPI.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTime?>("LastPasswordResetEmailSentTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("OriginalAvatarFileName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

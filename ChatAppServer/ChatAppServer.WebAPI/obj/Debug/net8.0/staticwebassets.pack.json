@@ -1,8 +1,12 @@
 {
   "Files": [
     {
-      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\avatar-trang-4.jpg",
-      "PackagePath": "staticwebassets\\avatars\\avatar-trang-4.jpg"
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\aaf2491f-daa6-4a28-8ba4-e385539c4208.jpg",
+      "PackagePath": "staticwebassets\\avatars\\aaf2491f-daa6-4a28-8ba4-e385539c4208.jpg"
+    },
+    {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\example.jpg",
+      "PackagePath": "staticwebassets\\avatars\\example.jpg"
     },
     {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.ChatAppServer.WebAPI.Microsoft.AspNetCore.StaticWebAssets.props",

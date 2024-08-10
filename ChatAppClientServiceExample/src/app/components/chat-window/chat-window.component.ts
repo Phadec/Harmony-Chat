@@ -1,70 +1,50 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ChatService } from '../../services/chat.service';
 import { SignalRService } from '../../services/signalr.service';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-chat-window',
   templateUrl: './chat-window.component.html',
   styleUrls: ['./chat-window.component.css']
 })
-export class ChatWindowComponent implements OnInit, OnDestroy {
-  @Input() recipientId: string = '';
+export class ChatWindowComponent implements OnInit {
+  @Input() recipientId: string | null = null;
   messages: any[] = [];
-  newMessage: string = '';
-  userId: string; // Biến lưu trữ userId từ localStorage
-  private messageSubscription: Subscription | null = null;
-  selectedFile: File | null = null; // Biến lưu trữ file được chọn
+  chatName: string = '';
 
-  constructor(private chatService: ChatService, private signalRService: SignalRService) {
-    this.userId = localStorage.getItem('userId') || ''; // Lấy userId từ localStorage
-  }
+  constructor(private chatService: ChatService, private signalRService: SignalRService) {}
 
   ngOnInit(): void {
-    this.loadMessages();
+    this.signalRService.messageReceived$.subscribe(message => {
+      this.messages.push(message);
+    });
 
-    this.messageSubscription = this.signalRService.messageReceived$.subscribe(message => {
-      if (message.recipientId === this.recipientId) {
-        this.messages.push(message);
-      }
+    if (this.recipientId) {
+      this.loadMessages(this.recipientId);
+    }
+  }
+
+  ngOnChanges(): void {
+    if (this.recipientId) {
+      this.loadMessages(this.recipientId);
+    }
+  }
+
+  loadMessages(recipientId: string): void {
+    this.chatService.getChats(recipientId).subscribe((response) => {
+      this.messages = response;
+      this.chatName = response.length > 0 ? response[0].SenderFullName : 'Chat';
     });
   }
 
-  ngOnDestroy(): void {
-    this.messageSubscription?.unsubscribe();
-  }
-
-  loadMessages(): void {
-    this.chatService.getChats(this.recipientId).subscribe(data => {
-      console.log('Messages loaded: ', data);
-      this.messages = data;
-    });
-  }
-
-  onFileSelected(event: any): void {
-    this.selectedFile = event.target.files[0]; // Lưu file được chọn
-  }
-
-  triggerFileInput(): void {
-    document.getElementById('fileInput')?.click(); // Kích hoạt input file ẩn
-  }
-
-  sendMessage(): void {
-    if (this.newMessage.trim() || this.selectedFile) {
+  onSendMessage(message: string): void {
+    if (this.recipientId) {
       const formData = new FormData();
-      formData.append('UserId', this.userId);
+      formData.append('Message', message);
+      formData.append('UserId', localStorage.getItem('userId') || '');
       formData.append('RecipientId', this.recipientId);
-      formData.append('Message', this.newMessage);
 
-      if (this.selectedFile) {
-        formData.append('Attachment', this.selectedFile, this.selectedFile.name);
-      }
-
-      this.chatService.sendMessage(formData).subscribe(response => {
-        this.newMessage = '';
-        this.selectedFile = null; // Reset selected file
-        this.loadMessages(); // Reload messages after sending
-      });
+      this.chatService.sendMessage(formData).subscribe();
     }
   }
 }
