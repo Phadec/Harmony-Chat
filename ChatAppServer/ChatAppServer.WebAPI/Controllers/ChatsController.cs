@@ -30,7 +30,7 @@ namespace ChatAppServer.WebAPI.Controllers
         {
             if (userId == Guid.Empty)
             {
-                return BadRequest("Invalid userId");
+                return BadRequest(new { Message = "Invalid userId." });
             }
 
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -55,14 +55,19 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     if (latestChat != null)
                     {
-                        // Xác định IsSentByUser
+                        // Determine IsSentByUser
                         bool isSentByUser = latestChat.UserId == userId;
 
-                        // Truy vấn thông tin của user dựa trên contactId
+                        // Query user information based on contactId
                         var contact = await _context.Users.FirstOrDefaultAsync(u => u.Id == (isSentByUser ? latestChat.ToUserId : latestChat.UserId), cancellationToken);
 
-                        // Xác định tên và tag name của contact
-                        string contactFullName = contact != null ? $"{contact.FirstName} {contact.LastName}" : "Unknown Contact";
+                        if (contact == null)
+                        {
+                            continue; // Skip this chat if the contact is not found
+                        }
+
+                        // Determine contact name and tag name
+                        string contactFullName = $"{contact.FirstName} {contact.LastName}";
                         string contactTagName = contact?.TagName ?? string.Empty;
 
                         var result = new
@@ -71,8 +76,8 @@ namespace ChatAppServer.WebAPI.Controllers
                             ChatId = latestChat.Id,
                             ChatDate = latestChat.Date,
                             ContactId = isSentByUser ? latestChat.ToUserId : latestChat.UserId,
-                            ContactFullName = contactFullName,  // Sử dụng thông tin từ contact
-                            ContactTagName = contactTagName,  // Sử dụng thông tin từ contact
+                            ContactFullName = contactFullName,
+                            ContactTagName = contactTagName,
                             LastMessage = latestChat.Message ?? string.Empty,
                             LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
                             IsSentByUser = isSentByUser,
@@ -80,15 +85,14 @@ namespace ChatAppServer.WebAPI.Controllers
 
                         privateChatResults.Add(result);
                     }
-
                 }
 
                 // Get distinct group IDs
                 var groupIds = await _context.Chats
-                .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
-                .Select(c => c.GroupId.Value)
-                .Distinct()
-                .ToListAsync(cancellationToken);
+                    .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
+                    .Select(c => c.GroupId.Value)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
 
                 // Get the latest message for each group
                 var latestGroupChats = new List<object>();
@@ -104,11 +108,16 @@ namespace ChatAppServer.WebAPI.Controllers
                         var group = await _context.Groups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
                         var sender = await _context.Users.FirstOrDefaultAsync(u => u.Id == latestChat.UserId, cancellationToken);
 
+                        if (group == null || sender == null)
+                        {
+                            continue; // Skip this chat if the group or sender is not found
+                        }
+
                         latestGroupChats.Add(new
                         {
                             RelationshipType = "Group",
-                            GroupId = group?.Id ?? Guid.Empty,
-                            GroupName = group?.Name ?? string.Empty,
+                            GroupId = group.Id,
+                            GroupName = group.Name,
                             ChatId = latestChat.Id,
                             ChatDate = latestChat.Date,
                             LastMessage = latestChat.Message ?? string.Empty,
@@ -116,7 +125,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             IsSentByUser = latestChat.UserId == userId,
                             SenderId = latestChat.UserId,
                             SenderFullName = $"{sender.FirstName} {sender.LastName}",
-                            SenderTagName = sender?.TagName ?? string.Empty,
+                            SenderTagName = sender.TagName ?? string.Empty,
                         });
                     }
                 }
@@ -130,10 +139,11 @@ namespace ChatAppServer.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error in GetRelationships: {ex.Message}");
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error in GetRelationships for user {UserId}", userId);
+                return StatusCode(500, new { Message = "Internal server error. Please try again later." });
             }
         }
+
 
 
 
@@ -142,13 +152,13 @@ namespace ChatAppServer.WebAPI.Controllers
         {
             if (userId == Guid.Empty || recipientId == Guid.Empty)
             {
-                return BadRequest("Invalid userId or recipientId");
+                return BadRequest(new { Message = "Invalid userId or recipientId." });
             }
 
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
             {
-                return Forbid("You are not authorized to view these chats.");
+                return Forbid(new { Message = "You are not authorized to view these chats." });
             }
 
             var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
@@ -159,14 +169,14 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 if (!isGroup)
                 {
-                    // Kiểm tra xem người dùng đã bị chặn hay đã chặn người dùng khác
+                    // Kiểm tra xem người dùng đã bị chặn hoặc đã chặn người dùng khác
                     var isBlocked = await _context.UserBlocks
                         .AnyAsync(ub => (ub.UserId == authenticatedUserIdGuid && ub.BlockedUserId == recipientId) ||
                                         (ub.UserId == recipientId && ub.BlockedUserId == authenticatedUserIdGuid), cancellationToken);
 
                     if (isBlocked)
                     {
-                        return Forbid("You are not authorized to view these chats.");
+                        return Forbid(new { Message = "You are not authorized to view these chats." });
                     }
 
                     var privateChats = await _context.Chats
@@ -192,35 +202,33 @@ namespace ChatAppServer.WebAPI.Controllers
 
                     if (!isMember)
                     {
-                        return Forbid("You are not authorized to view these group chats.");
+                        return Forbid(new { Message = "You are not authorized to view these group chats." });
                     }
 
                     var groupChats = await _context.Chats
-                  .Where(p => p.GroupId == recipientId)
-                  .Include(p => p.User)
-                  .OrderBy(p => p.Date) // Sắp xếp theo thời gian gửi tin nhắn
-                  .Select(chat => new
-                  {
-                      chat.Id,
-                      chat.UserId,
-                      SenderFullName = chat.User != null ? (chat.User.FirstName + " " + chat.User.LastName) : "Unknown",
-                      SenderTagName = chat.User != null ? chat.User.TagName : "Unknown",
-                      chat.GroupId,
-                      Message = chat.Message ?? string.Empty,
-                      AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-                      chat.Date
-                  })
-                  .ToListAsync(cancellationToken);
+                        .Where(p => p.GroupId == recipientId)
+                        .Include(p => p.User)
+                        .OrderBy(p => p.Date) // Sắp xếp theo thời gian gửi tin nhắn
+                        .Select(chat => new
+                        {
+                            chat.Id,
+                            chat.UserId,
+                            SenderFullName = chat.User != null ? (chat.User.FirstName + " " + chat.User.LastName) : "Unknown",
+                            SenderTagName = chat.User != null ? chat.User.TagName : "Unknown",
+                            chat.GroupId,
+                            Message = chat.Message ?? string.Empty,
+                            AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
+                            chat.Date
+                        })
+                        .ToListAsync(cancellationToken);
 
                     return Ok(groupChats);
-
-
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error in GetChats: {ex.Message}");
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error in GetChats for user {UserId} and recipient {RecipientId}", userId, recipientId);
+                return StatusCode(500, new { Message = "Internal server error. Please try again later." });
             }
         }
 
