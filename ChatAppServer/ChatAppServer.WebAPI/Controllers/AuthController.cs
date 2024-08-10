@@ -74,9 +74,9 @@ namespace ChatAppServer.WebAPI.Controllers
 
             // Check if an email confirmation was sent recently
             var existingPendingUser = await _context.PendingUsers
-                .Where(u => u.Email == request.Email)
-                .OrderByDescending(u => u.TokenExpiration)
-                .FirstOrDefaultAsync(cancellationToken);
+        .Where(u => u.Email == request.Email && u.Username == usernameLowerCase)
+        .OrderByDescending(u => u.TokenExpiration)
+        .FirstOrDefaultAsync(cancellationToken);
 
             if (existingPendingUser != null && (DateTime.UtcNow - existingPendingUser.TokenExpiration).TotalMinutes < 3)
             {
