@@ -1,17 +1,11 @@
-<div *ngFor="let message of messages"
-     [ngClass]="{'message-item': true, 'user-message': message.userId === userId}">
-  <div class="message-text">
-    <div>{{ message.message }}</div>
-    <div *ngIf="message.attachmentUrl">
-      <a [href]="message.attachmentUrl" target="_blank">View attachment</a>
-    </div>
-    <div class="message-time">{{ message.date | date:'shortTime' }}</div>
+<div class="chat-window">
+  <div class="chat-header">
+    <h3>{{ chatName }}</h3>
   </div>
-</div>
-
-<div class="message-input">
-  <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..." />
-  <input type="file" (change)="onFileSelected($event)" style="display:none" id="fileInput" />
-  <button (click)="triggerFileInput()">📎</button>
-  <button (click)="sendMessage()">Send</button>
+  <div class="chat-content">
+    <div *ngFor="let message of messages" class="message" [ngClass]="{'sent': message.IsSentByUser}">
+      <p>{{ message.Message }}</p>
+    </div>
+  </div>
+  <app-message-input (sendMessage)="onSendMessage($event)"></app-message-input>
 </div>

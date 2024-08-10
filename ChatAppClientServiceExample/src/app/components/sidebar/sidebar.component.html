@@ -1,0 +1,8 @@
+<div class="sidebar">
+  <div *ngFor="let relationship of relationships" (click)="onSelectRecipient(relationship.ContactId)">
+    <div class="contact-item">
+      <p>{{ relationship.ContactFullName }}</p>
+      <p>{{ relationship.LastMessage }}</p>
+    </div>
+  </div>
+</div>

@@ -25,6 +25,7 @@ namespace ChatAppServer.WebAPI.Controllers
             _hubContext = hubContext;
             _logger = logger;
         }
+
         [HttpGet("get-relationships")]
         public async Task<IActionResult> GetRelationships(Guid userId, CancellationToken cancellationToken)
         {
@@ -45,6 +46,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 // Get the latest message for each private contact
                 var latestPrivateChats = await _context.Chats
+                    .AsNoTracking()
                     .Where(c => (c.UserId == userId && c.ToUserId.HasValue) || (c.ToUserId == userId))
                     .GroupBy(c => c.UserId == userId ? c.ToUserId : c.UserId)
                     .Select(g => g.OrderByDescending(c => c.Date).FirstOrDefault())
@@ -55,13 +57,12 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     if (latestChat != null)
                     {
-                        // Xác định IsSentByUser
                         bool isSentByUser = latestChat.UserId == userId;
 
-                        // Truy vấn thông tin của user dựa trên contactId
-                        var contact = await _context.Users.FirstOrDefaultAsync(u => u.Id == (isSentByUser ? latestChat.ToUserId : latestChat.UserId), cancellationToken);
+                        var contact = await _context.Users
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(u => u.Id == (isSentByUser ? latestChat.ToUserId : latestChat.UserId), cancellationToken);
 
-                        // Xác định tên và tag name của contact
                         string contactFullName = contact != null ? $"{contact.FirstName} {contact.LastName}" : "Unknown Contact";
                         string contactTagName = contact?.TagName ?? string.Empty;
 
@@ -71,8 +72,8 @@ namespace ChatAppServer.WebAPI.Controllers
                             ChatId = latestChat.Id,
                             ChatDate = latestChat.Date,
                             ContactId = isSentByUser ? latestChat.ToUserId : latestChat.UserId,
-                            ContactFullName = contactFullName,  // Sử dụng thông tin từ contact
-                            ContactTagName = contactTagName,  // Sử dụng thông tin từ contact
+                            ContactFullName = contactFullName,
+                            ContactTagName = contactTagName,
                             LastMessage = latestChat.Message ?? string.Empty,
                             LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
                             IsSentByUser = isSentByUser,
@@ -80,29 +81,35 @@ namespace ChatAppServer.WebAPI.Controllers
 
                         privateChatResults.Add(result);
                     }
-
                 }
 
                 // Get distinct group IDs
                 var groupIds = await _context.Chats
-                .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
-                .Select(c => c.GroupId.Value)
-                .Distinct()
-                .ToListAsync(cancellationToken);
+                    .AsNoTracking()
+                    .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
+                    .Select(c => c.GroupId.Value)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
 
                 // Get the latest message for each group
                 var latestGroupChats = new List<object>();
                 foreach (var groupId in groupIds)
                 {
                     var latestChat = await _context.Chats
+                        .AsNoTracking()
                         .Where(c => c.GroupId == groupId)
                         .OrderByDescending(c => c.Date)
                         .FirstOrDefaultAsync(cancellationToken);
 
                     if (latestChat != null)
                     {
-                        var group = await _context.Groups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
-                        var sender = await _context.Users.FirstOrDefaultAsync(u => u.Id == latestChat.UserId, cancellationToken);
+                        var group = await _context.Groups
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+                        var sender = await _context.Users
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(u => u.Id == latestChat.UserId, cancellationToken);
 
                         latestGroupChats.Add(new
                         {
@@ -115,7 +122,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
                             IsSentByUser = latestChat.UserId == userId,
                             SenderId = latestChat.UserId,
-                            SenderFullName = $"{sender.FirstName} {sender.LastName}",
+                            SenderFullName = sender != null ? $"{sender.FirstName} {sender.LastName}" : "Unknown",
                             SenderTagName = sender?.TagName ?? string.Empty,
                         });
                     }
@@ -130,12 +137,10 @@ namespace ChatAppServer.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error in GetRelationships: {ex.Message}");
+                _logger.LogError(ex, "Error in GetRelationships for user {UserId}", userId);
                 return StatusCode(500, "Internal server error");
             }
         }
-
-
 
         [HttpGet("get-chats")]
         public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
@@ -155,12 +160,14 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
-                bool isGroup = await _context.Groups.AnyAsync(g => g.Id == recipientId, cancellationToken);
+                bool isGroup = await _context.Groups
+                    .AsNoTracking()
+                    .AnyAsync(g => g.Id == recipientId, cancellationToken);
 
                 if (!isGroup)
                 {
-                    // Kiểm tra xem người dùng đã bị chặn hay đã chặn người dùng khác
                     var isBlocked = await _context.UserBlocks
+                        .AsNoTracking()
                         .AnyAsync(ub => (ub.UserId == authenticatedUserIdGuid && ub.BlockedUserId == recipientId) ||
                                         (ub.UserId == recipientId && ub.BlockedUserId == authenticatedUserIdGuid), cancellationToken);
 
@@ -170,8 +177,9 @@ namespace ChatAppServer.WebAPI.Controllers
                     }
 
                     var privateChats = await _context.Chats
+                        .AsNoTracking()
                         .Where(c => (c.UserId == userId && c.ToUserId == recipientId) || (c.UserId == recipientId && c.ToUserId == userId))
-                        .OrderBy(c => c.Date) // Sắp xếp theo thời gian gửi tin nhắn
+                        .OrderBy(c => c.Date)
                         .Select(chat => new
                         {
                             chat.Id,
@@ -188,6 +196,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 else
                 {
                     var isMember = await _context.GroupMembers
+                        .AsNoTracking()
                         .AnyAsync(gm => gm.GroupId == recipientId && gm.UserId == authenticatedUserIdGuid, cancellationToken);
 
                     if (!isMember)
@@ -196,34 +205,32 @@ namespace ChatAppServer.WebAPI.Controllers
                     }
 
                     var groupChats = await _context.Chats
-                  .Where(p => p.GroupId == recipientId)
-                  .Include(p => p.User)
-                  .OrderBy(p => p.Date) // Sắp xếp theo thời gian gửi tin nhắn
-                  .Select(chat => new
-                  {
-                      chat.Id,
-                      chat.UserId,
-                      SenderFullName = chat.User != null ? (chat.User.FirstName + " " + chat.User.LastName) : "Unknown",
-                      SenderTagName = chat.User != null ? chat.User.TagName : "Unknown",
-                      chat.GroupId,
-                      Message = chat.Message ?? string.Empty,
-                      AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-                      chat.Date
-                  })
-                  .ToListAsync(cancellationToken);
+                        .AsNoTracking()
+                        .Where(p => p.GroupId == recipientId)
+                        .Include(p => p.User)
+                        .OrderBy(p => p.Date)
+                        .Select(chat => new
+                        {
+                            chat.Id,
+                            chat.UserId,
+                            SenderFullName = chat.User != null ? $"{chat.User.FirstName} {chat.User.LastName}" : "Unknown",
+                            SenderTagName = chat.User != null ? chat.User.TagName : "Unknown",
+                            chat.GroupId,
+                            Message = chat.Message ?? string.Empty,
+                            AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
+                            chat.Date
+                        })
+                        .ToListAsync(cancellationToken);
 
                     return Ok(groupChats);
-
-
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error in GetChats: {ex.Message}");
+                _logger.LogError(ex, "Error in GetChats for user {UserId} and recipient {RecipientId}", userId, recipientId);
                 return StatusCode(500, "Internal server error");
             }
         }
-
 
         [HttpPost("send-message")]
         public async Task<IActionResult> SendMessage([FromForm] SendMessageDto request, CancellationToken cancellationToken)
@@ -246,11 +253,14 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
-                // Kiểm tra nếu là tin nhắn nhóm
-                bool isGroup = await _context.Groups.AnyAsync(g => g.Id == request.RecipientId, cancellationToken);
+                bool isGroup = await _context.Groups
+                    .AsNoTracking()
+                    .AnyAsync(g => g.Id == request.RecipientId, cancellationToken);
+
                 if (isGroup)
                 {
                     bool isMember = await _context.GroupMembers
+                        .AsNoTracking()
                         .AnyAsync(gm => gm.GroupId == request.RecipientId && gm.UserId == request.UserId, cancellationToken);
 
                     if (!isMember)
@@ -262,6 +272,19 @@ namespace ChatAppServer.WebAPI.Controllers
                     string? originalFileName = null;
                     if (request.Attachment != null)
                     {
+                        // Improved: Validate attachment before saving
+                        if (request.Attachment.Length > 10 * 1024 * 1024) // 10 MB limit
+                        {
+                            return BadRequest("Attachment size exceeds the limit.");
+                        }
+
+                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".pdf" };
+                        var extension = Path.GetExtension(request.Attachment.FileName);
+                        if (!allowedExtensions.Contains(extension.ToLower()))
+                        {
+                            return BadRequest("Unsupported file type.");
+                        }
+
                         var (savedFileName, originalName) = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
                         attachmentUrl = Path.Combine("uploads", savedFileName).Replace("\\", "/");
                         originalFileName = originalName;
@@ -302,10 +325,12 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.Date
                     });
                 }
-                // Xử lý tin nhắn riêng tư
                 else
                 {
-                    var isBlocked = await _context.UserBlocks.AnyAsync(ub => ub.UserId == request.RecipientId && ub.BlockedUserId == request.UserId, cancellationToken);
+                    var isBlocked = await _context.UserBlocks
+                        .AsNoTracking()
+                        .AnyAsync(ub => ub.UserId == request.RecipientId && ub.BlockedUserId == request.UserId, cancellationToken);
+
                     if (isBlocked)
                     {
                         return Forbid("You cannot send messages to this user as they have blocked you.");
@@ -315,6 +340,19 @@ namespace ChatAppServer.WebAPI.Controllers
                     string? originalFileName = null;
                     if (request.Attachment != null)
                     {
+                        // Improved: Validate attachment before saving
+                        if (request.Attachment.Length > 10 * 1024 * 1024) // 10 MB limit
+                        {
+                            return BadRequest("Attachment size exceeds the limit.");
+                        }
+
+                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".pdf" };
+                        var extension = Path.GetExtension(request.Attachment.FileName);
+                        if (!allowedExtensions.Contains(extension.ToLower()))
+                        {
+                            return BadRequest("Unsupported file type.");
+                        }
+
                         var (savedFileName, originalName) = FileService.FileSaveToServer(request.Attachment, "wwwroot/uploads/");
                         attachmentUrl = Path.Combine("uploads", savedFileName).Replace("\\", "/");
                         originalFileName = originalName;
@@ -358,15 +396,18 @@ namespace ChatAppServer.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error in SendMessage: {ex.Message}");
+                _logger.LogError(ex, "Error in SendMessage for user {UserId} and recipient {RecipientId}", request.UserId, request.RecipientId);
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
         private async Task<bool> AreFriends(Guid userId1, Guid userId2, CancellationToken cancellationToken)
         {
             return await _context.Users
+                .AsNoTracking()
                 .AnyAsync(u => u.Id == userId1 && u.Friends.Any(f => f.FriendId == userId2), cancellationToken) &&
                    await _context.Users
+                .AsNoTracking()
                 .AnyAsync(u => u.Id == userId2 && u.Friends.Any(f => f.FriendId == userId1), cancellationToken);
         }
     }

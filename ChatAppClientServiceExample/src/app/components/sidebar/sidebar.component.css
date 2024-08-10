@@ -1,0 +1,19 @@
+.sidebar {
+  width: 300px;
+  background-color: #f1f1f1;
+  padding: 10px;
+}
+
+.chat-list {
+  list-style: none;
+  padding: 0;
+}
+
+.chat-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.chat-item:hover {
+  background-color: #ddd;
+}

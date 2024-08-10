@@ -22,12 +22,27 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
         }
 
+        private Guid GetAuthenticatedUserId()
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                throw new UnauthorizedAccessException("User is not authenticated.");
+            }
+            return Guid.Parse(authenticatedUserId);
+        }
+
+        private async Task<bool> IsUserAdminAsync(Guid groupId, Guid userId, CancellationToken cancellationToken)
+        {
+            return await _context.GroupMembers.AnyAsync(gm => gm.GroupId == groupId && gm.UserId == userId && gm.IsAdmin, cancellationToken);
+        }
+
         [HttpPost("create-group-chat")]
         public async Task<IActionResult> CreateGroup([FromForm] CreateGroupDto request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(request.Name))
+            if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length < 3)
             {
-                return BadRequest(new { Message = "Group name is required" });
+                return BadRequest(new { Message = "Group name is required and must be at least 3 characters long." });
             }
 
             request.MemberIds = request.MemberIds.Distinct().ToList();
@@ -36,13 +51,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "A group must have at least 3 members." });
             }
 
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to create this group.");
-            }
+            var authenticatedUserId = GetAuthenticatedUserId();
 
-            if (!request.MemberIds.Contains(Guid.Parse(authenticatedUserId)))
+            if (!request.MemberIds.Contains(authenticatedUserId))
             {
                 return BadRequest(new { Message = "The group creator must be a member of the group." });
             }
@@ -50,8 +61,16 @@ namespace ChatAppServer.WebAPI.Controllers
             string avatarUrl = null;
             if (request.AvatarFile != null)
             {
-                (string savedFileName, string originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
-                avatarUrl = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+                try
+                {
+                    (string savedFileName, string originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                    avatarUrl = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error saving avatar file for group creation.");
+                    return StatusCode(500, "An error occurred while saving the group avatar.");
+                }
             }
 
             var group = new Group
@@ -76,7 +95,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     GroupId = group.Id,
                     UserId = userId,
-                    IsAdmin = userId == Guid.Parse(authenticatedUserId)
+                    IsAdmin = userId == authenticatedUserId
                 };
 
                 await _context.GroupMembers.AddAsync(groupMember, cancellationToken);
@@ -94,7 +113,7 @@ namespace ChatAppServer.WebAPI.Controllers
             }
 
             await _context.SaveChangesAsync(cancellationToken);
-            _logger.LogInformation($"Group {group.Name} created with ID {group.Id}");
+            _logger.LogInformation($"Group {group.Name} created with ID {group.Id} by user {authenticatedUserId}");
 
             return CreatedAtAction(nameof(GetGroupMembers), new { groupId = group.Id }, new
             {
@@ -108,11 +127,7 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPost("add-group-chat-member")]
         public async Task<IActionResult> AddMember([FromForm] AddGroupMemberDto request, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to add members to this group.");
-            }
+            var authenticatedUserId = GetAuthenticatedUserId();
 
             var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
             if (group == null)
@@ -120,7 +135,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group not found" });
             }
 
-            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            var isAdmin = await IsUserAdminAsync(request.GroupId, authenticatedUserId, cancellationToken);
             if (!isAdmin)
             {
                 return Forbid("You are not authorized to add members to this group.");
@@ -165,11 +180,7 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpDelete("{groupId}/delete")]
         public async Task<IActionResult> DeleteGroup(Guid groupId, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to delete this group.");
-            }
+            var authenticatedUserId = GetAuthenticatedUserId();
 
             var group = await _context.Groups.Include(g => g.Members)
                                              .Include(g => g.Chats)
@@ -179,7 +190,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group not found" });
             }
 
-            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == groupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            var isAdmin = await IsUserAdminAsync(groupId, authenticatedUserId, cancellationToken);
             if (!isAdmin)
             {
                 return Forbid("You are not authorized to delete this group.");
@@ -191,7 +202,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation($"Group {group.Name} deleted");
+            _logger.LogInformation($"Group {group.Name} (ID: {groupId}) deleted by user {authenticatedUserId}");
 
             return NoContent();
         }
@@ -199,11 +210,7 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpGet("{groupId}/members")]
         public async Task<IActionResult> GetGroupMembers(Guid groupId, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to view the members of this group.");
-            }
+            var authenticatedUserId = GetAuthenticatedUserId();
 
             var groupMembers = await _context.GroupMembers
                 .Where(gm => gm.GroupId == groupId)
@@ -215,7 +222,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "No members found in this group" });
             }
 
-            var isMember = groupMembers.Any(gm => gm.UserId == Guid.Parse(authenticatedUserId));
+            var isMember = groupMembers.Any(gm => gm.UserId == authenticatedUserId);
             if (!isMember)
             {
                 return Forbid("You are not authorized to view the members of this group.");
@@ -239,13 +246,8 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpDelete("remove-member")]
         public async Task<IActionResult> RemoveMember([FromForm] RemoveGroupMemberDto request, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to remove members from this group.");
-            }
-
-            var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
+            var authenticatedUserId = GetAuthenticatedUserId();
+            var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId.ToString());
 
             var groupMember = await _context.GroupMembers
                 .FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
@@ -255,7 +257,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group member not found" });
             }
 
-            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == authenticatedUserIdGuid && gm.IsAdmin, cancellationToken);
+            var isAdmin = await IsUserAdminAsync(request.GroupId, authenticatedUserIdGuid, cancellationToken);
             if (!isAdmin && request.UserId != authenticatedUserIdGuid)
             {
                 return Forbid("You are not authorized to remove members from this group.");
@@ -307,12 +309,11 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Member removed from the group" });
         }
 
-
         [HttpGet("user-groups-with-details/{userId}")]
         public async Task<IActionResult> GetUserGroupsWithDetails(Guid userId, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            var authenticatedUserId = GetAuthenticatedUserId();
+            if (userId.ToString() != authenticatedUserId.ToString())
             {
                 return Forbid("You are not authorized to view this user's groups.");
             }
@@ -346,11 +347,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "New group name is required" });
             }
 
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to rename this group.");
-            }
+            var authenticatedUserId = GetAuthenticatedUserId();
 
             var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
             if (group == null)
@@ -358,7 +355,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group not found" });
             }
 
-            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            var isAdmin = await IsUserAdminAsync(request.GroupId, authenticatedUserId, cancellationToken);
             if (!isAdmin)
             {
                 return Forbid("You are not authorized to rename this group.");
@@ -372,15 +369,10 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "Group name updated successfully", group.Id, group.Name });
         }
 
-
         [HttpPost("update-admin")]
         public async Task<IActionResult> UpdateGroupAdmin([FromForm] UpdateGroupAdminDto request, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to update group admin.");
-            }
+            var authenticatedUserId = GetAuthenticatedUserId();
 
             var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
             if (group == null)
@@ -388,7 +380,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group not found" });
             }
 
-            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            var isAdmin = await IsUserAdminAsync(request.GroupId, authenticatedUserId, cancellationToken);
             if (!isAdmin)
             {
                 return Forbid("You are not authorized to update group admin.");
@@ -411,11 +403,7 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPost("revoke-admin")]
         public async Task<IActionResult> RevokeGroupAdmin([FromForm] RevokeGroupAdminDto request, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to revoke admin rights.");
-            }
+            var authenticatedUserId = GetAuthenticatedUserId();
 
             var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
             if (group == null)
@@ -423,7 +411,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound(new { Message = "Group not found" });
             }
 
-            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            var isAdmin = await IsUserAdminAsync(request.GroupId, authenticatedUserId, cancellationToken);
             if (!isAdmin)
             {
                 return Forbid("You are not authorized to revoke admin rights.");
@@ -455,7 +443,7 @@ namespace ChatAppServer.WebAPI.Controllers
             else
             {
                 var adminCount = await _context.GroupMembers.CountAsync(gm => gm.GroupId == request.GroupId && gm.IsAdmin, cancellationToken);
-                if (adminCount == 1 && groupMember.UserId == Guid.Parse(authenticatedUserId))
+                if (adminCount == 1 && groupMember.UserId == authenticatedUserId)
                 {
                     var randomMember = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && !gm.IsAdmin, cancellationToken);
                     if (randomMember != null)
@@ -478,11 +466,7 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPost("update-avatar")]
         public async Task<IActionResult> UpdateGroupAvatar([FromForm] UpdateAvatarGroupDto request, CancellationToken cancellationToken)
         {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null)
-            {
-                return Forbid("You are not authorized to update this group avatar.");
-            }
+            var authenticatedUserId = GetAuthenticatedUserId();
 
             var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
             if (group == null)
@@ -490,7 +474,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("Group not found");
             }
 
-            var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+            var isAdmin = await IsUserAdminAsync(request.GroupId, authenticatedUserId, cancellationToken);
             if (!isAdmin)
             {
                 return Forbid("You are not authorized to update this group avatar.");
@@ -498,8 +482,16 @@ namespace ChatAppServer.WebAPI.Controllers
 
             if (request.AvatarFile != null)
             {
-                var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
-                group.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+                try
+                {
+                    var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                    group.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error saving avatar file for group update.");
+                    return StatusCode(500, "An error occurred while saving the group avatar.");
+                }
             }
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -514,6 +506,5 @@ namespace ChatAppServer.WebAPI.Controllers
                 group.Avatar
             });
         }
-
     }
 }

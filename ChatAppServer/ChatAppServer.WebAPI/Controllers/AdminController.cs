@@ -8,7 +8,7 @@ namespace ChatAppServer.WebAPI.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    [Authorize(Roles = "Admin")] // Chỉ cho phép admin truy cập các phương thức trong controller này
+    [Authorize(Roles = "Admin")]
     public sealed class AdminController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -20,7 +20,17 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
         }
 
-        [HttpGet("get-users")]
+        private async Task<User?> TryGetUserAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
+            if (user == null)
+            {
+                _logger.LogWarning($"User with ID {userId} not found.");
+            }
+            return user;
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetUsers(CancellationToken cancellationToken)
         {
             var users = await _context.Users
@@ -41,10 +51,10 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(users);
         }
 
-        [HttpPost("update-user-role")]
+        [HttpPost]
         public async Task<IActionResult> UpdateUserRole([FromForm] UpdateRoleDto request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(request.UserId);
+            var user = await TryGetUserAsync(request.UserId, cancellationToken);
             if (user == null)
             {
                 return NotFound(new { Message = "User not found" });
@@ -55,6 +65,13 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "New role is required" });
             }
 
+            // Validate role if necessary (assuming roles are predefined)
+            var validRoles = new[] { "Admin", "User", "Moderator" }; // Example roles
+            if (!validRoles.Contains(request.NewRole, StringComparer.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { Message = "Invalid role specified." });
+            }
+
             user.Role = request.NewRole;
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -63,10 +80,10 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "User role updated successfully" });
         }
 
-        [HttpPost("lock-user")]
+        [HttpPost]
         public async Task<IActionResult> LockUser([FromForm] Guid userId, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(userId);
+            var user = await TryGetUserAsync(userId, cancellationToken);
             if (user == null)
             {
                 return NotFound(new { Message = "User not found" });
@@ -80,10 +97,10 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "User has been locked successfully." });
         }
 
-        [HttpPost("unlock-user")]
+        [HttpPost]
         public async Task<IActionResult> UnlockUser([FromForm] Guid userId, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(userId);
+            var user = await TryGetUserAsync(userId, cancellationToken);
             if (user == null)
             {
                 return NotFound(new { Message = "User not found" });
@@ -97,7 +114,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(new { Message = "User has been unlocked successfully." });
         }
 
-        [HttpGet("get-friend-requests")]
+        [HttpGet]
         public async Task<IActionResult> GetFriendRequests(CancellationToken cancellationToken)
         {
             var friendRequests = await _context.FriendRequests
@@ -117,14 +134,14 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(friendRequests);
         }
 
-        [HttpGet("get-all-chats")]
+        [HttpGet]
         public async Task<IActionResult> GetAllChats(CancellationToken cancellationToken)
         {
             var chats = await _context.Chats
                 .Include(c => c.User)
                 .Include(c => c.ToUser)
                 .Include(c => c.Group)
-                .OrderBy(c => c.Date) // Sắp xếp theo thời gian gửi tin nhắn
+                .OrderBy(c => c.Date)
                 .Select(c => new
                 {
                     c.Id,
@@ -143,9 +160,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(chats);
         }
 
-
-
-        [HttpGet("get-groups")]
+        [HttpGet]
         public async Task<IActionResult> GetGroups(CancellationToken cancellationToken)
         {
             var groups = await _context.Groups
@@ -179,8 +194,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(groups);
         }
 
-
-        [HttpGet("get-user-blocks")]
+        [HttpGet]
         public async Task<IActionResult> GetUserBlocks(CancellationToken cancellationToken)
         {
             var userBlocks = await _context.UserBlocks
@@ -200,7 +214,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok(userBlocks);
         }
 
-        [HttpGet("get-pending-users")]
+        [HttpGet]
         public async Task<IActionResult> GetPendingUsers(CancellationToken cancellationToken)
         {
             var pendingUsers = await _context.PendingUsers

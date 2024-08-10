@@ -18,9 +18,10 @@ import { AuthInterceptor } from './auth.interceptor';
 import { FriendRequestsComponent } from './components/friend-requests/friend-requests.component';
 import { GroupListComponent } from './components/group-list/group-list.component';
 import { GroupDetailComponent } from './components/group-detail/group-detail.component';
-import { ChatComponent } from './components/chat/chat.component';
-import {ChatListComponent} from "./components/chat-list/chat-list.component";
 import {ChatWindowComponent} from "./components/chat-window/chat-window.component";
+import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { MessageInputComponent } from './components/message-input/message-input.component';
+import { ChatLayoutComponent } from './layouts/chat-layout/chat-layout.component';
 
 @NgModule({
   declarations: [
@@ -37,9 +38,10 @@ import {ChatWindowComponent} from "./components/chat-window/chat-window.componen
     FriendRequestsComponent,
     GroupListComponent,
     GroupDetailComponent,
-    ChatComponent,
-    ChatListComponent,
-    ChatWindowComponent
+    ChatWindowComponent,
+    SidebarComponent,
+    MessageInputComponent,
+    ChatLayoutComponent
   ],
   imports: [
     BrowserModule,

@@ -1,86 +1,26 @@
-.container-fluid.h-100 {
-  height: 100vh;
-  display: flex;
-  flex-direction: row;
-}
-
-.chat-list-container {
-  flex: 0 0 25%; /* Chiếm 25% chiều rộng */
-  background-color: #f8f8f8;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.chat-window-container {
-  flex: 1; /* Chiếm hết không gian còn lại */
-  background-color: #f9f9f9;
-  padding: 10px;
-  height: 100%;
+.chat-window {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+}
+
+.chat-header {
+  background-color: #007bff;
+  color: white;
+  padding: 10px;
+}
+
+.chat-content {
+  flex: 1;
+  padding: 10px;
   overflow-y: auto;
 }
 
-.message-item {
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: flex-start;
+.message {
+  padding: 5px;
+  margin: 5px 0;
 }
 
-.message-item.user-message {
-  justify-content: flex-end;
-}
-
-.message-text {
-  background-color: #e0e0e0;
-  padding: 8px 12px;
-  border-radius: 15px;
-  max-width: 60%;
-  word-wrap: break-word;
-}
-
-.message-item.user-message .message-text {
-  background-color: #007bff;
-  color: white;
-}
-
-.message-time {
-  font-size: 0.8em;
-  color: #888;
-  margin-top: 2px;
-  margin-left: 10px;
-}
-
-.message-item.user-message .message-time {
-  margin-left: 0;
-  margin-right: 10px;
-}
-
-.message-input {
-  display: flex;
-  align-items: center;
-  padding: 10px 0;
-}
-
-.message-input input[type="text"] {
-  flex-grow: 1;
-  padding: 10px;
-  border-radius: 20px;
-  border: 1px solid #ddd;
-  outline: none;
-}
-
-.message-input button {
-  margin-left: 10px;
-  padding: 10px 20px;
-  border-radius: 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.message-input button:hover {
-  background-color: #0056b3;
+.message.sent {
+  text-align: right;
 }

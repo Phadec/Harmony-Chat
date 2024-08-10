@@ -29,6 +29,9 @@
         public bool IsLocked { get; set; } = false;
         public string TagName { get; set; } = string.Empty;
 
+        // New field to store the last time a password reset email was sent
+        public DateTime? LastPasswordResetEmailSentTime { get; set; }
+
         public List<Friendship> Friends { get; set; }
         public List<FriendRequest> SentFriendRequests { get; set; }
         public List<FriendRequest> ReceivedFriendRequests { get; set; }

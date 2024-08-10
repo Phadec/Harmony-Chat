@@ -21,21 +21,23 @@ namespace ChatAppServer.WebAPI.Controllers
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly IBackgroundTaskQueue _taskQueue;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(ApplicationDbContext context, IConfiguration configuration, IEmailService emailService, IBackgroundTaskQueue taskQueue)
+        public AuthController(ApplicationDbContext context, IConfiguration configuration, IEmailService emailService, IBackgroundTaskQueue taskQueue, ILogger<AuthController> logger)
         {
             _context = context;
             _configuration = configuration;
             _emailService = emailService;
             _taskQueue = taskQueue;
+            _logger = logger;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] RegisterDto request, CancellationToken cancellationToken)
         {
             // Trim whitespace from FirstName and LastName
-            string firstName = request.FirstName?.Trim() ?? string.Empty;
-            string lastName = request.LastName?.Trim() ?? string.Empty;
+            string firstName = NormalizeName(request.FirstName?.Trim() ?? string.Empty);
+            string lastName = NormalizeName(request.LastName?.Trim() ?? string.Empty);
 
             // Check if the first name or last name contains special characters
             if (!IsValidName(firstName) || !IsValidName(lastName))
@@ -48,9 +50,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "First name and last name cannot be empty." });
             }
 
-            if (request.Password.Length < 8)
+            if (request.Password.Length < 8 || !IsValidPassword(request.Password))
             {
-                return BadRequest(new { Message = "Password must be at least 8 characters long." });
+                return BadRequest(new { Message = "Password must be at least 8 characters long and contain letters, numbers, and special characters." });
             }
 
             if (request.Password != request.RetypePassword)
@@ -68,6 +70,17 @@ namespace ChatAppServer.WebAPI.Controllers
             if (isNameExists)
             {
                 return BadRequest(new { Message = "Username already exists!" });
+            }
+
+            // Check if an email confirmation was sent recently
+            var existingPendingUser = await _context.PendingUsers
+                .Where(u => u.Email == request.Email)
+                .OrderByDescending(u => u.TokenExpiration)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (existingPendingUser != null && (DateTime.UtcNow - existingPendingUser.TokenExpiration).TotalMinutes < 3)
+            {
+                return BadRequest(new { Message = "Please wait at least 3 minutes before requesting another confirmation email." });
             }
 
             // Handle avatar
@@ -96,7 +109,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 OriginalAvatarFileName = originalAvatarFileName,
                 PasswordHash = passwordHash,
                 Token = token,
-                TokenExpiration = DateTime.UtcNow.AddHours(3)
+                TokenExpiration = DateTime.UtcNow.AddMinutes(3) // Set the token expiration to 3 minutes from now
             };
 
             await _context.PendingUsers.AddAsync(pendingUser, cancellationToken);
@@ -105,10 +118,25 @@ namespace ChatAppServer.WebAPI.Controllers
             // Queue background email task for sending the verification email
             _taskQueue.QueueBackgroundWorkItem(async tokenCancellationToken =>
             {
-                await _emailService.SendEmailConfirmationTokenAsync(pendingUser.Email, pendingUser.FirstName, pendingUser.LastName, token);
+                try
+                {
+                    await _emailService.SendEmailConfirmationTokenAsync(pendingUser.Email, pendingUser.FirstName, pendingUser.LastName, token);
+                }
+                catch (Exception ex)
+                {
+                    // Log error or handle as necessary
+                    _logger.LogError(ex, "Failed to send email confirmation for user {Username} with email {Email}", pendingUser.Username, pendingUser.Email);
+                }
             });
 
             return Ok(new { Message = "Registration successful. Please check your email to confirm your account." });
+        }
+
+        // Helper method to normalize names (remove extra spaces)
+        private string NormalizeName(string name)
+        {
+            // Replace multiple spaces with a single space
+            return Regex.Replace(name, @"\s+", " ");
         }
 
         // Helper method to validate names
@@ -119,6 +147,13 @@ namespace ChatAppServer.WebAPI.Controllers
             return regex.IsMatch(name);
         }
 
+        // Helper method to validate passwords
+        private bool IsValidPassword(string password)
+        {
+            // Password must contain at least one letter, one number, and one special character
+            var regex = new Regex(@"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$");
+            return regex.IsMatch(password);
+        }
 
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(string token)
@@ -186,8 +221,8 @@ namespace ChatAppServer.WebAPI.Controllers
 
             var claims = new[]
             {
-        new Claim(ClaimTypes.Email, email)
-    };
+                new Claim(ClaimTypes.Email, email)
+            };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -280,12 +315,35 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "Username not found" });
             }
 
+            // Kiểm tra thời gian gửi email đặt lại mật khẩu gần nhất
+            if (user.LastPasswordResetEmailSentTime != null &&
+                (DateTime.UtcNow - user.LastPasswordResetEmailSentTime.Value).TotalMinutes < 3)
+            {
+                return BadRequest(new { Message = "Please wait at least 3 minutes before requesting another password reset email." });
+            }
+
+            // Tạo và gửi token
             var token = GenerateResetToken(user);
 
+            // Cập nhật thời gian gửi email gần nhất
+            user.LastPasswordResetEmailSentTime = DateTime.UtcNow;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Gửi email đặt lại mật khẩu
             _taskQueue.QueueBackgroundWorkItem(async ct =>
             {
-                await _emailService.SendResetEmail(user.Email, token);
+                try
+                {
+                    await _emailService.SendResetEmail(user.Email, token);
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi hoặc thực hiện các biện pháp khác
+                    _logger.LogError(ex, "Failed to send password reset email to {Email} for user {Username}.", user.Email, user.Username);
+                }
             });
+
             return Ok(new { Message = "Password reset email sent." });
         }
 
@@ -310,9 +368,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "User not found." });
             }
 
-            if (request.NewPassword.Length < 8)
+            if (request.NewPassword.Length < 8 || !IsValidPassword(request.NewPassword))
             {
-                return BadRequest(new { Message = "Password must be at least 8 characters long." });
+                return BadRequest(new { Message = "Password must be at least 8 characters long and contain letters, numbers, and special characters." });
             }
 
             // Kiểm tra ConfirmPassword
@@ -326,12 +384,19 @@ namespace ChatAppServer.WebAPI.Controllers
 
             _taskQueue.QueueBackgroundWorkItem(async token =>
             {
-                await _emailService.SendResetSuccessEmail(user.Email, user.Username);
+                try
+                {
+                    await _emailService.SendResetSuccessEmail(user.Email, user.Username);
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi hoặc thực hiện các biện pháp khác
+                    _logger.LogError(ex, "Failed to send password reset success email to {Email} for user {Username}.", user.Email, user.Username);
+                }
             });
 
             return Ok(new { Message = "Password has been reset." });
         }
-
 
         [HttpPost("change-user-password")]
         [Authorize]
@@ -362,9 +427,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "New password cannot be the same as the current password." });
             }
 
-            if (request.NewPassword.Length < 8)
+            if (request.NewPassword.Length < 8 || !IsValidPassword(request.NewPassword))
             {
-                return BadRequest(new { Message = "New password must be at least 8 characters long." });
+                return BadRequest(new { Message = "New password must be at least 8 characters long and contain letters, numbers, and special characters." });
             }
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
@@ -372,12 +437,19 @@ namespace ChatAppServer.WebAPI.Controllers
 
             _taskQueue.QueueBackgroundWorkItem(async token =>
             {
-                await _emailService.SendPasswordChangeEmail(user.Email, user.Username);
+                try
+                {
+                    await _emailService.SendPasswordChangeEmail(user.Email, user.Username);
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi hoặc thực hiện các biện pháp khác
+                    _logger.LogError(ex, "Failed to send password change email to {Email} for user {Username}.", user.Email, user.Username);
+                }
             });
 
             return Ok(new { Message = "Password has been changed successfully." });
         }
-
 
         private string GenerateJwtToken(User user)
         {
@@ -442,11 +514,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
             if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 throw new SecurityTokenException("Invalid token");
-
-            foreach (var claim in principal.Claims)
-            {
-                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
-            }
 
             return principal;
         }

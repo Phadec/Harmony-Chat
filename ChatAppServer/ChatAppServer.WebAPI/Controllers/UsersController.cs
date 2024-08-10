@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
@@ -109,13 +110,23 @@ namespace ChatAppServer.WebAPI.Controllers
             // Update FirstName if provided
             if (!string.IsNullOrEmpty(request.FirstName))
             {
-                user.FirstName = request.FirstName;
+                string firstName = NormalizeName(request.FirstName);
+                if (!IsValidName(firstName))
+                {
+                    return BadRequest(new { Message = "First name contains invalid characters. Only letters and spaces are allowed." });
+                }
+                user.FirstName = firstName;
             }
 
             // Update LastName if provided
             if (!string.IsNullOrEmpty(request.LastName))
             {
-                user.LastName = request.LastName;
+                string lastName = NormalizeName(request.LastName);
+                if (!IsValidName(lastName))
+                {
+                    return BadRequest(new { Message = "Last name contains invalid characters. Only letters and spaces are allowed." });
+                }
+                user.LastName = lastName;
             }
 
             // Update Birthday if provided
@@ -127,6 +138,10 @@ namespace ChatAppServer.WebAPI.Controllers
             // Update Email if provided
             if (!string.IsNullOrEmpty(request.Email) && user.Email != request.Email)
             {
+                if (!IsValidEmail(request.Email))
+                {
+                    return BadRequest(new { Message = "Invalid email format." });
+                }
                 emailChanged = true;
                 user.Email = request.Email;
             }
@@ -195,6 +210,29 @@ namespace ChatAppServer.WebAPI.Controllers
                 user.OriginalAvatarFileName,
                 user.TagName
             });
+        }
+
+        // Helper method to normalize names (remove extra spaces)
+        private string NormalizeName(string name)
+        {
+            // Replace multiple spaces with a single space
+            return Regex.Replace(name, @"\s+", " ").Trim();
+        }
+
+        // Helper method to validate names
+        private bool IsValidName(string name)
+        {
+            // Regular expression to allow only letters and spaces
+            var regex = new Regex(@"^[a-zA-Z\s]+$");
+            return regex.IsMatch(name);
+        }
+
+        // Helper method to validate email
+        private bool IsValidEmail(string email)
+        {
+            // Simple regex for email validation
+            var regex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            return regex.IsMatch(email);
         }
 
 
