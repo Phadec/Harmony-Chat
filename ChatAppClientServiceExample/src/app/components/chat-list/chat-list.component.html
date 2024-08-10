@@ -1,0 +1,9 @@
+<div class="chat-list">
+  <div *ngFor="let chat of chats" (click)="selectChat(chat)" class="chat-item">
+    <div class="chat-info">
+      <h5 *ngIf="chat.contactFullName">{{ chat.contactFullName }}</h5>
+      <h5 *ngIf="chat.groupName">{{ chat.groupName }}</h5>
+      <p>{{ chat.lastMessage }}</p>
+    </div>
+  </div>
+</div>

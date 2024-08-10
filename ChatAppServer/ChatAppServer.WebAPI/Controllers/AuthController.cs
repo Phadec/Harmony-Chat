@@ -9,6 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
@@ -32,6 +33,21 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] RegisterDto request, CancellationToken cancellationToken)
         {
+            // Trim whitespace from FirstName and LastName
+            string firstName = request.FirstName?.Trim() ?? string.Empty;
+            string lastName = request.LastName?.Trim() ?? string.Empty;
+
+            // Check if the first name or last name contains special characters
+            if (!IsValidName(firstName) || !IsValidName(lastName))
+            {
+                return BadRequest(new { Message = "First name or last name contains invalid characters. Only letters and spaces are allowed." });
+            }
+
+            if (firstName.Length == 0 || lastName.Length == 0)
+            {
+                return BadRequest(new { Message = "First name and last name cannot be empty." });
+            }
+
             if (request.Password.Length < 8)
             {
                 return BadRequest(new { Message = "Password must be at least 8 characters long." });
@@ -72,8 +88,8 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 Id = Guid.NewGuid(),
                 Username = usernameLowerCase,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
+                FirstName = firstName,
+                LastName = lastName,
                 Birthday = request.Birthday,
                 Email = request.Email,
                 Avatar = avatarUrl,
@@ -94,6 +110,15 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(new { Message = "Registration successful. Please check your email to confirm your account." });
         }
+
+        // Helper method to validate names
+        private bool IsValidName(string name)
+        {
+            // Regular expression to allow only letters and spaces
+            var regex = new Regex(@"^[a-zA-Z\s]+$");
+            return regex.IsMatch(name);
+        }
+
 
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(string token)
@@ -330,6 +355,13 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest(new { Message = "Current password is incorrect." });
             }
 
+            // Check if the new password is the same as the current password
+            bool isNewPasswordSameAsCurrent = BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash);
+            if (isNewPasswordSameAsCurrent)
+            {
+                return BadRequest(new { Message = "New password cannot be the same as the current password." });
+            }
+
             if (request.NewPassword.Length < 8)
             {
                 return BadRequest(new { Message = "New password must be at least 8 characters long." });
@@ -345,6 +377,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(new { Message = "Password has been changed successfully." });
         }
+
 
         private string GenerateJwtToken(User user)
         {

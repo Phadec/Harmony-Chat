@@ -1,9 +1,0 @@
-<div class="chat-app">
-  <div class="sidebar">
-    <app-chat-relationships (recipientSelected)="onRecipientSelected($event)"></app-chat-relationships>
-  </div>
-  <div class="chat-area">
-    <app-chat-messages [recipientId]="selectedRecipientId"></app-chat-messages>
-    <app-send-message [recipientId]="selectedRecipientId"></app-send-message>
-  </div>
-</div>

@@ -8,7 +8,8 @@ import { ChangePasswordComponent } from './components/change-password/change-pas
 import { ConfirmEmailComponent } from './components/confirm-email/confirm-email.component';
 import { FriendListComponent } from './components/friend-list/friend-list.component';
 import {FriendRequestsComponent} from "./components/friend-requests/friend-requests.component";
-import { ChatLayoutComponent } from './layouts/chat-layout/chat-layout.component';
+import {ChatComponent} from "./components/chat/chat.component";
+
 const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'login', component: LoginComponent },
@@ -18,7 +19,7 @@ const routes: Routes = [
   { path: 'confirm-email', component: ConfirmEmailComponent },
   { path: 'friends', component: FriendListComponent },
   { path: 'friend-requests', component: FriendRequestsComponent },
-  { path: 'chats', component: ChatLayoutComponent },
+  { path: 'chat', component: ChatComponent },  // route cho từng cuộc hội thoại
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];
 

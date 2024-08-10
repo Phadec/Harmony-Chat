@@ -87,8 +87,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok(user);
         }
-
-
         [HttpPut("{userId}/update-user")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
         {
@@ -105,23 +103,57 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("User not found");
             }
 
-            bool emailChanged = user.Email != request.Email;
-            bool tagNameChanged = user.TagName != request.TagName;
+            bool emailChanged = false;
+            bool tagNameChanged = false;
 
-            user.FirstName = request.FirstName;
-            user.LastName = request.LastName;
-            user.Birthday = request.Birthday;
-            user.Email = request.Email;
+            // Update FirstName if provided
+            if (!string.IsNullOrEmpty(request.FirstName))
+            {
+                user.FirstName = request.FirstName;
+            }
 
+            // Update LastName if provided
+            if (!string.IsNullOrEmpty(request.LastName))
+            {
+                user.LastName = request.LastName;
+            }
+
+            // Update Birthday if provided
+            if (request.Birthday != null)
+            {
+                user.Birthday = request.Birthday.Value;
+            }
+
+            // Update Email if provided
+            if (!string.IsNullOrEmpty(request.Email) && user.Email != request.Email)
+            {
+                emailChanged = true;
+                user.Email = request.Email;
+            }
+
+            // Update Avatar if a new file is provided
             if (request.AvatarFile != null)
             {
-                var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
-                user.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+                // Check if the user has an existing avatar and delete it
+                if (!string.IsNullOrEmpty(user.Avatar))
+                {
+                    var oldAvatarPath = Path.Combine("wwwroot", user.Avatar);
+                    if (System.IO.File.Exists(oldAvatarPath))
+                    {
+                        System.IO.File.Delete(oldAvatarPath);
+                    }
+                }
+
+                // Save the new avatar
+                var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatars/");
+                user.Avatar = Path.Combine("avatars", savedFileName).Replace("\\", "/");
                 user.OriginalAvatarFileName = originalFileName;
             }
 
-            if (tagNameChanged)
+            // Update TagName if provided
+            if (!string.IsNullOrEmpty(request.TagName) && user.TagName != request.TagName)
             {
+                tagNameChanged = true;
                 var newTagName = request.TagName.ToLower();
                 if (!newTagName.StartsWith("@"))
                 {

@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
@@ -17,14 +16,11 @@ import { BlockedUsersComponent } from './components/blocked-users/blocked-users.
 import { FriendsService } from './services/friends.service';
 import { AuthInterceptor } from './auth.interceptor';
 import { FriendRequestsComponent } from './components/friend-requests/friend-requests.component';
-import { ChatDetailComponent } from './components/chat-detail/chat-detail.component';
-import { ChatHeaderComponent } from './components/chat-header/chat-header.component';
 import { GroupListComponent } from './components/group-list/group-list.component';
 import { GroupDetailComponent } from './components/group-detail/group-detail.component';
-import { ChatMessagesComponent } from './components/chat-messages/chat-messages.component';
-import { SendMessageComponent } from './components/send-message/send-message.component';
-import { ChatLayoutComponent } from './layouts/chat-layout/chat-layout.component';
-import {ChatRelationshipsComponent} from "./components/chat-relationships/chat-relationships.component";
+import { ChatComponent } from './components/chat/chat.component';
+import {ChatListComponent} from "./components/chat-list/chat-list.component";
+import {ChatWindowComponent} from "./components/chat-window/chat-window.component";
 
 @NgModule({
   declarations: [
@@ -39,22 +35,17 @@ import {ChatRelationshipsComponent} from "./components/chat-relationships/chat-r
     AddFriendComponent,
     BlockedUsersComponent,
     FriendRequestsComponent,
-    ChatDetailComponent,
-    ChatHeaderComponent,
     GroupListComponent,
     GroupDetailComponent,
-    ChatRelationshipsComponent,
-    ChatMessagesComponent,
-    SendMessageComponent,
-    ChatLayoutComponent,
-
+    ChatComponent,
+    ChatListComponent,
+    ChatWindowComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     FormsModule,
     AppRoutingModule,
-    RouterModule,
     ReactiveFormsModule
   ],
   providers: [
