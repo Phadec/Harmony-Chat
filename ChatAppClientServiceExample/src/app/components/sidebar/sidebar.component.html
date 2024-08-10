@@ -1,8 +1,8 @@
-<div class="sidebar">
-  <div *ngFor="let relationship of relationships" (click)="onSelectRecipient(relationship.ContactId)">
-    <div class="contact-item">
-      <p>{{ relationship.ContactFullName }}</p>
-      <p>{{ relationship.LastMessage }}</p>
-    </div>
+<div class = "container"></div>
+<div *ngFor="let relationship of relationships">
+  <!-- Sử dụng dữ liệu trong relationship như bình thường -->
+  <div (click)="onSelectRecipient(relationship.contactId || relationship.groupId)">
+    <h3>{{ relationship.contactFullName || relationship.groupName }}</h3>
+    <p>{{ relationship.lastMessage }}</p>
   </div>
 </div>

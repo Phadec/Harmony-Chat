@@ -12,9 +12,15 @@ export class ChatWindowComponent implements OnInit {
   messages: any[] = [];
   chatName: string = '';
 
+  // Ensure the newMessage property exists
+  newMessage: string = '';
+  currentUserId: string = '';
+
   constructor(private chatService: ChatService, private signalRService: SignalRService) {}
 
   ngOnInit(): void {
+    this.currentUserId = localStorage.getItem('userId') || ''; // Store the userId in a class property
+
     this.signalRService.messageReceived$.subscribe(message => {
       this.messages.push(message);
     });
@@ -31,9 +37,11 @@ export class ChatWindowComponent implements OnInit {
   }
 
   loadMessages(recipientId: string): void {
-    this.chatService.getChats(recipientId).subscribe((response) => {
-      this.messages = response;
-      this.chatName = response.length > 0 ? response[0].SenderFullName : 'Chat';
+    this.chatService.getChats(recipientId).subscribe((response: any) => {
+      if (response && response.$values) {
+        this.messages = response.$values; // Gán mảng $values vào biến messages
+        this.chatName = this.messages.length > 0 ? this.messages[0].senderFullName : 'Chat';
+      }
     });
   }
 
@@ -41,10 +49,11 @@ export class ChatWindowComponent implements OnInit {
     if (this.recipientId) {
       const formData = new FormData();
       formData.append('Message', message);
-      formData.append('UserId', localStorage.getItem('userId') || '');
+      formData.append('UserId', this.currentUserId);
       formData.append('RecipientId', this.recipientId);
 
       this.chatService.sendMessage(formData).subscribe();
+      this.newMessage = ''; // Clear the input after sending the message
     }
   }
 }

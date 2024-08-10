@@ -1,19 +1,35 @@
-.sidebar {
-  width: 300px;
-  background-color: #f1f1f1;
+/* Styles for the container of the list items */
+.relationship-item {
+  display: flex;
+  flex-direction: column;
   padding: 10px;
-}
-
-.chat-list {
-  list-style: none;
-  padding: 0;
-}
-
-.chat-item {
-  padding: 10px;
+  margin: 5px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
   cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.chat-item:hover {
-  background-color: #ddd;
+/* Hover effect for each item */
+.relationship-item:hover {
+  background-color: #e0e0e0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Styles for the title (h3) */
+.relationship-item h3 {
+  font-size: 1.2em;
+  margin: 0;
+  color: #333;
+}
+
+/* Styles for the last message (p) */
+.relationship-item p {
+  font-size: 0.9em;
+  color: #666;
+  margin: 5px 0 0;
+}
+.container{
+  background-color: blue;
 }

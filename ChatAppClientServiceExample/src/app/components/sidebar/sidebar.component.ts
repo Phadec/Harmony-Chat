@@ -19,7 +19,8 @@ export class SidebarComponent implements OnInit {
 
   loadRelationships(): void {
     this.chatService.getRelationships().subscribe((response) => {
-      this.relationships = response;
+      // Giả sử response là đối tượng JSON chứa $values
+      this.relationships = response.$values; // Lấy dữ liệu từ $values
     });
   }
 
