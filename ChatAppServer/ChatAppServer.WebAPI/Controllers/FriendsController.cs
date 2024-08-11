@@ -35,27 +35,36 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest("Invalid userId");
             }
 
-            var sentRequests = await _context.FriendRequests
-                .Where(fr => fr.SenderId == userId)
-                .Include(fr => fr.Receiver)
-                .ToListAsync(cancellationToken);
-
-            if (!sentRequests.Any())
+            try
             {
-                return NotFound("No sent friend requests found.");
+                var sentRequests = await _context.FriendRequests
+                    .Where(fr => fr.SenderId == userId)
+                    .Include(fr => fr.Receiver)
+                    .ToListAsync(cancellationToken);
+
+                if (!sentRequests.Any())
+                {
+                    return NotFound("No sent friend requests found.");
+                }
+
+                var sentRequestsDto = sentRequests.Select(fr => new SentFriendRequestDto
+                {
+                    Id = fr.Id,
+                    ReceiverId = fr.ReceiverId,
+                    TagName = fr.Receiver.TagName, // Should be Receiver instead of Sender
+                    RequestDate = fr.RequestDate,
+                    Status = fr.Status
+                }).ToList();
+
+                return Ok(sentRequestsDto);
             }
-
-            var sentRequestsDto = sentRequests.Select(fr => new SentFriendRequestDto
+            catch (Exception ex)
             {
-                Id = fr.Id,
-                ReceiverId = fr.ReceiverId,
-                TagName = fr.Sender.TagName,
-                RequestDate = fr.RequestDate,
-                Status = fr.Status
-            }).ToList();
-
-            return Ok(sentRequestsDto);
+                _logger.LogError(ex, "An error occurred while retrieving sent friend requests for user {UserId}.", userId);
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
+
 
         [HttpPost("{userId}/change-nickname")]
         public async Task<IActionResult> ChangeNickname(Guid userId, [FromForm] ChangeNicknameDto request, CancellationToken cancellationToken)
@@ -66,22 +75,41 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to change this nickname.");
             }
 
-            var friendship = await _context.Friendships
-                .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == request.FriendId, cancellationToken);
-
-            if (friendship == null)
+            if (userId == Guid.Empty || request.FriendId == Guid.Empty)
             {
-                return NotFound("Friendship not found.");
+                return BadRequest("Invalid userId or friendId.");
             }
 
-            friendship.Nickname = request.Nickname;
-            _context.Friendships.Update(friendship);
-            await _context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                var friendship = await _context.Friendships
+                    .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == request.FriendId, cancellationToken);
 
-            _logger.LogInformation($"Nickname for friend {request.FriendId} changed to {request.Nickname}");
+                if (friendship == null)
+                {
+                    return NotFound("Friendship not found.");
+                }
 
-            return Ok(new { Message = "Nickname changed successfully." });
+                friendship.Nickname = request.Nickname;
+                _context.Friendships.Update(friendship);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation($"Nickname for friend {request.FriendId} changed to {request.Nickname}");
+
+                return Ok(new { Message = "Nickname changed successfully." });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Database error occurred while changing nickname for user {UserId} and friend {FriendId}.", userId, request.FriendId);
+                return StatusCode(500, "An error occurred while updating the nickname in the database.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while changing nickname for user {UserId} and friend {FriendId}.", userId, request.FriendId);
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
+
 
         [HttpPost("{userId}/add/{friendId}")]
         public async Task<IActionResult> AddFriend(Guid userId, Guid friendId, CancellationToken cancellationToken)
@@ -237,42 +265,54 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest("Invalid userId");
             }
 
-            var friendships = await _context.Friendships
-                .Where(f => f.UserId == userId)
-                .Include(f => f.Friend)
-                .ToListAsync(cancellationToken);
-
-            var reverseFriendships = await _context.Friendships
-                .Where(f => f.FriendId == userId)
-                .Include(f => f.User)
-                .ToListAsync(cancellationToken);
-
-            var allFriends = friendships
-                .Select(f => new { User = f.Friend, f.Nickname })
-                .Concat(reverseFriendships.Select(f => new { User = f.User, f.Nickname }))
-                .Distinct()
-                .ToList();
-
-            if (!allFriends.Any())
+            try
             {
-                return NotFound("No friends found.");
+                var friendships = await _context.Friendships
+                    .Where(f => f.UserId == userId)
+                    .Include(f => f.Friend)
+                    .ToListAsync(cancellationToken);
+
+                var reverseFriendships = await _context.Friendships
+                    .Where(f => f.FriendId == userId)
+                    .Include(f => f.User)
+                    .ToListAsync(cancellationToken);
+
+                var allFriends = friendships
+                    .Select(f => new { User = f.Friend, f.Nickname })
+                    .Concat(reverseFriendships.Select(f => new { User = f.User, f.Nickname }))
+                    .Distinct()
+                    .ToList();
+
+                if (!allFriends.Any())
+                {
+                    return NotFound("No friends found.");
+                }
+
+                var friendsDto = allFriends.Select(f => new FriendDto
+                {
+                    Id = f.User.Id,
+                    Username = f.User.Username,
+                    FirstName = f.User.FirstName,
+                    LastName = f.User.LastName,
+                    Birthday = f.User.Birthday,
+                    Email = f.User.Email,
+                    Avatar = f.User.Avatar,
+                    Status = f.User.Status,
+                    Nickname = f.Nickname
+                }).ToList();
+
+                return Ok(friendsDto);
             }
-
-            var friendsDto = allFriends.Select(f => new FriendDto
+            catch (Exception ex)
             {
-                Id = f.User.Id,
-                Username = f.User.Username,
-                FirstName = f.User.FirstName,
-                LastName = f.User.LastName,
-                Birthday = f.User.Birthday,
-                Email = f.User.Email,
-                Avatar = f.User.Avatar,
-                Status = f.User.Status,
-                Nickname = f.Nickname
-            }).ToList();
+                // Ghi lại lỗi vào log
+                _logger.LogError(ex, "Error occurred while fetching friends for user {UserId}", userId);
 
-            return Ok(friendsDto);
+                // Trả về lỗi Internal Server Error với thông báo lỗi
+                return StatusCode(500, "An error occurred while fetching friends.");
+            }
         }
+
 
         [HttpGet("{userId}/friend-requests")]
         public async Task<IActionResult> GetFriendRequests(Guid userId, CancellationToken cancellationToken)
@@ -288,24 +328,35 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest("Invalid userId");
             }
 
-            var user = await _context.Users.Include(u => u.ReceivedFriendRequests)
-                                           .ThenInclude(fr => fr.Sender)
-                                           .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-            if (user == null)
+            try
             {
-                return NotFound();
+                var user = await _context.Users.Include(u => u.ReceivedFriendRequests)
+                                               .ThenInclude(fr => fr.Sender)
+                                               .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                var friendRequests = user.ReceivedFriendRequests.Select(fr => new
+                {
+                    fr.Id,
+                    SenderId = fr.SenderId,
+                    SenderName = $"{fr.Sender.FirstName} {fr.Sender.LastName}",
+                    TagName = fr.Sender.TagName,
+                    fr.Status
+                }).ToList();
+
+                return Ok(friendRequests);
             }
-
-            var friendRequests = user.ReceivedFriendRequests.Select(fr => new
+            catch (Exception ex)
             {
-                fr.Id,
-                SenderId = fr.SenderId,
-                SenderName = $"{fr.Sender.FirstName} {fr.Sender.LastName}",
-                TagName = fr.Sender.TagName,
-                fr.Status
-            }).ToList();
+                // Ghi lại lỗi
+                _logger.LogError(ex, "Error occurred while fetching friend requests for user {UserId}", userId);
 
-            return Ok(friendRequests);
+                // Trả về lỗi Internal Server Error với thông báo lỗi
+                return StatusCode(500, "An error occurred while fetching friend requests.");
+            }
         }
 
 
@@ -455,40 +506,57 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest("You cannot block yourself.");
             }
 
-            // Xóa kết bạn nếu họ là bạn bè
-            var friendships = await _context.Friendships
-                .Where(f => (f.UserId == userId && f.FriendId == blockedUserId) || (f.UserId == blockedUserId && f.FriendId == userId))
-                .ToListAsync(cancellationToken);
-
-            if (friendships.Any())
+            try
             {
-                _context.Friendships.RemoveRange(friendships);
+                // Xóa kết bạn nếu họ là bạn bè
+                var friendships = await _context.Friendships
+                    .Where(f => (f.UserId == userId && f.FriendId == blockedUserId) || (f.UserId == blockedUserId && f.FriendId == userId))
+                    .ToListAsync(cancellationToken);
+
+                if (friendships.Any())
+                {
+                    _context.Friendships.RemoveRange(friendships);
+                }
+
+                // Xóa tất cả yêu cầu kết bạn liên quan đến người dùng bị chặn
+                var friendRequests = await _context.FriendRequests
+                    .Where(fr => (fr.SenderId == userId && fr.ReceiverId == blockedUserId) || (fr.SenderId == blockedUserId && fr.ReceiverId == userId))
+                    .ToListAsync(cancellationToken);
+
+                if (friendRequests.Any())
+                {
+                    _context.FriendRequests.RemoveRange(friendRequests);
+                }
+
+                // Kiểm tra xem người dùng đã bị chặn trước đó hay chưa
+                var existingBlock = await _context.UserBlocks
+                    .FirstOrDefaultAsync(ub => ub.UserId == userId && ub.BlockedUserId == blockedUserId, cancellationToken);
+
+                if (existingBlock != null)
+                {
+                    return BadRequest("This user is already blocked.");
+                }
+
+                // Thêm người dùng bị chặn vào bảng chặn
+                var userBlock = new UserBlock
+                {
+                    UserId = userId,
+                    BlockedUserId = blockedUserId,
+                    BlockedDate = DateTime.UtcNow
+                };
+
+                _context.UserBlocks.Add(userBlock);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation($"User {userId} blocked user {blockedUserId}");
+
+                return Ok(new { Message = "User blocked successfully" });
             }
-
-            // Xóa tất cả yêu cầu kết bạn liên quan đến người dùng bị chặn
-            var friendRequests = await _context.FriendRequests
-                .Where(fr => (fr.SenderId == userId && fr.ReceiverId == blockedUserId) || (fr.SenderId == blockedUserId && fr.ReceiverId == userId))
-                .ToListAsync(cancellationToken);
-
-            if (friendRequests.Any())
+            catch (Exception ex)
             {
-                _context.FriendRequests.RemoveRange(friendRequests);
+                _logger.LogError(ex, "An error occurred while blocking user {BlockedUserId} for user {UserId}.", blockedUserId, userId);
+                return StatusCode(500, "An error occurred while processing your request.");
             }
-
-            // Thêm người dùng bị chặn vào bảng chặn
-            var userBlock = new UserBlock
-            {
-                UserId = userId,
-                BlockedUserId = blockedUserId,
-                BlockedDate = DateTime.UtcNow
-            };
-
-            _context.UserBlocks.Add(userBlock);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation($"User {userId} blocked user {blockedUserId}");
-
-            return Ok(new { Message = "User blocked successfully" });
         }
 
 
@@ -501,21 +569,35 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to unblock this user.");
             }
 
-            var userBlock = await _context.UserBlocks
-                .FirstOrDefaultAsync(ub => ub.UserId == userId && ub.BlockedUserId == blockedUserId, cancellationToken);
-
-            if (userBlock == null)
+            if (userId == blockedUserId)
             {
-                return NotFound(new { Message = "User block not found" });
+                return BadRequest("You cannot unblock yourself.");
             }
 
-            _context.UserBlocks.Remove(userBlock);
-            await _context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                var userBlock = await _context.UserBlocks
+                    .FirstOrDefaultAsync(ub => ub.UserId == userId && ub.BlockedUserId == blockedUserId, cancellationToken);
 
-            _logger.LogInformation($"User {userId} unblocked user {blockedUserId}");
+                if (userBlock == null)
+                {
+                    return NotFound(new { Message = "User block not found" });
+                }
 
-            return Ok(new { Message = "User unblocked successfully" });
+                _context.UserBlocks.Remove(userBlock);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation($"User {userId} unblocked user {blockedUserId}");
+
+                return Ok(new { Message = "User unblocked successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while unblocking user {BlockedUserId} for user {UserId}.", blockedUserId, userId);
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
+
 
         [HttpGet("{userId}/blocked-users")]
         public async Task<IActionResult> GetBlockedUsers(Guid userId, CancellationToken cancellationToken)
@@ -526,16 +608,28 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to view blocked users.");
             }
 
-            var blockedUsers = await _context.UserBlocks
-                .Where(ub => ub.UserId == userId)
-                .Select(ub => new
-                {
-                    ub.BlockedUserId,
-                    BlockedDate = ub.BlockedDate.ToString("yyyy-MM-ddTHH:mm:ssZ")
-                })
-                .ToListAsync(cancellationToken);
+            try
+            {
+                var blockedUsers = await _context.UserBlocks
+                    .Where(ub => ub.UserId == userId)
+                    .Select(ub => new
+                    {
+                        ub.BlockedUserId,
+                        BlockedDate = ub.BlockedDate.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                    })
+                    .ToListAsync(cancellationToken);
 
-            return Ok(blockedUsers);
+                return Ok(blockedUsers);
+            }
+            catch (Exception ex)
+            {
+                // Ghi lại lỗi
+                _logger.LogError(ex, "Error occurred while fetching blocked users for user {UserId}", userId);
+
+                // Trả về lỗi Internal Server Error với thông báo lỗi
+                return StatusCode(500, "An error occurred while fetching blocked users.");
+            }
         }
+
     }
 }

@@ -19,26 +19,33 @@ export class SignalRService {
   }
 
   public startConnection(): void {
-    this.hubConnection
-      .start()
-      .then(() => console.log('SignalR Connection started'))
-      .catch(err => console.log('Error while starting SignalR connection: ' + err));
+    if (this.hubConnection.state === signalR.HubConnectionState.Disconnected) {
+      this.hubConnection
+        .start()
+        .then(() => console.log('SignalR Connection started'))
+        .catch(err => console.log('Error while starting SignalR connection: ' + err));
+    } else {
+      console.log('SignalR connection already started.');
+    }
   }
 
   public addReceiveMessageListener(): void {
     this.hubConnection.on('ReceivePrivateMessage', (message) => {
-      this.messageReceived.next(message);  // Emit sự kiện khi nhận tin nhắn
+      console.log('Private message received:', message); // Log tin nhắn nhận được
+      this.messageReceived.next(message);
     });
 
     this.hubConnection.on('ReceiveGroupMessage', (message) => {
-      this.messageReceived.next(message);  // Emit sự kiện khi nhận tin nhắn
+      console.log('Group message received:', message); // Log tin nhắn nhận được
+      this.messageReceived.next(message);
     });
   }
 
   public stopConnection(): void {
-    this.hubConnection.stop()
-      .then(() => console.log('SignalR Connection stopped'))
-      .catch(err => console.log('Error while stopping SignalR connection: ' + err));
+    if (this.hubConnection.state !== signalR.HubConnectionState.Disconnected) {
+      this.hubConnection.stop()
+        .then(() => console.log('SignalR Connection stopped'))
+        .catch(err => console.log('Error while stopping SignalR connection: ' + err));
+    }
   }
 }
-

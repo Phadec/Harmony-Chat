@@ -1,11 +1,19 @@
-<div class="chat-window">
-  <div class="chat-header">
-    <h3>{{ chatName }}</h3>
-  </div>
-  <div class="chat-content">
-    <div *ngFor="let message of messages" class="message" [ngClass]="{'sent': message.IsSentByUser}">
-      <p>{{ message.Message }}</p>
+<div class="chat-content">
+  <!-- Sidebar sẽ ở đây -->
+  <div class="chat-window">
+    <div class="chat-messages">
+      <div *ngFor="let message of messages"
+           class="message-wrapper"
+           [ngClass]="{'sent': message.userId === currentUserId, 'received': message.userId !== currentUserId}">
+        <p *ngIf="message.groupId" class="sender-name">{{ message.senderFullName }}</p>
+        <div class="message-content">
+          {{ message.message }}
+        </div>
+      </div>
+    </div>
+    <div class="message-input">
+      <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..." (keydown.enter)="onSendMessage()" />
+      <button (click)="onSendMessage()">Send</button>
     </div>
   </div>
-  <app-message-input (sendMessage)="onSendMessage($event)"></app-message-input>
 </div>
