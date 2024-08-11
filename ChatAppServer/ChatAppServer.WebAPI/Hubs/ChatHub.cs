@@ -150,6 +150,9 @@ namespace ChatAppServer.WebAPI.Hubs
                 _logger.LogWarning("Chat message must have either GroupId or ToUserId.");
                 throw new HubException("Chat message must have either GroupId or ToUserId.");
             }
+
+            // Phát sự kiện cập nhật danh sách mối quan hệ
+            await Clients.All.SendAsync("UpdateRelationships");
         }
     }
 }

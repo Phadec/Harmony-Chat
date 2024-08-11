@@ -78,6 +78,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             ContactId = isSentByUser ? latestChat.ToUserId : latestChat.UserId,
                             ContactFullName = contactFullName,
                             ContactTagName = contactTagName,
+                            Avatar = contact.Avatar,
                             LastMessage = latestChat.Message ?? string.Empty,
                             LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
                             IsSentByUser = isSentByUser,
@@ -118,6 +119,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             RelationshipType = "Group",
                             GroupId = group.Id,
                             GroupName = group.Name,
+                            Avatar = group.Avatar,
                             ChatId = latestChat.Id,
                             ChatDate = latestChat.Date,
                             LastMessage = latestChat.Message ?? string.Empty,
@@ -144,9 +146,6 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
-
-
-
         [HttpGet("get-chats")]
         public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
         {
@@ -158,7 +157,7 @@ namespace ChatAppServer.WebAPI.Controllers
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
             {
-                return Forbid(new { Message = "You are not authorized to view these chats." });
+                return Forbid("You are not authorized to view these chats.");
             }
 
             var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
@@ -176,7 +175,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
                     if (isBlocked)
                     {
-                        return Forbid(new { Message = "You are not authorized to view these chats." });
+                        return Forbid("You are not authorized to view these chats.");
                     }
 
                     var privateChats = await _context.Chats
@@ -202,7 +201,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
                     if (!isMember)
                     {
-                        return Forbid(new { Message = "You are not authorized to view these group chats." });
+                        return Forbid("You are not authorized to view these group chats.");
                     }
 
                     var groupChats = await _context.Chats
@@ -232,7 +231,6 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
-
         [HttpPost("send-message")]
         public async Task<IActionResult> SendMessage([FromForm] SendMessageDto request, CancellationToken cancellationToken)
         {
@@ -254,6 +252,19 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
+                // Lấy tên người gửi từ cơ sở dữ liệu bằng UserId
+                var sender = await _context.Users
+                    .Where(u => u.Id == request.UserId)
+                    .Select(u => new { u.FirstName, u.LastName })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (sender == null)
+                {
+                    return NotFound("Sender not found.");
+                }
+
+                string senderFullName = $"{sender.FirstName} {sender.LastName}";
+
                 // Kiểm tra nếu là tin nhắn nhóm
                 bool isGroup = await _context.Groups.AnyAsync(g => g.Id == request.RecipientId, cancellationToken);
                 if (isGroup)
@@ -296,7 +307,8 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.Message,
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
-                        chat.Date
+                        chat.Date,
+                        SenderFullName = senderFullName // Trả về tên người gửi
                     });
 
                     return Ok(new
@@ -307,7 +319,8 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.Message,
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
-                        chat.Date
+                        chat.Date,
+                        SenderFullName = senderFullName // Trả về tên người gửi
                     });
                 }
                 // Xử lý tin nhắn riêng tư
@@ -349,7 +362,8 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.Message,
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
-                        chat.Date
+                        chat.Date,
+                        SenderFullName = senderFullName // Trả về tên người gửi
                     });
 
                     return Ok(new
@@ -360,7 +374,8 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.Message,
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
-                        chat.Date
+                        chat.Date,
+                        SenderFullName = senderFullName // Trả về tên người gửi
                     });
                 }
             }
@@ -370,6 +385,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
         private async Task<bool> AreFriends(Guid userId1, Guid userId2, CancellationToken cancellationToken)
         {
             return await _context.Users

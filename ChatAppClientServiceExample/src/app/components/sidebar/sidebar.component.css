@@ -1,35 +1,66 @@
-/* Styles for the container of the list items */
+/* Tổng thể */
+body, html {
+  height: 100%;
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f2f5;
+}
+
+.container {
+  display: flex;
+  height: 100%;
+  background-color: #ffffff;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 300px;
+  background: linear-gradient(45deg, #3a3d40, #18191a);
+  padding: 20px;
+  box-sizing: border-box;
+  color: #ffffff;
+  overflow-y: auto;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar li {
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.sidebar li:hover {
+  background-color: #4e5052;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar li.active {
+  background-color: #007bff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
 .relationship-item {
   display: flex;
   flex-direction: column;
-  padding: 10px;
-  margin: 5px 0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  cursor: pointer;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Hover effect for each item */
-.relationship-item:hover {
-  background-color: #e0e0e0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.tag-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 1em;
 }
 
-/* Styles for the title (h3) */
-.relationship-item h3 {
-  font-size: 1.2em;
-  margin: 0;
-  color: #333;
-}
-
-/* Styles for the last message (p) */
-.relationship-item p {
+.recent-message {
   font-size: 0.9em;
-  color: #666;
-  margin: 5px 0 0;
-}
-.container{
-  background-color: blue;
+  color: #d1d1d1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

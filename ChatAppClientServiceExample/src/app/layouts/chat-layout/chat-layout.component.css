@@ -1,0 +1,81 @@
+/* General styles for the layout */
+.chat-layout {
+  display: flex;
+  height: 100vh; /* Full height to fill the viewport */
+  width: 100%; /* Full width */
+  overflow: hidden; /* Hide overflow to prevent unwanted scrollbars */
+}
+
+/* Sidebar styles */
+app-sidebar {
+  flex: 0 0 25%; /* Sidebar takes 25% of the width */
+  max-width: 300px; /* Max width of the sidebar */
+  background-color: #2c2f33; /* Sidebar background color */
+  color: #ffffff; /* Text color for sidebar */
+}
+
+/* Chat window styles */
+app-chat-window {
+  flex: 1; /* Chat window takes the remaining space */
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9; /* Chat window background color */
+  border-left: 1px solid #dcdcdc; /* Optional: A separator between the sidebar and chat window */
+}
+
+/* Chat messages container inside chat window */
+.chat-messages {
+  flex-grow: 1; /* Allow messages container to grow and fill available space */
+  overflow-y: auto; /* Enable vertical scrolling for messages */
+  padding: 20px; /* Padding around messages */
+  background-color: #ffffff; /* Messages background color */
+}
+
+/* Message input container */
+.message-input {
+  padding: 15px; /* Padding around input area */
+  background-color: #f1f1f1; /* Input area background color */
+  border-top: 1px solid #dcdcdc; /* Optional: A top border for the input area */
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure input and send button are well aligned */
+.message-input input[type="text"] {
+  flex: 1; /* Input field takes available space */
+  padding: 10px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  margin-right: 10px;
+}
+
+.message-input button {
+  padding: 10px 15px;
+  border-radius: 20px;
+  background-color: #0084ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.message-input button:hover {
+  background-color: #005bb5;
+}
+
+/* Customize scrollbar for messages */
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

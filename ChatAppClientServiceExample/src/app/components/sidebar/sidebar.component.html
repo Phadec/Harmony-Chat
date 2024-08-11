@@ -1,8 +1,22 @@
-<div class = "container"></div>
-<div *ngFor="let relationship of relationships">
-  <!-- Sử dụng dữ liệu trong relationship như bình thường -->
-  <div (click)="onSelectRecipient(relationship.contactId || relationship.groupId)">
-    <h3>{{ relationship.contactFullName || relationship.groupName }}</h3>
-    <p>{{ relationship.lastMessage }}</p>
+<div class="container">
+  <div class="sidebar">
+    <ul>
+      <li *ngFor="let relationship of relationships"
+          [ngClass]="{'active': relationship.id === selectedRecipientId}"
+          (click)="onSelectRecipient(relationship.id)">
+        <div class="relationship-item">
+          <div class="tag-name">
+            {{ relationship.fullName }}
+            <span *ngIf="!relationship.isGroup">({{ relationship.tagName }})</span>
+          </div>
+          <div class="recent-message">
+            <span *ngIf="relationship.isGroup && !relationship.isSentByUser">
+              {{ relationship.senderFullName }}:
+            </span>
+            {{ relationship.lastMessage }}
+          </div>
+        </div>
+      </li>
+    </ul>
   </div>
 </div>
