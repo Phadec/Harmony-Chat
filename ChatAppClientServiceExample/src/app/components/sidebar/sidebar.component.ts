@@ -1,16 +1,16 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog'; // Đảm bảo đã nhập MatDialog
+import { MatDialog } from '@angular/material/dialog';
 import { ChatService } from '../../services/chat.service';
 import { FriendsService } from '../../services/friends.service';
 import { SignalRService } from '../../services/signalr.service';
 import { FriendDto } from '../../models/friend.dto';
 import { FriendRequestDto } from '../../models/friend-request.dto';
-import {GroupDto} from "../../models/group.dto";
-import {GroupService} from "../../services/group.service";
-import {BlockedUsersModalComponent} from "../blocked-users-modal/blocked-users-modal.component";
-import {AuthService} from "../../services/auth.service";
-import {Router} from "@angular/router";
-import {UserService} from "../../services/user.service";
+import { GroupDto } from "../../models/group.dto";
+import { GroupService } from "../../services/group.service";
+import { BlockedUsersModalComponent } from "../blocked-users-modal/blocked-users-modal.component";
+import { AuthService } from "../../services/auth.service";
+import { Router } from "@angular/router";
+import { UserService } from "../../services/user.service";
 
 @Component({
   selector: 'app-sidebar',
@@ -30,6 +30,7 @@ export class SidebarComponent implements OnInit {
   selectedRecipientId: string | null = null;
   searchQuery: string = '';
   selectedTab: string = 'recent';
+  sentRequests: { [key: string]: { HasSentRequest: boolean, RequestId: string | null } } = {};
 
   @Output() selectRecipient = new EventEmitter<string>();
 
@@ -91,7 +92,6 @@ export class SidebarComponent implements OnInit {
     );
   }
 
-
   loadFriends(): void {
     const userId = localStorage.getItem('userId');
 
@@ -106,7 +106,7 @@ export class SidebarComponent implements OnInit {
           this.friends = response.$values.map((rel: any): FriendDto => ({
             id: rel.id,
             tagname: rel.tagname,
-            fullName: rel.fullName,
+            fullName: rel.nickname ? rel.nickname : rel.fullName,
             birthday: rel.birthday,
             email: rel.email,
             avatar: rel.avatar,
@@ -151,6 +151,7 @@ export class SidebarComponent implements OnInit {
       }
     );
   }
+
   loadGroups(): void {
     const userId = localStorage.getItem('userId');
 
@@ -167,7 +168,6 @@ export class SidebarComponent implements OnInit {
             name: group.name,
             avatar: group.avatar
           }));
-          console.log(this.groups); // Log để kiểm tra dữ liệu
         } else {
           console.error('Invalid response format');
         }
@@ -182,7 +182,7 @@ export class SidebarComponent implements OnInit {
     const userId = localStorage.getItem('userId')!;
     this.friendsService.getSentFriendRequests(userId).subscribe(
       (response) => {
-        this.sentFriendRequests = response;
+        this.sentFriendRequests = response.$values; // Gán đúng $values cho mảng sentFriendRequests
       },
       (error) => {
         console.error('Error fetching sent friend requests:', error);
@@ -194,38 +194,121 @@ export class SidebarComponent implements OnInit {
     const userId = localStorage.getItem('userId')!;
     this.friendsService.getBlockedUsers(userId).subscribe(
       (response) => {
-        this.blockedUsers = response;
+        this.blockedUsers = response.$values; // Gán đúng $values cho mảng blockedUsers
       },
       (error) => {
         console.error('Error fetching blocked users:', error);
       }
     );
   }
+
+  filterRelationships(): void {
+    if (this.searchQuery.startsWith('@')) {
+      this.searchTerm = this.searchQuery;  // Cập nhật searchTerm với giá trị searchQuery
+      this.searchUsers();
+    } else {
+      this.filteredRelationships = this.relationships.filter((rel) =>
+        rel.fullName.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    }
+  }
+
   searchUsers(): void {
     if (this.searchTerm.trim() !== '') {
       this.userService.searchUserByTagName(this.searchTerm).subscribe(
         data => {
-          this.filteredUsers = [data]; // Đặt kết quả tìm kiếm vào filteredUsers
+          this.filteredUsers = [data];
+          this.checkFriendRequestStatus(data.id); // Kiểm tra trạng thái yêu cầu kết bạn
         },
         error => {
           console.error('Error searching users:', error);
-          this.filteredUsers = []; // Xoá danh sách người dùng nếu tìm kiếm không thành công
+          this.filteredUsers = [];
         }
       );
     } else {
-      this.filteredUsers = []; // Xoá danh sách người dùng nếu từ khoá tìm kiếm trống
+      this.filteredUsers = [];
     }
   }
 
-  filterRelationships(): void {
-    if (this.searchQuery.startsWith('@')) {
-      // Nếu tìm kiếm bắt đầu bằng '@', gọi API để tìm người dùng theo TagName
-      this.searchUsers();
-    } else {
-      // Nếu không, lọc danh sách mối quan hệ hiện có
-      this.filteredRelationships = this.relationships.filter((rel) =>
-        rel.fullName.toLowerCase().includes(this.searchQuery.toLowerCase())
+  isFriend(userId: string): boolean {
+    return this.friends.some(friend => friend.id === userId);
+  }
+
+  isRequestSent(userId: string): boolean {
+    return !!this.sentRequests[userId]?.HasSentRequest;
+  }
+
+  getRequestId(userId: string): string | null {
+    return this.sentRequests[userId]?.RequestId || null;
+  }
+
+  onAddFriend(userId: string): void {
+    const currentUserId = localStorage.getItem('userId');
+    if (!currentUserId) {
+      console.error('User ID not found in localStorage.');
+      return;
+    }
+
+    this.friendsService.addFriend(currentUserId, userId).subscribe(
+      () => {
+        console.log('Friend request sent successfully');
+        this.checkFriendRequestStatus(userId); // Kiểm tra lại trạng thái sau khi gửi yêu cầu kết bạn
+      },
+      error => {
+        console.error('Error sending friend request:', error);
+      }
+    );
+  }
+  getSentRequest(userId: string) {
+    return this.sentRequests[userId];
+  }
+
+  checkFriendRequestStatus(userId: string): void {
+    const currentUserId = localStorage.getItem('userId')!;
+    this.friendsService.hasSentFriendRequest(currentUserId, userId).subscribe(
+      response => {
+        // Kiểm tra xem response có chứa RequestId không
+        if (response.HasSentRequest) {
+          this.sentRequests[userId] = {
+            HasSentRequest: true,
+            RequestId: response.RequestId || null
+          };
+        } else {
+          this.sentRequests[userId] = {
+            HasSentRequest: false,
+            RequestId: null
+          };
+        }
+      },
+      error => {
+        console.error('Error checking friend request status:', error);
+        this.sentRequests[userId] = {
+          HasSentRequest: false,
+          RequestId: null
+        };
+      }
+    );
+  }
+
+  onCancelFriendRequest(requestId: string | null): void {
+    if (requestId) {
+      const currentUserId = localStorage.getItem('userId')!;
+      this.friendsService.cancelFriendRequest(currentUserId, requestId).subscribe(
+        () => {
+          console.log('Friend request cancelled successfully');
+          this.sentRequests = Object.keys(this.sentRequests).reduce((result, key) => {
+            if (this.sentRequests[key].RequestId !== requestId) {
+              result[key] = this.sentRequests[key];
+            }
+            return result;
+          }, {} as { [key: string]: { HasSentRequest: boolean; RequestId: string | null } });
+        },
+        error => {
+          console.error('Error cancelling friend request:', error);
+        }
       );
+    } else {
+      console.warn('Request ID is null or undefined');
     }
   }
 
@@ -250,6 +333,7 @@ export class SidebarComponent implements OnInit {
 
     this.selectRecipient.emit(recipientId);
   }
+
   viewBlockedUsers(): void {
     const dialogRef = this.dialog.open(BlockedUsersModalComponent, {
       width: '400px',
@@ -262,9 +346,8 @@ export class SidebarComponent implements OnInit {
   }
 
   changeLanguage(): void {
-    // Logic to change language
-    // You can redirect to a language settings page or show a language selection modal
     console.log('Change Language clicked');
+    // Logic to change language
   }
 
   onAcceptRequest(requestId: string): void {
@@ -293,25 +376,20 @@ export class SidebarComponent implements OnInit {
     const userId = localStorage.getItem('userId')!;
     this.friendsService.removeFriend(userId, friendId).subscribe({
       next: () => {
-        // Tải lại danh sách bạn bè sau khi xóa thành công
-        this.loadFriends();
+        this.loadFriends(); // Tải lại danh sách bạn bè sau khi xóa thành công
       },
       error: (error) => {
         console.error('Error removing friend:', error);
-        // Xử lý lỗi nếu cần
       }
     });
   }
 
-
   onBlockUser(blockedUserId: string): void {
     const userId = localStorage.getItem('userId')!;
 
-    // Chặn người dùng
     this.friendsService.blockUser(userId, blockedUserId).subscribe(
       () => {
-        // Sau khi chặn thành công, cập nhật danh sách bạn bè và người bị chặn
-        this.loadFriends(); // Cập nhật danh sách bạn bè
+        this.loadFriends(); // Cập nhật danh sách bạn bè sau khi chặn
         this.loadBlockedUsers(); // Cập nhật danh sách người bị chặn
       },
       (error) => {
@@ -320,19 +398,19 @@ export class SidebarComponent implements OnInit {
     );
   }
 
-
   onUnblockUser(blockedUserId: string): void {
     const userId = localStorage.getItem('userId')!;
     this.friendsService.unblockUser(userId, blockedUserId).subscribe(() => {
       this.loadBlockedUsers();
     });
   }
+
   signOut(): void {
     const userId = localStorage.getItem('userId')!;
     this.authService.logout(userId).subscribe({
       next: () => {
-        localStorage.removeItem('userId'); // Xóa thông tin người dùng khỏi localStorage
-        this.router.navigate(['/login']); // Điều hướng đến trang đăng nhập
+        localStorage.removeItem('userId');
+        this.router.navigate(['/login']);
       },
       error: (err) => {
         console.error('Error during sign out:', err);

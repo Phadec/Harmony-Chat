@@ -12,13 +12,16 @@ export class UserService {
 
   constructor(private http: HttpClient) { }
 
-  // Tìm kiếm người dùng theo TagName
   searchUserByTagName(tagName: string): Observable<any> {
     const url = `${this.apiUrl}/search?tagName=${encodeURIComponent(tagName)}`;
     return this.http.get<any>(url).pipe(
-      catchError(this.handleError)
+      catchError((error) => {
+        console.error('Error occurred during search API call:', error);
+        return throwError(error);
+      })
     );
   }
+
 
   // Cập nhật thông tin người dùng
   updateUser(userId: string, request: any): Observable<any> {

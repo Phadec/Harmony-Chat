@@ -1,61 +1,123 @@
+/* Giao diện chính của form đăng nhập */
 .login-container {
-  width: 300px;
+  max-width: 400px; /* Tăng chiều rộng tối đa để form rộng hơn */
   margin: 0 auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
+  padding: 30px;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
+/* Hiệu ứng hover cho form */
+.login-container:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+}
+
+/* Tiêu đề */
 .login-container h2 {
   text-align: center;
+  margin-bottom: 25px;
+  font-size: 1.75rem;
+  color: #333;
+  font-family: 'Roboto', sans-serif; /* Sử dụng font hiện đại */
+  font-weight: 700;
+}
+
+/* Các khối của form */
+.login-container form div {
   margin-bottom: 20px;
 }
 
-.login-container form div {
-  margin-bottom: 15px;
-}
-
+/* Nhãn của các trường nhập liệu */
 .login-container label {
   display: block;
   margin-bottom: 5px;
+  font-weight: 600;
+  color: #555;
+  font-family: 'Roboto', sans-serif;
 }
 
+/* Các trường nhập liệu */
 .login-container input {
   width: 100%;
-  padding: 8px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   box-sizing: border-box;
+  font-size: 1rem;
+  color: #333;
+  font-family: 'Roboto', sans-serif;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Hiệu ứng khi ô nhập liệu được chọn */
+.login-container input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+/* Nút đăng nhập */
 .login-container button {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background-color: #007bff;
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+/* Hiệu ứng khi di chuột qua nút đăng nhập */
 .login-container button:hover {
   background-color: #0056b3;
+  transform: translateY(-2px);
 }
 
+/* Thông báo lỗi */
 .error-message {
-  color: red;
-  margin-top: 10px;
+  color: #e74c3c;
+  margin-top: 20px;
   text-align: center;
+  font-size: 0.9rem;
+  font-family: 'Roboto', sans-serif;
 }
+
+/* Liên kết quên mật khẩu */
 .forgot-password-link {
-  margin-top: 10px;
+  margin-top: 20px;
   text-align: center;
 }
 
-.forgot-password-link a {
+/* Liên kết quên mật khẩu và liên kết đăng ký */
+.forgot-password-link a,
+.register-link a {
   color: #007bff;
   text-decoration: none;
+  font-family: 'Roboto', sans-serif;
 }
 
-.forgot-password-link a:hover {
+/* Hiệu ứng khi di chuột qua liên kết */
+.forgot-password-link a:hover,
+.register-link a:hover {
   text-decoration: underline;
+}
+
+/* Liên kết đăng ký */
+.register-link {
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* Văn bản trong liên kết đăng ký */
+.register-link p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
 }

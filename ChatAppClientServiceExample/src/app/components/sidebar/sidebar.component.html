@@ -1,10 +1,12 @@
 <div class="sidebar">
   <h2>Harmony Chat</h2>
 
+  <!-- Thanh tìm kiếm -->
   <div class="sidebar-search">
     <input type="text" placeholder="Search..." [(ngModel)]="searchQuery" (input)="filterRelationships()">
   </div>
 
+  <!-- Các nút tab -->
   <div class="sidebar-icons">
     <button (click)="selectTab('recent')" [class.active]="selectedTab === 'recent'">
       <i class="fas fa-clock"></i>
@@ -25,7 +27,7 @@
 
   <div class="sidebar-content">
     <!-- Recent Conversations -->
-    <ul *ngIf="selectedTab === 'recent'">
+    <ul *ngIf="!searchQuery.startsWith('@') && selectedTab === 'recent'">
       <li *ngFor="let relationship of filteredRelationships" (click)="onSelectRecipient(relationship.id)">
         <img [src]="getAvatarUrl(relationship.avatar)" alt="Avatar">
         <div class="relationship-details">
@@ -37,15 +39,36 @@
       </li>
     </ul>
 
-    <!-- Filtered Users for Tag Search -->
-    <ul *ngIf="searchQuery.startsWith('@') && selectedTab === 'recent'">
-      <li *ngFor="let user of filteredUsers" (click)="onSelectRecipient(user.id)">
+    <ul *ngIf="filteredUsers.length > 0">
+      <li *ngFor="let user of filteredUsers">
         <img [src]="getAvatarUrl(user.avatar)" alt="Avatar">
         <div class="user-details">
-          <h4>{{ user.fullName }}</h4>
+          <h4>{{ user.firstName }} {{ user.lastName }}</h4>
+          <p>{{ user.email }}</p>
+          <span>{{ user.tagName }}</span>
+        </div>
+        <div class="user-actions">
+          <!-- Nếu là bạn bè, cho phép chọn người dùng -->
+          <button *ngIf="isFriend(user.id)" (click)="onSelectRecipient(user.id)">
+            Chat
+          </button>
+          <!-- Nếu đã gửi yêu cầu kết bạn, hiển thị nút Cancel -->
+          <button *ngIf="getSentRequest(user.id)?.HasSentRequest"
+                  (click)="onCancelFriendRequest(getSentRequest(user.id)?.RequestId || null)"
+                  class="icon-button">
+            <i class="fas fa-user-times"></i> <!-- Biểu tượng Cancel Friend Request -->
+          </button>
+
+          <!-- Nếu chưa gửi yêu cầu kết bạn, hiển thị nút Add Friend -->
+          <button *ngIf="!isFriend(user.id) && !getSentRequest(user.id)?.HasSentRequest"
+                  (click)="onAddFriend(user.id)"
+                  class="icon-button">
+            <i class="fas fa-user-plus"></i> <!-- Biểu tượng Add Friend -->
+          </button>
         </div>
       </li>
     </ul>
+
 
     <!-- Groups -->
     <ul *ngIf="selectedTab === 'groups'">
