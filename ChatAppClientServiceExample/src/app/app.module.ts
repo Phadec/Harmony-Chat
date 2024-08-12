@@ -10,20 +10,16 @@ import { ForgotPasswordComponent } from './components/forgot-password/forgot-pas
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 import { ChangePasswordComponent } from './components/change-password/change-password.component';
 import { ConfirmEmailComponent } from './components/confirm-email/confirm-email.component';
-import { FriendListComponent } from './components/friend-list/friend-list.component';
-import { AddFriendComponent } from './components/add-friend/add-friend.component';
-import { BlockedUsersComponent } from './components/blocked-users/blocked-users.component';
 import { FriendsService } from './services/friends.service';
 import { AuthInterceptor } from './auth.interceptor';
-import { FriendRequestsComponent } from './components/friend-requests/friend-requests.component';
-import { GroupListComponent } from './components/group-list/group-list.component';
-import { GroupDetailComponent } from './components/group-detail/group-detail.component';
 import {ChatWindowComponent} from "./components/chat-window/chat-window.component";
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { MessageInputComponent } from './components/message-input/message-input.component';
 import { ChatLayoutComponent } from './layouts/chat-layout/chat-layout.component';
 import { ChatHeaderComponent } from './components/chat-header/chat-header.component';
-import { FriendsListComponent } from './friends-list/friends-list.component';
+import { BlockedUsersModalComponent } from './components/blocked-users-modal/blocked-users-modal.component';
+import {MatDialogActions, MatDialogContent} from "@angular/material/dialog";
+import {MatIcon} from "@angular/material/icon";
 
 @NgModule({
   declarations: [
@@ -34,25 +30,22 @@ import { FriendsListComponent } from './friends-list/friends-list.component';
     ResetPasswordComponent,
     ChangePasswordComponent,
     ConfirmEmailComponent,
-    FriendListComponent,
-    AddFriendComponent,
-    BlockedUsersComponent,
-    FriendRequestsComponent,
-    GroupListComponent,
-    GroupDetailComponent,
     ChatWindowComponent,
     SidebarComponent,
     MessageInputComponent,
     ChatLayoutComponent,
     ChatHeaderComponent,
-    FriendsListComponent
+    BlockedUsersModalComponent,
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     FormsModule,
     AppRoutingModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatDialogActions,
+    MatDialogContent,
+    MatIcon
   ],
   providers: [
     FriendsService,

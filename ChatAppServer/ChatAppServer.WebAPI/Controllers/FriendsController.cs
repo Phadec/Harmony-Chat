@@ -292,9 +292,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 var friendsDto = friendships.Select(f => new FriendDto
                 {
                     Id = f.UserId == userId ? f.Friend.Id : f.User.Id, // Lấy Id của bạn bè
-                    Username = f.UserId == userId ? f.Friend.Username : f.User.Username,
-                    FirstName = f.UserId == userId ? f.Friend.FirstName : f.User.FirstName,
-                    LastName = f.UserId == userId ? f.Friend.LastName : f.User.LastName,
+                    Tagname = f.UserId == userId ? f.Friend.TagName : f.User.TagName,
+                    FullName = (f.UserId == userId ? f.Friend.FirstName : f.User.FirstName) + " " + (f.UserId == userId ? f.Friend.LastName : f.User.LastName),
                     Birthday = f.UserId == userId ? f.Friend.Birthday : f.User.Birthday,
                     Email = f.UserId == userId ? f.Friend.Email : f.User.Email,
                     Avatar = f.UserId == userId ? f.Friend.Avatar : f.User.Avatar,
@@ -342,6 +341,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     SenderId = fr.SenderId,
                     SenderName = $"{fr.Sender.FirstName} {fr.Sender.LastName}",
                     TagName = fr.Sender.TagName,
+                    fr.Sender.Avatar,
                     fr.Status
                 }).ToList();
 
@@ -659,13 +659,19 @@ namespace ChatAppServer.WebAPI.Controllers
             try
             {
                 var blockedUsers = await _context.UserBlocks
-                    .Where(ub => ub.UserId == userId)
-                    .Select(ub => new
-                    {
-                        ub.BlockedUserId,
-                        BlockedDate = ub.BlockedDate.ToString("yyyy-MM-ddTHH:mm:ssZ")
-                    })
-                    .ToListAsync(cancellationToken);
+               .Where(ub => ub.UserId == userId)
+               .Include(ub => ub.BlockedUser) // Bao gồm thông tin người dùng bị chặn
+               .Include(ub => ub.User) // Bao gồm thông tin người dùng thực hiện hành động chặn
+               .Select(ub => new
+               {
+                   BlockedUserId = ub.BlockedUserId,
+                   BlockedFullName = $"{ub.BlockedUser.FirstName} {ub.BlockedUser.LastName}", // Nối FirstName và LastName
+                   BlockedTagName = ub.BlockedUser.TagName,
+                   BlockedAvatar = ub.BlockedUser.Avatar,
+               })
+               .ToListAsync();
+
+
 
                 return Ok(blockedUsers);
             }

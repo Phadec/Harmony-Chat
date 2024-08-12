@@ -37,6 +37,7 @@
               }
             ],
             "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.css",
               "node_modules/@fortawesome/fontawesome-free/css/all.min.css"
             ],
@@ -98,6 +99,7 @@
               }
             ],
             "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.css"
             ],
             "scripts": []
