@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import {RecipientInfo} from "../models/recipient-info.model";
 
 @Injectable({
   providedIn: 'root'
@@ -22,5 +23,11 @@ export class ChatService {
 
   sendMessage(formData: FormData): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/send-message`, formData);
+  }
+  getRecipientInfo(userId: string, recipientId: string): Observable<RecipientInfo> {
+    return this.http.get<RecipientInfo>(`${this.apiUrl}/${userId}/recipient-info/${recipientId}`);
+  }
+  markMessageAsRead(chatId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${chatId}/mark-as-read`, {});
   }
 }

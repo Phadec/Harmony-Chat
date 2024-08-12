@@ -2,125 +2,125 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
+using System.Security.Claims;
 
-namespace ChatAppServer.WebAPI.Hubs
+public sealed class ChatHub : Hub
 {
-    public sealed class ChatHub : Hub
+    private readonly ApplicationDbContext _context;
+    private readonly ILogger<ChatHub> _logger;
+
+    // Dictionary để quản lý các ConnectionId theo UserId
+    public static ConcurrentDictionary<Guid, List<string>> UserConnections = new();
+
+    public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger)
     {
-        private readonly ApplicationDbContext _context;
-        private readonly ILogger<ChatHub> _logger;
-        public static ConcurrentDictionary<string, Guid> Users = new();
+        _context = context;
+        _logger = logger;
+    }
 
-        public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger)
+    // Khi người dùng kết nối
+    public async Task Connect(Guid userId)
+    {
+        if (userId == Guid.Empty)
         {
-            _context = context;
-            _logger = logger;
+            _logger.LogWarning("Invalid userId provided for connection.");
+            throw new HubException("Invalid userId.");
         }
 
-        public async Task Connect(Guid userId)
+        // Add the connection to the UserConnections dictionary
+        if (!UserConnections.ContainsKey(userId))
         {
-            if (userId == Guid.Empty)
+            UserConnections[userId] = new List<string>();
+        }
+        UserConnections[userId].Add(Context.ConnectionId);
+
+        _logger.LogInformation($"User {userId} connected with ConnectionId {Context.ConnectionId}.");
+
+        // Notify the user that they have successfully connected
+        await Clients.Client(Context.ConnectionId).SendAsync("Connected", userId);
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (Guid.TryParse(userId, out var guidUserId))
+        {
+            _logger.LogInformation($"Processing connection for user {guidUserId} with ConnectionId {Context.ConnectionId}.");
+
+            if (!UserConnections.ContainsKey(guidUserId))
             {
-                _logger.LogWarning("Invalid userId provided for connection.");
-                throw new HubException("Invalid userId.");
+                UserConnections[guidUserId] = new List<string>();
+                _logger.LogInformation($"New connection list created for user {guidUserId}.");
             }
+            UserConnections[guidUserId].Add(Context.ConnectionId);
+            _logger.LogInformation($"ConnectionId {Context.ConnectionId} added for user {guidUserId}. Total connections: {UserConnections[guidUserId].Count}.");
 
-            Users.TryAdd(Context.ConnectionId, userId);
-            User? user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
-            if (user is not null)
+            // Thêm người dùng vào các group mà họ là thành viên
+            var userGroups = await _context.GroupMembers
+                .Where(gm => gm.UserId == guidUserId)
+                .Select(gm => gm.GroupId)
+                .ToListAsync();
+
+            foreach (var groupId in userGroups)
             {
-                user.Status = "online";
-                _context.Users.Update(user);
-                await _context.SaveChangesAsync();
-
-                await Clients.All.SendAsync("Users", new
+                try
                 {
-                    user.Id,
-                    user.Username,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    user.Birthday,
-                    user.Email,
-                    user.Avatar,
-                    user.Status
-                });
-
-                _logger.LogInformation($"User {user.Username} connected with ConnectionId {Context.ConnectionId}.");
-            }
-            else
-            {
-                _logger.LogWarning($"User with Id {userId} not found.");
-            }
-        }
-
-        public async Task Disconnect(Guid userId)
-        {
-            if (userId == Guid.Empty)
-            {
-                _logger.LogWarning("Invalid userId provided for disconnection.");
-                throw new HubException("Invalid userId.");
-            }
-
-            await OnDisconnectedAsync(null);
-        }
-
-        public override async Task OnDisconnectedAsync(Exception? exception)
-        {
-            if (Users.TryRemove(Context.ConnectionId, out Guid userId))
-            {
-                User? user = await _context.Users.FindAsync(userId);
-                if (user is not null)
-                {
-                    user.Status = "offline";
-                    _context.Users.Update(user);
-                    await _context.SaveChangesAsync();
-
-                    await Clients.All.SendAsync("Users", new
-                    {
-                        user.Id,
-                        user.Username,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                        user.Birthday,
-                        user.Email,
-                        user.Avatar,
-                        user.Status
-                    });
-
-                    _logger.LogInformation($"User {user.Username} disconnected.");
+                    await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
+                    _logger.LogInformation($"User {guidUserId} added to group {groupId}.");
                 }
-                else
+                catch (Exception ex)
                 {
-                    _logger.LogWarning($"User with Id {userId} not found.");
+                    _logger.LogError($"Failed to add user {guidUserId} to group {groupId}. Error: {ex.Message}");
+                    // Optionally, you can take further actions here, like notifying the user or performing a retry.
                 }
             }
-            await base.OnDisconnectedAsync(exception);
+
+        }
+        else
+        {
+            _logger.LogWarning($"Failed to parse user ID for ConnectionId {Context.ConnectionId}.");
+        }
+        await UpdateConnectedUsersList();
+        await base.OnConnectedAsync();
+    }
+
+    private async Task UpdateConnectedUsersList()
+    {
+        var connectedUsers = UserConnections.Keys.ToList();
+        await Clients.All.SendAsync("UpdateConnectedUsers", connectedUsers);
+    }
+
+    public async Task NotifyNewMessage(Chat chat)
+    {
+        if (chat == null)
+        {
+            _logger.LogWarning("Invalid chat message.");
+            throw new HubException("Invalid chat message.");
         }
 
-        public async Task NotifyNewMessage(Chat chat)
+        List<Guid> affectedUsers = new List<Guid>();
+
+        if (chat.GroupId.HasValue)
         {
-            if (chat == null)
-            {
-                _logger.LogWarning("Invalid chat message.");
-                throw new HubException("Invalid chat message.");
-            }
+            // Lấy tất cả các thành viên trong nhóm
+            var groupMembers = await _context.GroupMembers
+                .Where(gm => gm.GroupId == chat.GroupId)
+                .Select(gm => gm.UserId)
+                .ToListAsync();
 
-            if (chat.GroupId.HasValue)
-            {
-                var groupMembers = await _context.GroupMembers
-                    .Where(gm => gm.GroupId == chat.GroupId)
-                    .Select(gm => gm.UserId)
-                    .ToListAsync();
+            affectedUsers.AddRange(groupMembers);
 
-                foreach (var userId in groupMembers)
+            foreach (var userId in groupMembers)
+            {
+                if (UserConnections.ContainsKey(userId))
                 {
-                    var connection = Users.FirstOrDefault(p => p.Value == userId);
-                    if (connection.Key != null)
+                    var connections = UserConnections[userId];
+                    foreach (var connectionId in connections)
                     {
-                        await Clients.Client(connection.Key).SendAsync("ReceiveGroupMessage", new
+                        await Clients.Client(connectionId).SendAsync("ReceiveGroupMessage", new
                         {
                             chat.Id,
-                            chat.UserId,
+                            chat.UserId, // Đây là UserId của người gửi
                             chat.GroupId,
                             chat.Message,
                             chat.AttachmentUrl,
@@ -129,30 +129,101 @@ namespace ChatAppServer.WebAPI.Hubs
                     }
                 }
             }
-            else if (chat.ToUserId.HasValue)
+        }
+        else if (chat.ToUserId.HasValue)
+        {
+            // Thêm cả người nhận và người gửi vào danh sách bị ảnh hưởng
+            affectedUsers.Add(chat.ToUserId.Value); // Người nhận
+            affectedUsers.Add(chat.UserId); // Người gửi
+
+            // Gửi tin nhắn đến người nhận
+            if (UserConnections.ContainsKey(chat.ToUserId.Value))
             {
-                var connection = Users.FirstOrDefault(p => p.Value == chat.ToUserId.Value);
-                if (connection.Key != null)
+                var connections = UserConnections[chat.ToUserId.Value];
+                foreach (var connectionId in connections)
                 {
-                    await Clients.Client(connection.Key).SendAsync("ReceivePrivateMessage", new
+                    await Clients.Client(connectionId).SendAsync("ReceivePrivateMessage", new
                     {
                         chat.Id,
-                        chat.UserId,
-                        chat.ToUserId,
+                        chat.UserId, // Đây là UserId của người gửi
+                        chat.ToUserId, // Đây là UserId của người nhận
                         chat.Message,
                         chat.AttachmentUrl,
                         chat.Date
                     });
                 }
             }
+        }
+        else
+        {
+            _logger.LogWarning("Chat message must have either GroupId or ToUserId.");
+            throw new HubException("Chat message must have either GroupId or ToUserId.");
+        }
+
+        // Phát sự kiện cập nhật danh sách mối quan hệ tới cả người gửi và người nhận
+        foreach (var userId in affectedUsers.Distinct())
+        {
+            if (UserConnections.ContainsKey(userId))
+            {
+                var connections = UserConnections[userId];
+                foreach (var connectionId in connections)
+                {
+                    await Clients.Client(connectionId).SendAsync("UpdateRelationships");
+                }
+            }
             else
             {
-                _logger.LogWarning("Chat message must have either GroupId or ToUserId.");
-                throw new HubException("Chat message must have either GroupId or ToUserId.");
+                _logger.LogWarning($"User {userId} not found in UserConnections.");
             }
-
-            // Phát sự kiện cập nhật danh sách mối quan hệ
-            await Clients.All.SendAsync("UpdateRelationships");
         }
+    }
+
+
+
+    // Phương thức thông báo khi tin nhắn đã được đọc
+    public async Task NotifyMessageRead(Guid chatId)
+    {
+        // Tìm tin nhắn dựa trên chatId
+        var message = await _context.Chats.FindAsync(chatId);
+        if (message == null)
+        {
+            _logger.LogWarning($"Message with ID {chatId} not found.");
+            return;
+        }
+
+        // Đánh dấu tin nhắn là đã đọc
+        message.IsRead = true;
+        await _context.SaveChangesAsync();
+
+        // Thông báo người gửi rằng tin nhắn đã được đọc
+        if (UserConnections.ContainsKey(message.UserId))
+        {
+            var connections = UserConnections[message.UserId];
+            foreach (var connectionId in connections)
+            {
+                await Clients.Client(connectionId).SendAsync("MessageRead", chatId);
+            }
+        }
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (Guid.TryParse(userId, out var guidUserId))
+        {
+            if (UserConnections.ContainsKey(guidUserId))
+            {
+                UserConnections[guidUserId].Remove(Context.ConnectionId);
+                if (!UserConnections[guidUserId].Any())
+                {
+                    UserConnections.TryRemove(guidUserId, out _);
+                }
+
+                _logger.LogInformation($"User {guidUserId} disconnected with ConnectionId {Context.ConnectionId}.");
+
+            }
+        }
+        await UpdateConnectedUsersList();
+        await base.OnDisconnectedAsync(exception);
     }
 }

@@ -8,6 +8,7 @@ import { Component } from '@angular/core';
 export class ChatLayoutComponent {
   selectedRecipientId: string | null = null;
 
+
   onRecipientSelected(recipientId: string): void {
     this.selectedRecipientId = recipientId;
   }

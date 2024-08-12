@@ -61,4 +61,5 @@ export class FriendsService {
   getBlockedUsers(userId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/${userId}/blocked-users`);
   }
+
 }

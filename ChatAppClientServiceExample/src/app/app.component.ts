@@ -11,7 +11,10 @@ export class AppComponent implements OnInit {
   constructor(private signalRService: SignalRService) { }
 
   ngOnInit(): void {
+    // Bắt đầu kết nối SignalR
     this.signalRService.startConnection();
-    this.signalRService.addReceiveMessageListener();
+
+    // Đăng ký lắng nghe tin nhắn nhận được
+    this.signalRService.registerServerEvents();
   }
 }

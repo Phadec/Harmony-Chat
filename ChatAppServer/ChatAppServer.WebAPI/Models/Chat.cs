@@ -19,4 +19,8 @@ public sealed class Chat
     public string? AttachmentUrl { get; set; } // Cho phép null
     public string? AttachmentOriginalName { get; set; } // Cho phép null
     public DateTime Date { get; set; }
+
+    // Thuộc tính mới để lưu trạng thái đã đọc
+    public bool IsRead { get; set; } = false; // Mặc định là chưa đọc
+    public DateTime? ReadAt { get; set; } // Thời gian đã đọc (nullable)
 }

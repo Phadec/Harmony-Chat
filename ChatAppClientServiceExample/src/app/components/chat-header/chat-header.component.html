@@ -1,0 +1,15 @@
+<div class="chat-header" *ngIf="recipientInfo">
+  <div class="chat-info">
+    <img [src]="'https://localhost:7267/' + recipientInfo.avatar" alt="Avatar" class="avatar">
+    <div class="chat-details">
+      <div class="chat-name">
+        {{ recipientInfo.nickname || recipientInfo.fullName }}
+        <!-- Status Indicator -->
+        <span class="status-indicator"
+              [ngClass]="{'online': recipientInfo.status === 'online', 'offline': recipientInfo.status === 'offline'}">
+        </span>
+      </div>
+      <div class="chat-tag">{{ recipientInfo.tagName }}</div>
+    </div>
+  </div>
+</div>

@@ -2,14 +2,22 @@
   <div class="sidebar">
     <ul>
       <li *ngFor="let relationship of relationships"
-          [ngClass]="{'active': relationship.id === selectedRecipientId}"
+          [ngClass]="{'active': relationship.id === selectedRecipientId, 'new-message': relationship.hasNewMessage}"
           (click)="onSelectRecipient(relationship.id)">
         <div class="relationship-item">
+          <!-- Hiển thị Avatar -->
+          <img [src]="'https://localhost:7267/' + relationship.avatar"
+               alt="Avatar"
+               class="avatar">
+
+          <!-- Hiển thị chấm đỏ nếu có tin nhắn mới -->
+          <div class="notification-dot" *ngIf="relationship.hasNewMessage"></div>
+
           <div class="tag-name">
             {{ relationship.fullName }}
             <span *ngIf="!relationship.isGroup">({{ relationship.tagName }})</span>
           </div>
-          <div class="recent-message">
+          <div class="recent-message" [ngClass]="{'bold': relationship.hasNewMessage}">
             <span *ngIf="relationship.isGroup && !relationship.isSentByUser">
               {{ relationship.senderFullName }}:
             </span>
