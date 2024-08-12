@@ -23,6 +23,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { MessageInputComponent } from './components/message-input/message-input.component';
 import { ChatLayoutComponent } from './layouts/chat-layout/chat-layout.component';
 import { ChatHeaderComponent } from './components/chat-header/chat-header.component';
+import { FriendsListComponent } from './friends-list/friends-list.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { ChatHeaderComponent } from './components/chat-header/chat-header.compon
     SidebarComponent,
     MessageInputComponent,
     ChatLayoutComponent,
-    ChatHeaderComponent
+    ChatHeaderComponent,
+    FriendsListComponent
   ],
   imports: [
     BrowserModule,

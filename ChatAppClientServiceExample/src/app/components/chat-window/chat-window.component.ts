@@ -162,6 +162,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         (response) => {
           this.newMessage = ''; // Xóa nội dung nhập sau khi gửi tin nhắn
           this.attachmentFile = null; // Reset attachment file
+
           this.handleReceivedMessage(response); // Thêm tin nhắn mới vào giao diện
           console.log(`Message sent by user ${this.currentUserId} to recipient ${this.recipientId}:`, response);
 

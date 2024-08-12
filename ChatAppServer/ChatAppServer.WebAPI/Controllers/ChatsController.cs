@@ -73,6 +73,9 @@ namespace ChatAppServer.WebAPI.Controllers
 
                         string contactNickname = friendship?.Nickname ?? string.Empty;
 
+                        // HasNewMessage should only be true if the message is not read AND it was sent to the current user (not by them)
+                        bool hasNewMessage = !isSentByUser && !latestChat.IsRead;
+
                         var result = new
                         {
                             RelationshipType = "Private",
@@ -87,6 +90,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             LastMessage = latestChat.Message ?? string.Empty,
                             LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
                             IsSentByUser = isSentByUser,
+                            HasNewMessage = hasNewMessage
                         };
 
                         privateChatResults.Add(result);
@@ -119,6 +123,9 @@ namespace ChatAppServer.WebAPI.Controllers
                             continue; // Skip this chat if the group or sender is not found
                         }
 
+                        // HasNewMessage should only be true if the message is not read AND it was sent by someone else (not the current user)
+                        bool hasNewMessage = latestChat.UserId != userId && !latestChat.IsRead;
+
                         latestGroupChats.Add(new
                         {
                             RelationshipType = "Group",
@@ -133,6 +140,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             SenderId = latestChat.UserId,
                             SenderFullName = $"{sender.FirstName} {sender.LastName}",
                             SenderTagName = sender.TagName ?? string.Empty,
+                            HasNewMessage = hasNewMessage
                         });
                     }
                 }
@@ -150,6 +158,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "Internal server error. Please try again later." });
             }
         }
+
         [HttpGet("{userId}/recipient-info/{recipientId}")]
         public async Task<IActionResult> GetRecipientInfo(Guid userId, Guid recipientId, CancellationToken cancellationToken)
         {
@@ -242,33 +251,92 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+        [HttpPost("{chatId}/mark-as-read")]
         public async Task<IActionResult> MarkAsRead(Guid chatId, CancellationToken cancellationToken)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return Unauthorized();
 
+            var userGuid = Guid.Parse(userId);
+
             // Fetch the message from the database
             var message = await _context.Chats
-                .FirstOrDefaultAsync(m => m.Id == chatId && m.ToUserId.ToString() == userId, cancellationToken);
+                .FirstOrDefaultAsync(m => m.Id == chatId, cancellationToken);
 
-            if (message == null) return NotFound("Message not found or not authorized to mark as read.");
+            if (message == null)
+                return NotFound("Message not found or not authorized to mark as read.");
 
-            // Safely access nullable properties
-            string messageContent = message.Message ?? "No content";
-            string attachmentUrl = message.AttachmentUrl ?? string.Empty;
-            string attachmentOriginalName = message.AttachmentOriginalName ?? "Unnamed file";
+            // Ensure the user is the intended recipient or a member of the group
+            if (message.ToUserId.HasValue)
+            {
+                // Kiểm tra nếu người dùng hiện tại là người gửi tin nhắn thì không được phép đánh dấu là đã đọc
+                if (message.ToUserId.Value != userGuid || message.UserId == userGuid)
+                {
+                    return Forbid("You are not authorized to mark this message as read.");
+                }
+            }
+            else if (message.GroupId.HasValue)
+            {
+                var isMember = await _context.GroupMembers
+                    .AnyAsync(gm => gm.GroupId == message.GroupId && gm.UserId == userGuid, cancellationToken);
+
+                if (!isMember)
+                {
+                    return Forbid("You are not authorized to mark this message as read.");
+                }
+
+                // Người gửi tin nhắn trong nhóm không thể tự đánh dấu tin nhắn của họ là đã đọc
+                if (message.UserId == userGuid)
+                {
+                    return BadRequest("You cannot mark your own message as read.");
+                }
+            }
+            else
+            {
+                return BadRequest("Invalid message context.");
+            }
 
             // Mark the message as read
             message.IsRead = true;
             message.ReadAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                // Save changes to the database
+                await _context.SaveChangesAsync(cancellationToken);
 
-            // Notify the sender that the message has been read
-            await _hubContext.Clients.User(message.UserId.ToString()).SendAsync("MessageRead", message.Id);
+                // Notify all other members of the group that the message has been read
+                if (message.GroupId.HasValue)
+                {
+                    var groupMembers = await _context.GroupMembers
+                        .Where(gm => gm.GroupId == message.GroupId && gm.UserId != userGuid)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var member in groupMembers)
+                    {
+                        await _hubContext.Clients.User(member.UserId.ToString()).SendAsync("MessageRead", message.Id);
+                    }
+                }
+                else
+                {
+                    // Notify the sender if it's a private message
+                    await _hubContext.Clients.User(message.UserId.ToString()).SendAsync("MessageRead", message.Id);
+                }
+
+                // Notify the current user (the reader) to update their UI
+                await _hubContext.Clients.User(userGuid.ToString()).SendAsync("UpdateRelationships");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception for debugging purposes
+                _logger.LogError(ex, "Failed to mark message as read.");
+                return BadRequest("There was an issue marking the message as read. Please try again.");
+            }
 
             return Ok();
         }
+
+
 
         [HttpGet("get-chats")]
         public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
@@ -413,7 +481,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     {
                         UserId = request.UserId,
                         GroupId = request.RecipientId,
-                        Message = request.Message,
+                        Message = request.Message ?? string.Empty,
                         AttachmentUrl = attachmentUrl,
                         AttachmentOriginalName = originalFileName,
                         Date = DateTime.UtcNow
@@ -467,7 +535,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     {
                         UserId = request.UserId,
                         ToUserId = request.RecipientId,
-                        Message = request.Message,
+                        Message = request.Message ?? string.Empty,
                         AttachmentUrl = attachmentUrl,
                         AttachmentOriginalName = originalFileName,
                         Date = DateTime.UtcNow

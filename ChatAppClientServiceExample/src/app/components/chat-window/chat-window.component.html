@@ -42,7 +42,7 @@
         (keydown.enter)="onSendMessage()"
         aria-label="Type a message"
       />
-      <input type="file" (change)="onFileSelected($event)" />
+      <input type="file" (change)="onFileSelected($event)" #fileInput />
       <button
         (click)="onSendMessage()"
         [disabled]="!newMessage.trim() && !attachmentFile">
