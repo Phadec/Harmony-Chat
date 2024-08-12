@@ -684,6 +684,50 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while fetching blocked users.");
             }
         }
+        [HttpGet("{userId}/has-sent-friend-request/{friendId}")]
+        public async Task<IActionResult> HasSentFriendRequest(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to view this user's friend requests.");
+            }
+
+            if (userId == Guid.Empty || friendId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId or friendId.");
+            }
+
+            try
+            {
+                // Truy vấn để lấy yêu cầu kết bạn
+                var friendRequest = await _context.FriendRequests
+                    .FirstOrDefaultAsync(fr => fr.SenderId == userId && fr.ReceiverId == friendId && fr.Status == "Pending", cancellationToken);
+
+                if (friendRequest != null)
+                {
+                    return Ok(new
+                    {
+                        HasSentRequest = true,
+                        RequestId = friendRequest.Id // Trả về requestId nếu yêu cầu tồn tại
+                    });
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        HasSentRequest = false,
+                        RequestId = (Guid?)null // Trả về null nếu không có yêu cầu nào tồn tại
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while checking friend request status for user {UserId} and friend {FriendId}.", userId, friendId);
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
 
     }
 }

@@ -3,15 +3,15 @@
   <form (submit)="onRegister()">
     <div>
       <label for="username">Username:</label>
-      <input type="text" id="username" [(ngModel)]="username" name="username" required>
+      <input type="text" id="username" [(ngModel)]="username" name="username" required placeholder="Enter your username">
     </div>
     <div>
       <label for="firstName">First Name:</label>
-      <input type="text" id="firstName" [(ngModel)]="firstName" name="firstName" required>
+      <input type="text" id="firstName" [(ngModel)]="firstName" name="firstName" required placeholder="Enter your first name">
     </div>
     <div>
       <label for="lastName">Last Name:</label>
-      <input type="text" id="lastName" [(ngModel)]="lastName" name="lastName" required>
+      <input type="text" id="lastName" [(ngModel)]="lastName" name="lastName" required placeholder="Enter your last name">
     </div>
     <div>
       <label for="birthday">Birthday:</label>
@@ -19,21 +19,22 @@
     </div>
     <div>
       <label for="email">Email:</label>
-      <input type="email" id="email" [(ngModel)]="email" name="email" required>
+      <input type="email" id="email" [(ngModel)]="email" name="email" required placeholder="Enter your email">
     </div>
     <div>
       <label for="password">Password:</label>
-      <input type="password" id="password" [(ngModel)]="password" name="password" required>
+      <input type="password" id="password" [(ngModel)]="password" name="password" required placeholder="Enter your password">
     </div>
     <div>
       <label for="retypePassword">Retype Password:</label>
-      <input type="password" id="retypePassword" [(ngModel)]="retypePassword" name="retypePassword" required>
+      <input type="password" id="retypePassword" [(ngModel)]="retypePassword" name="retypePassword" required placeholder="Retype your password">
     </div>
-    <div>
-      <label for="file">Avatar:</label>
-      <input type="file" id="file" (change)="onFileSelected($event)">
+    <div class="avatar-container">
+      <label for="file" class="avatar-label"><i class="fas fa-upload"></i> Choose Avatar</label>
+      <input type="file" id="file" class="avatar-input" (change)="onFileSelected($event)">
     </div>
-    <button type="submit">Register</button>
+    <button type="submit" class="register-btn">Register</button>
+    <a href="/login" class="cancel-btn">Cancel</a> <!-- Nút Cancel dưới nút Register -->
   </form>
 
   <div *ngIf="errorMessage" class="error-message">

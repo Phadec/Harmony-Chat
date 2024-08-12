@@ -62,4 +62,8 @@ export class FriendsService {
     return this.http.get(`${this.apiUrl}/${userId}/blocked-users`);
   }
 
+  // API mới: Kiểm tra xem người dùng hiện tại đã gửi lời mời kết bạn với người khác hay chưa
+  hasSentFriendRequest(userId: string, friendId: string): Observable<{ HasSentRequest: boolean, RequestId: string | null }> {
+    return this.http.get<{ HasSentRequest: boolean, RequestId: string | null }>(`${this.apiUrl}/${userId}/has-sent-friend-request/${friendId}`);
+  }
 }
