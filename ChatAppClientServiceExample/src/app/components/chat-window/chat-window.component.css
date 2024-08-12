@@ -4,6 +4,7 @@ body, html {
   margin: 0;
   font-family: 'Arial', sans-serif;
   background-color: #f0f2f5;
+  display: flex;
 }
 
 /* Sidebar */
@@ -27,6 +28,43 @@ body, html {
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Chat Header */
+.chat-header {
+  flex-shrink: 0; /* Ensure the header does not grow or shrink */
+  padding: 10px 20px;
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+}
+
+.chat-info {
+  display: flex;
+  align-items: center;
+}
+
+.chat-info img.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.chat-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.chat-tag {
+  font-size: 12px;
+  color: #888;
+}
+
 /* Chat Window */
 .chat-window {
   flex-grow: 1;
@@ -45,7 +83,7 @@ body, html {
   border-radius: 10px;
   overflow-y: auto;
   margin-bottom: 10px;
-  max-height: calc(100vh - 150px); /* Adjust to fit within the viewport */
+  max-height: calc(100vh - 200px); /* Adjust to fit within the viewport including header and input */
   scrollbar-width: thin;  /* Firefox */
   scrollbar-color: #888 #e1e1e1;  /* Firefox */
 }
@@ -101,7 +139,31 @@ body, html {
   text-align: left;
 }
 
+/* Attachment Styles */
+.attachment {
+  margin-top: 10px;
+}
+
+.attachment img, .attachment video {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.attachment a {
+  color: #0084ff;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.attachment a:hover {
+  text-decoration: underline;
+}
+
+/* Message Input */
 .message-input {
+  flex-shrink: 0; /* Ensure the input area does not grow or shrink */
   display: flex;
   align-items: center;
   padding: 15px;
@@ -135,13 +197,4 @@ body, html {
 
 .message-input button:hover {
   background-color: #005bb5;
-}
-.chat-messages {
-  flex-grow: 1;
-  height: calc(100vh - 100px); /* Adjust this according to your layout */
-  overflow-y: auto;
-  padding: 20px;
-  background-color: white;
-  border-radius: 10px;
-  margin-bottom: 10px;
 }

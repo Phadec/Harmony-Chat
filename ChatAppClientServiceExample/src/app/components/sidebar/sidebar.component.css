@@ -29,6 +29,8 @@ body, html {
 }
 
 .sidebar li {
+  display: flex;
+  align-items: center;
   padding: 15px;
   margin-bottom: 10px;
   border-radius: 10px;
@@ -46,21 +48,30 @@ body, html {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  border: 2px solid #ffffff;
+}
+
 .relationship-item {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .tag-name {
   font-weight: bold;
-  margin-bottom: 5px;
   font-size: 1em;
+  margin-bottom: 5px;
 }
 
 .recent-message {
   font-size: 0.9em;
   color: #d1d1d1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-wrap: break-word;
+  margin-top: 5px;
 }

@@ -1,19 +1,53 @@
 <div class="chat-content">
-  <!-- Sidebar sẽ ở đây -->
+  <!-- Header hiển thị thông tin người nhận -->
+  <app-chat-header [recipientInfo]="recipientInfo"></app-chat-header>
+
   <div class="chat-window">
     <div class="chat-messages">
-      <div *ngFor="let message of messages"
+      <!-- Vòng lặp hiển thị các tin nhắn -->
+      <div *ngFor="let message of messages; let i = index"
            class="message-wrapper"
            [ngClass]="{'sent': message.userId === currentUserId, 'received': message.userId !== currentUserId}">
+        <!-- Tên người gửi trong nhóm (nếu là tin nhắn nhóm) -->
         <p *ngIf="message.groupId" class="sender-name">{{ message.senderFullName }}</p>
-        <div class="message-content">
+
+        <!-- Chỉ hiển thị nội dung tin nhắn nếu có -->
+        <div *ngIf="message.message" class="message-content">
           {{ message.message }}
+        </div>
+
+        <!-- Hiển thị tệp đính kèm nếu có -->
+        <div *ngIf="message.attachmentUrl" class="attachment">
+          <ng-container [ngSwitch]="getAttachmentType(message.attachmentUrl)">
+            <img *ngSwitchCase="'image'" [src]="getAttachmentUrl(message.attachmentUrl)" alt="Image attachment" />
+            <video *ngSwitchCase="'video'" controls [src]="getAttachmentUrl(message.attachmentUrl)"></video>
+            <a *ngSwitchCase="'pdf'" [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">{{ message.attachmentOriginalName }}</a>
+            <a *ngSwitchDefault [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">{{ message.attachmentOriginalName }}</a>
+          </ng-container>
+        </div>
+
+        <!-- Hiển thị "Đã đọc" nếu tin nhắn là cuối cùng đã đọc -->
+        <div *ngIf="message.isRead && message.userId === currentUserId && i === messages.length - 1" class="message-status">
+          Đã đọc
         </div>
       </div>
     </div>
+
+    <!-- Khu vực nhập tin nhắn -->
     <div class="message-input">
-      <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..." (keydown.enter)="onSendMessage()" />
-      <button (click)="onSendMessage()">Send</button>
+      <input
+        type="text"
+        [(ngModel)]="newMessage"
+        placeholder="Type a message..."
+        (keydown.enter)="onSendMessage()"
+        aria-label="Type a message"
+      />
+      <input type="file" (change)="onFileSelected($event)" />
+      <button
+        (click)="onSendMessage()"
+        [disabled]="!newMessage.trim() && !attachmentFile">
+        Send
+      </button>
     </div>
   </div>
 </div>

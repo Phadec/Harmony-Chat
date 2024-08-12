@@ -18,7 +18,13 @@ export class SidebarComponent implements OnInit {
   ngOnInit(): void {
     this.loadRelationships();
 
-    // Lắng nghe sự kiện nhận tin nhắn mới và cập nhật relationships
+    // Lắng nghe sự kiện `UpdateRelationships` để cập nhật relationships
+    this.signalRService.hubConnection.on('UpdateRelationships', () => {
+      console.log('UpdateRelationships event received');
+      this.loadRelationships(); // Cập nhật danh sách relationships khi có sự thay đổi
+    });
+
+    // Tiếp tục lắng nghe sự kiện nhận tin nhắn mới
     this.signalRService.messageReceived$.subscribe((message: any) => {
       this.loadRelationships(); // Cập nhật danh sách relationships khi có tin nhắn mới
     });
@@ -29,12 +35,14 @@ export class SidebarComponent implements OnInit {
       this.relationships = response.$values.map((rel: any) => {
         return {
           id: rel.relationshipType === 'Private' ? rel.contactId : rel.groupId,
-          fullName: rel.relationshipType === 'Private' ? rel.contactFullName : rel.groupName,
+          // Display contactNickname if available, otherwise show fullName
+          fullName: rel.relationshipType === 'Private' && rel.contactNickname ? rel.contactNickname : (rel.relationshipType === 'Private' ? rel.contactFullName : rel.groupName),
           tagName: rel.relationshipType === 'Private' ? rel.contactTagName : '',
           lastMessage: rel.lastMessage,
           isGroup: rel.relationshipType === 'Group',
           isSentByUser: rel.isSentByUser,
-          senderFullName: rel.senderFullName || '', // Trong trường hợp group, nếu cần hiển thị tên người gửi
+          avatar: rel.avatar,
+          senderFullName: rel.senderFullName || '', // For group messages, display sender's name
         };
       });
     });

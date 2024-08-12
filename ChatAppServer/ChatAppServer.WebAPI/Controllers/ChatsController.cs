@@ -1,5 +1,4 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
-using ChatAppServer.WebAPI.Hubs;
 using ChatAppServer.WebAPI.Models;
 using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -70,6 +69,10 @@ namespace ChatAppServer.WebAPI.Controllers
                         string contactFullName = $"{contact.FirstName} {contact.LastName}";
                         string contactTagName = contact?.TagName ?? string.Empty;
 
+                        var friendship = await _context.Friendships.FirstOrDefaultAsync(f => (f.UserId == userId && f.FriendId == contact.Id), cancellationToken);
+
+                        string contactNickname = friendship?.Nickname ?? string.Empty;
+
                         var result = new
                         {
                             RelationshipType = "Private",
@@ -78,6 +81,8 @@ namespace ChatAppServer.WebAPI.Controllers
                             ContactId = isSentByUser ? latestChat.ToUserId : latestChat.UserId,
                             ContactFullName = contactFullName,
                             ContactTagName = contactTagName,
+                            ContactNickname = contactNickname,
+                            Status = contact.Status,
                             Avatar = contact.Avatar,
                             LastMessage = latestChat.Message ?? string.Empty,
                             LastAttachmentUrl = latestChat.AttachmentUrl ?? string.Empty,
@@ -145,6 +150,125 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "Internal server error. Please try again later." });
             }
         }
+        [HttpGet("{userId}/recipient-info/{recipientId}")]
+        public async Task<IActionResult> GetRecipientInfo(Guid userId, Guid recipientId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to view this recipient's information.");
+            }
+
+            if (userId == Guid.Empty || recipientId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId or recipientId.");
+            }
+
+            try
+            {
+                // Case 1: The recipient is the user themselves
+                if (userId == recipientId)
+                {
+                    var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
+                    if (user == null)
+                    {
+                        return NotFound("User not found.");
+                    }
+
+                    var selfInfo = new
+                    {
+                        Id = user.Id,
+                        FullName = $"{user.FirstName} {user.LastName}",
+                        Nickname = "", // No nickname for oneself
+                        Avatar = user.Avatar,
+                        TagName = user.TagName,
+                        Status = user.Status,
+                        Type = "Self"  // Indicate that this is the user's own info
+                    };
+
+                    return Ok(selfInfo);
+                }
+
+                // Case 2: The recipient is a friend
+                var friendship = await _context.Friendships
+                    .Include(f => f.Friend)
+                    .Include(f => f.User)
+                    .FirstOrDefaultAsync(f => (f.UserId == userId && f.FriendId == recipientId) ||
+                                              (f.UserId == recipientId && f.FriendId == userId), cancellationToken);
+
+                if (friendship != null)
+                {
+                    var recipient = friendship.UserId == userId ? friendship.Friend : friendship.User;
+
+                    var recipientInfo = new
+                    {
+                        Id = recipient.Id,
+                        FullName = $"{recipient.FirstName} {recipient.LastName}",
+                        Nickname = friendship.Nickname,
+                        Avatar = recipient.Avatar,
+                        TagName = recipient.TagName,
+                        Status = recipient.Status,
+                        Type = "Private"  // Indicate that this is a friend
+                    };
+
+                    return Ok(recipientInfo);
+                }
+
+                // Case 3: The recipient is a group
+                var group = await _context.Groups
+                    .FirstOrDefaultAsync(g => g.Id == recipientId, cancellationToken);
+
+                if (group != null)
+                {
+                    var groupInfo = new
+                    {
+                        Id = group.Id,
+                        FullName = group.Name,
+                        Avatar = group.Avatar,
+                        Status = "group", // Special status for groups
+                        TagName = "", // Groups don't have tag names
+                        Nickname = "", // Groups don't have nicknames
+                        Type = "Group"  // Indicate that this is a group
+                    };
+
+                    return Ok(groupInfo);
+                }
+
+                return NotFound("Recipient not found.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching recipient info for user {UserId} and recipient {RecipientId}.", userId, recipientId);
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+        public async Task<IActionResult> MarkAsRead(Guid chatId, CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            // Fetch the message from the database
+            var message = await _context.Chats
+                .FirstOrDefaultAsync(m => m.Id == chatId && m.ToUserId.ToString() == userId, cancellationToken);
+
+            if (message == null) return NotFound("Message not found or not authorized to mark as read.");
+
+            // Safely access nullable properties
+            string messageContent = message.Message ?? "No content";
+            string attachmentUrl = message.AttachmentUrl ?? string.Empty;
+            string attachmentOriginalName = message.AttachmentOriginalName ?? "Unnamed file";
+
+            // Mark the message as read
+            message.IsRead = true;
+            message.ReadAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Notify the sender that the message has been read
+            await _hubContext.Clients.User(message.UserId.ToString()).SendAsync("MessageRead", message.Id);
+
+            return Ok();
+        }
 
         [HttpGet("get-chats")]
         public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
@@ -188,7 +312,8 @@ namespace ChatAppServer.WebAPI.Controllers
                             chat.ToUserId,
                             Message = chat.Message ?? string.Empty,
                             AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-                            chat.Date
+                            chat.Date,
+                            isRead = chat.IsRead,
                         })
                         .ToListAsync(cancellationToken);
 
@@ -252,7 +377,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
-                // Lấy tên người gửi từ cơ sở dữ liệu bằng UserId
                 var sender = await _context.Users
                     .Where(u => u.Id == request.UserId)
                     .Select(u => new { u.FirstName, u.LastName })
@@ -265,7 +389,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 string senderFullName = $"{sender.FirstName} {sender.LastName}";
 
-                // Kiểm tra nếu là tin nhắn nhóm
                 bool isGroup = await _context.Groups.AnyAsync(g => g.Id == request.RecipientId, cancellationToken);
                 if (isGroup)
                 {
@@ -299,7 +422,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     await _context.AddAsync(chat, cancellationToken);
                     await _context.SaveChangesAsync(cancellationToken);
 
-                    await _hubContext.Clients.All.SendAsync("ReceiveGroupMessage", new
+                    await _hubContext.Clients.Group(request.RecipientId.ToString()).SendAsync("ReceiveGroupMessage", new
                     {
                         chat.Id,
                         chat.UserId,
@@ -308,9 +431,9 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
                         chat.Date,
-                        SenderFullName = senderFullName // Trả về tên người gửi
+                        SenderFullName = senderFullName
                     });
-
+                    Console.WriteLine("Message sent to user via SignalR:", request.RecipientId);
                     return Ok(new
                     {
                         chat.Id,
@@ -320,10 +443,9 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
                         chat.Date,
-                        SenderFullName = senderFullName // Trả về tên người gửi
+                        SenderFullName = senderFullName
                     });
                 }
-                // Xử lý tin nhắn riêng tư
                 else
                 {
                     var isBlocked = await _context.UserBlocks.AnyAsync(ub => ub.UserId == request.RecipientId && ub.BlockedUserId == request.UserId, cancellationToken);
@@ -354,7 +476,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     await _context.AddAsync(chat, cancellationToken);
                     await _context.SaveChangesAsync(cancellationToken);
 
-                    await _hubContext.Clients.All.SendAsync("ReceivePrivateMessage", new
+                    await _hubContext.Clients.User(request.RecipientId.ToString()).SendAsync("ReceivePrivateMessage", new
                     {
                         chat.Id,
                         chat.UserId,
@@ -363,7 +485,7 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
                         chat.Date,
-                        SenderFullName = senderFullName // Trả về tên người gửi
+                        SenderFullName = senderFullName
                     });
 
                     return Ok(new
@@ -375,7 +497,7 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
                         chat.Date,
-                        SenderFullName = senderFullName // Trả về tên người gửi
+                        SenderFullName = senderFullName
                     });
                 }
             }
@@ -385,6 +507,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
 
         private async Task<bool> AreFriends(Guid userId1, Guid userId2, CancellationToken cancellationToken)
         {

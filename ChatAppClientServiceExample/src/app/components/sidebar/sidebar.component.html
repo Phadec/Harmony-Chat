@@ -5,6 +5,11 @@
           [ngClass]="{'active': relationship.id === selectedRecipientId}"
           (click)="onSelectRecipient(relationship.id)">
         <div class="relationship-item">
+          <!-- Hiển thị Avatar -->
+          <img [src]="'https://localhost:7267/' + relationship.avatar"
+               alt="Avatar"
+               class="avatar">
+
           <div class="tag-name">
             {{ relationship.fullName }}
             <span *ngIf="!relationship.isGroup">({{ relationship.tagName }})</span>

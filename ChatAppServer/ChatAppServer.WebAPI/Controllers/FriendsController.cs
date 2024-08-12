@@ -67,7 +67,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
 
         [HttpPost("{userId}/change-nickname")]
-        public async Task<IActionResult> ChangeNickname(Guid userId, [FromForm] ChangeNicknameDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> ChangeNickname(Guid userId, [FromBody] ChangeNicknameDto request, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
@@ -90,22 +90,31 @@ namespace ChatAppServer.WebAPI.Controllers
                     return NotFound("Friendship not found.");
                 }
 
-                friendship.Nickname = request.Nickname;
+                // Kiểm tra nếu biệt danh là chuỗi rỗng hoặc null, nghĩa là xóa biệt danh
+                if (string.IsNullOrEmpty(request.Nickname))
+                {
+                    friendship.Nickname = string.Empty; // Hoặc null, tùy theo cách bạn quản lý dữ liệu
+                    _logger.LogInformation($"Nickname for friend {request.FriendId} removed by user {userId}");
+                }
+                else
+                {
+                    friendship.Nickname = request.Nickname;
+                    _logger.LogInformation($"Nickname for friend {request.FriendId} changed to {request.Nickname} by user {userId}");
+                }
+
                 _context.Friendships.Update(friendship);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation($"Nickname for friend {request.FriendId} changed to {request.Nickname}");
-
-                return Ok(new { Message = "Nickname changed successfully." });
+                return Ok(new { Message = string.IsNullOrEmpty(request.Nickname) ? "Nickname removed successfully." : "Nickname changed successfully." });
             }
             catch (DbUpdateException dbEx)
             {
-                _logger.LogError(dbEx, "Database error occurred while changing nickname for user {UserId} and friend {FriendId}.", userId, request.FriendId);
+                _logger.LogError(dbEx, "Database error occurred while changing/removing nickname for user {UserId} and friend {FriendId}.", userId, request.FriendId);
                 return StatusCode(500, "An error occurred while updating the nickname in the database.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while changing nickname for user {UserId} and friend {FriendId}.", userId, request.FriendId);
+                _logger.LogError(ex, "An error occurred while changing/removing nickname for user {UserId} and friend {FriendId}.", userId, request.FriendId);
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
@@ -267,37 +276,29 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
+                // Truy vấn một phía từ UserId hoặc FriendId
                 var friendships = await _context.Friendships
                     .Where(f => f.UserId == userId)
+                    .Include(f => f.User)
                     .Include(f => f.Friend)
                     .ToListAsync(cancellationToken);
 
-                var reverseFriendships = await _context.Friendships
-                    .Where(f => f.FriendId == userId)
-                    .Include(f => f.User)
-                    .ToListAsync(cancellationToken);
-
-                var allFriends = friendships
-                    .Select(f => new { User = f.Friend, f.Nickname })
-                    .Concat(reverseFriendships.Select(f => new { User = f.User, f.Nickname }))
-                    .Distinct()
-                    .ToList();
-
-                if (!allFriends.Any())
+                if (!friendships.Any())
                 {
                     return NotFound("No friends found.");
                 }
 
-                var friendsDto = allFriends.Select(f => new FriendDto
+                // Tạo danh sách các bạn bè dựa trên UserId và FriendId
+                var friendsDto = friendships.Select(f => new FriendDto
                 {
-                    Id = f.User.Id,
-                    Username = f.User.Username,
-                    FirstName = f.User.FirstName,
-                    LastName = f.User.LastName,
-                    Birthday = f.User.Birthday,
-                    Email = f.User.Email,
-                    Avatar = f.User.Avatar,
-                    Status = f.User.Status,
+                    Id = f.UserId == userId ? f.Friend.Id : f.User.Id, // Lấy Id của bạn bè
+                    Username = f.UserId == userId ? f.Friend.Username : f.User.Username,
+                    FirstName = f.UserId == userId ? f.Friend.FirstName : f.User.FirstName,
+                    LastName = f.UserId == userId ? f.Friend.LastName : f.User.LastName,
+                    Birthday = f.UserId == userId ? f.Friend.Birthday : f.User.Birthday,
+                    Email = f.UserId == userId ? f.Friend.Email : f.User.Email,
+                    Avatar = f.UserId == userId ? f.Friend.Avatar : f.User.Avatar,
+                    Status = f.UserId == userId ? f.Friend.Status : f.User.Status,
                     Nickname = f.Nickname
                 }).ToList();
 
@@ -305,10 +306,7 @@ namespace ChatAppServer.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Ghi lại lỗi vào log
                 _logger.LogError(ex, "Error occurred while fetching friends for user {UserId}", userId);
-
-                // Trả về lỗi Internal Server Error với thông báo lỗi
                 return StatusCode(500, "An error occurred while fetching friends.");
             }
         }
@@ -491,6 +489,56 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+        [HttpGet("{userId}/friend-info/{friendId}")]
+        public async Task<IActionResult> GetFriendInfo(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to view this friend's information.");
+            }
+
+            if (userId == Guid.Empty || friendId == Guid.Empty)
+            {
+                return BadRequest("Invalid userId or friendId.");
+            }
+
+            try
+            {
+                // Tìm thông tin về mối quan hệ bạn bè
+                var friendship = await _context.Friendships
+                    .Include(f => f.Friend)
+                    .Include(f => f.User)
+                    .FirstOrDefaultAsync(f => (f.UserId == userId && f.FriendId == friendId) ||
+                                              (f.UserId == friendId && f.FriendId == userId), cancellationToken);
+
+                if (friendship == null)
+                {
+                    return NotFound("Friendship not found.");
+                }
+
+                // Lấy thông tin chi tiết về bạn bè
+                var friend = friendship.UserId == userId ? friendship.Friend : friendship.User;
+
+                var friendInfo = new
+                {
+                    Id = friend.Id,
+                    FullName = $"{friend.FirstName} {friend.LastName}",
+                    Nickname = friendship.Nickname,
+                    Avatar = friend.Avatar,
+                    TagName = friend.TagName,
+                    Status = friend.Status
+                };
+
+                return Ok(friendInfo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching friend info for user {UserId} and friend {FriendId}.", userId, friendId);
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
 
         [HttpPost("{userId}/block/{blockedUserId}")]
         public async Task<IActionResult> BlockUser(Guid userId, Guid blockedUserId, CancellationToken cancellationToken)
