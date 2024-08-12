@@ -1,30 +1,127 @@
-<div class="container">
-  <div class="sidebar">
-    <ul>
-      <li *ngFor="let relationship of relationships"
-          [ngClass]="{'active': relationship.id === selectedRecipientId, 'new-message': relationship.hasNewMessage}"
-          (click)="onSelectRecipient(relationship.id)">
-        <div class="relationship-item">
-          <!-- Hiển thị Avatar -->
-          <img [src]="'https://localhost:7267/' + relationship.avatar"
-               alt="Avatar"
-               class="avatar">
+<div class="sidebar">
+  <h2>Harmony Chat</h2>
 
-          <!-- Hiển thị chấm đỏ nếu có tin nhắn mới -->
-          <div class="notification-dot" *ngIf="relationship.hasNewMessage"></div>
+  <div class="sidebar-search">
+    <input type="text" placeholder="Search..." [(ngModel)]="searchQuery" (input)="filterRelationships()">
+  </div>
 
-          <div class="tag-name">
-            {{ relationship.fullName }}
-            <span *ngIf="!relationship.isGroup">({{ relationship.tagName }})</span>
-          </div>
-          <div class="recent-message" [ngClass]="{'bold': relationship.hasNewMessage}">
-            <span *ngIf="relationship.isGroup && !relationship.isSentByUser">
-              {{ relationship.senderFullName }}:
-            </span>
-            {{ relationship.lastMessage }}
-          </div>
+  <div class="sidebar-icons">
+    <button (click)="selectTab('recent')" [class.active]="selectedTab === 'recent'">
+      <i class="fas fa-clock"></i>
+    </button>
+    <button (click)="selectTab('groups')" [class.active]="selectedTab === 'groups'">
+      <i class="fas fa-users"></i>
+    </button>
+    <button (click)="selectTab('friends')" [class.active]="selectedTab === 'friends'">
+      <i class="fas fa-user-friends"></i>
+    </button>
+    <button (click)="selectTab('requests')" [class.active]="selectedTab === 'requests'">
+      <i class="fas fa-user-plus"></i>
+    </button>
+    <button (click)="selectTab('settings')" [class.active]="selectedTab === 'settings'">
+      <i class="fas fa-cog"></i>
+    </button>
+  </div>
+
+  <div class="sidebar-content">
+    <!-- Recent Conversations -->
+    <ul *ngIf="selectedTab === 'recent'">
+      <li *ngFor="let relationship of filteredRelationships" (click)="onSelectRecipient(relationship.id)">
+        <img [src]="getAvatarUrl(relationship.avatar)" alt="Avatar">
+        <div class="relationship-details">
+          <h4>{{ relationship.fullName }}</h4>
+          <p>{{ relationship.lastMessage }}</p>
+        </div>
+        <span class="timestamp">{{ relationship.timestamp }}</span>
+        <span class="notification-dot" *ngIf="relationship.hasNewMessage"></span>
+      </li>
+    </ul>
+
+    <!-- Filtered Users for Tag Search -->
+    <ul *ngIf="searchQuery.startsWith('@') && selectedTab === 'recent'">
+      <li *ngFor="let user of filteredUsers" (click)="onSelectRecipient(user.id)">
+        <img [src]="getAvatarUrl(user.avatar)" alt="Avatar">
+        <div class="user-details">
+          <h4>{{ user.fullName }}</h4>
         </div>
       </li>
     </ul>
+
+    <!-- Groups -->
+    <ul *ngIf="selectedTab === 'groups'">
+      <li *ngFor="let group of groups" (click)="onSelectRecipient(group.id)">
+        <img [src]="getAvatarUrl(group.avatar)" alt="Avatar">
+        <div class="group-details">
+          <h4>{{ group.name }}</h4>
+        </div>
+      </li>
+    </ul>
+
+    <!-- Friends -->
+    <ul *ngIf="selectedTab === 'friends'">
+      <li *ngFor="let friend of friends" (click)="onSelectRecipient(friend.id)">
+        <img [src]="getAvatarUrl(friend.avatar)" alt="Avatar">
+        <div class="friend-details">
+          <h4>{{ friend.fullName }}</h4>
+        </div>
+        <div class="icon-group">
+          <button (click)="onRemoveFriend(friend.id)" title="Remove">
+            <i class="fas fa-user-minus"></i>
+          </button>
+          <button (click)="onBlockUser(friend.id)" title="Block">
+            <i class="fas fa-user-lock"></i>
+          </button>
+        </div>
+      </li>
+    </ul>
+
+    <!-- Friend Requests -->
+    <ul *ngIf="selectedTab === 'requests'">
+      <li *ngFor="let request of friendRequests">
+        <img [src]="getAvatarUrl(request.avatar)" alt="Avatar">
+        <div class="request-details">
+          <h4>{{ request.senderName }}</h4>
+          <h5>({{ request.tagName }})</h5>
+        </div>
+        <div class="icon-group">
+          <button (click)="onAcceptRequest(request.id)" title="Accept">
+            <i class="fas fa-check"></i>
+          </button>
+          <button (click)="onRejectRequest(request.id)" title="Reject">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </li>
+    </ul>
+
+    <!-- Settings -->
+    <ul *ngIf="selectedTab === 'settings'" class="settings-list">
+      <li (click)="viewBlockedUsers()" class="settings-item">
+        <i class="fas fa-ban settings-icon"></i>
+        <span class="settings-text">View blocked users</span>
+      </li>
+      <li (click)="changeLanguage()" class="settings-item">
+        <i class="fas fa-globe settings-icon"></i>
+        <span class="settings-text">Change language</span>
+      </li>
+      <li (click)="signOut()" class="settings-item">
+        <i class="fas fa-sign-out-alt settings-icon"></i>
+        <span class="settings-text">Sign out</span>
+      </li>
+    </ul>
+
+    <!-- No Content Messages -->
+    <div class="no-content" *ngIf="groups.length === 0 && selectedTab === 'groups'">
+      No groups found.
+    </div>
+    <div class="no-content" *ngIf="filteredRelationships.length === 0 && selectedTab === 'recent' && !searchQuery.startsWith('@')">
+      No recent conversations.
+    </div>
+    <div class="no-content" *ngIf="friends.length === 0 && selectedTab === 'friends'">
+      No friends found.
+    </div>
+    <div class="no-content" *ngIf="friendRequests.length === 0 && selectedTab === 'requests'">
+      No friend requests.
+    </div>
   </div>
 </div>

@@ -1,0 +1,17 @@
+<h2 mat-dialog-title>Blocked Users</h2>
+<mat-dialog-content>
+  <ul class="blocked-users-list">
+    <li *ngFor="let user of blockedUsers">
+      <img [src]="getAvatarUrl(user.blockedAvatar)" alt="Avatar" class="avatar">
+      <div class="user-details">
+        <span class="user-name">{{ user.blockedFullName }}</span>
+      </div>
+      <button (click)="unblockUser(user.blockedUserId)" mat-icon-button color="warn">
+        <i class="fas fa-user-times"></i> <!-- Font Awesome icon for Unblock -->
+      </button>
+    </li>
+  </ul>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onClose()">Close</button>
+</mat-dialog-actions>

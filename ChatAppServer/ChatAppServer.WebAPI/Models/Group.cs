@@ -12,7 +12,6 @@
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Avatar { get; set; } = string.Empty; // Thêm thuộc tính này
-
         public List<GroupMember> Members { get; set; }
         public List<Chat> Chats { get; set; }
     }

@@ -26,7 +26,7 @@ export class LoginComponent {
         console.log("Token:", response.token);
 
         // Redirect to another page or perform other actions after successful login
-        this.router.navigate(['/friends']);
+        this.router.navigate(['/chats']);
       },
       error: (error) => {
         console.error("Login failed", error);

@@ -1,0 +1,55 @@
+/* Styles for the dialog content */
+mat-dialog-content {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.blocked-users-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.blocked-users-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-details {
+  flex: 1;
+  margin-left: 10px;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Styles for Font Awesome icons */
+.fa-user-times {
+  font-size: 20px; /* Adjust icon size */
+  color: #f44336;  /* Adjust icon color */
+}
+
+/* Styles for the dialog actions */
+mat-dialog-actions {
+  padding: 10px;
+  display: flex;
+  justify-content: flex-end;
+  background: #f1f1f1;
+}
+
+mat-button {
+  margin-left: 8px;
+}

@@ -356,21 +356,14 @@ namespace ChatAppServer.WebAPI.Controllers
                     return BadRequest(new { Message = "Invalid userId" });
                 }
 
+                // Truy vấn để lấy các nhóm mà người dùng tham gia và chỉ trả về id, name, avatar
                 var userGroups = await _context.Groups
                     .Where(g => g.Members.Any(gm => gm.UserId == userId))
                     .Select(g => new
                     {
                         g.Id,
                         g.Name,
-                        Members = g.Members.Select(gm => new
-                        {
-                            gm.User.Id,
-                            gm.User.Username,
-                            gm.User.FirstName,
-                            gm.User.LastName,
-                            gm.User.Email,
-                            gm.User.Avatar
-                        }).ToList()
+                        g.Avatar
                     })
                     .ToListAsync(cancellationToken);
 
@@ -387,6 +380,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "An error occurred while processing your request." });
             }
         }
+
 
         [HttpPut("rename-group")]
         public async Task<IActionResult> RenameGroup([FromForm] RenameGroupDto request, CancellationToken cancellationToken)

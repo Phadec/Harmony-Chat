@@ -12,6 +12,8 @@ app-sidebar {
   max-width: 300px; /* Max width of the sidebar */
   background-color: #2c2f33; /* Sidebar background color */
   color: #ffffff; /* Text color for sidebar */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Chat window styles */
