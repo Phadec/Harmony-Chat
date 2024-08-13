@@ -30,4 +30,8 @@ export class ChatService {
   markMessageAsRead(chatId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${chatId}/mark-as-read`, {});
   }
+  deleteChat(userId: string, recipientId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${userId}/delete-chats/${recipientId}`);
+  }
+
 }

@@ -1,0 +1,11 @@
+<h2 mat-dialog-title>Đổi biệt danh</h2>
+<mat-dialog-content>
+  <mat-form-field appearance="fill">
+    <mat-label>Biệt danh mới</mat-label>
+    <input matInput [(ngModel)]="newNickname">
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button color="primary" (click)="onSave()">OK</button>
+</mat-dialog-actions>

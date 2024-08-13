@@ -24,12 +24,10 @@ export class UserService {
 
 
   // Cập nhật thông tin người dùng
-  updateUser(userId: string, request: any): Observable<any> {
-    const url = `${this.apiUrl}/${userId}/update-user`;
-    return this.http.put<any>(url, request).pipe(
-      catchError(this.handleError)
-    );
+  updateUser(userId: string, formData: FormData): Observable<any> {
+    return this.http.put(`${this.apiUrl}/update/${userId}`, formData);
   }
+
 
   // Cập nhật trạng thái người dùng
   updateStatus(userId: string, status: string): Observable<any> {

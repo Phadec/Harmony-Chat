@@ -1,0 +1,27 @@
+<h2 mat-dialog-title>Tạo nhóm mới</h2>
+<mat-dialog-content>
+  <form [formGroup]="createGroupForm">
+    <mat-form-field>
+      <mat-label>Tên nhóm</mat-label>
+      <input matInput formControlName="Name">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Ảnh đại diện nhóm</mat-label>
+      <input type="file" (change)="onFileChange($event)">
+    </mat-form-field>
+
+    <div class="friends-list">
+      <h3>Chọn bạn bè (tối thiểu 3):</h3>
+      <div *ngFor="let friend of friends">
+        <mat-checkbox [formControl]="friendControl(friend.id)">
+          {{ friend.fullName }}
+        </mat-checkbox>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Hủy</button>
+  <button mat-button (click)="onCreate()" [disabled]="!createGroupForm.valid">Tạo nhóm</button>
+</mat-dialog-actions>

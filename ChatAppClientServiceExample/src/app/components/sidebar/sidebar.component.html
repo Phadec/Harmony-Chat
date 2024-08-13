@@ -53,14 +53,26 @@
           <button *ngIf="isFriend(user.id)" (click)="onSelectRecipient(user.id)" class="icon-button">
             <i class="fas fa-comments"></i> <!-- Biểu tượng chat -->
           </button>
+
           <!-- Nếu đã gửi yêu cầu kết bạn, hiển thị nút Hủy -->
-          <button *ngIf="user.hasSentRequest"
-                  (click)="onCancelFriendRequest(user.requestId,'search')"
+          <button *ngIf="user.hasSentRequest && !user.hasReceivedRequest"
+                  (click)="onCancelFriendRequest(user.requestId, 'search')"
                   class="icon-button">
             <i class="fas fa-user-times"></i> <!-- Biểu tượng hủy yêu cầu kết bạn -->
           </button>
+
+          <!-- Nếu đã nhận được yêu cầu kết bạn, hiển thị nút Đồng ý và Từ chối -->
+          <div *ngIf="user.hasReceivedRequest">
+            <button (click)="onAcceptRequest(user.receivedRequestId,'search')" class="icon-button">
+              <i class="fas fa-user-check"></i> <!-- Biểu tượng đồng ý kết bạn -->
+            </button>
+            <button (click)="onRejectRequest(user.receivedRequestId,'search')" class="icon-button">
+              <i class="fas fa-user-times"></i> <!-- Biểu tượng từ chối kết bạn -->
+            </button>
+          </div>
+
           <!-- Nếu chưa gửi yêu cầu kết bạn, hiển thị nút Kết bạn -->
-          <button *ngIf="!isFriend(user.id) && !user.hasSentRequest"
+          <button *ngIf="!isFriend(user.id) && !user.hasSentRequest && !user.hasReceivedRequest"
                   (click)="onAddFriend(user.id)"
                   class="icon-button">
             <i class="fas fa-user-plus"></i> <!-- Biểu tượng kết bạn -->
@@ -103,10 +115,10 @@
             <h5>({{ request.tagName }})</h5>
           </div>
           <div class="icon-group">
-            <button (click)="onAcceptRequest(request.id)" class="icon-button" title="Accept">
+            <button (click)="onAcceptRequest(request.id,'friendRequests')" class="icon-button" title="Accept">
               <i class="fas fa-check"></i>
             </button>
-            <button (click)="onRejectRequest(request.id)" class="icon-button reject-button" title="Reject">
+            <button (click)="onRejectRequest(request.id,'friendRequests')" class="icon-button reject-button" title="Reject">
               <i class="fas fa-times"></i>
             </button>
           </div>
@@ -141,6 +153,10 @@
         <i class="fas fa-globe settings-icon"></i>
         <span class="settings-text">Change language</span>
       </li>
+      <li (click)="openUpdateUserDialog()" class="settings-item">
+        <i class="fas fa-user-edit settings-icon"></i>
+        <span class="settings-text">Update Profile</span>
+      </li>
       <li (click)="signOut()" class="settings-item">
         <i class="fas fa-sign-out-alt settings-icon"></i>
         <span class="settings-text">Sign out</span>
@@ -163,3 +179,7 @@
 
   </div>
 </div>
+<!--<app-recipient-info-->
+<!--  [recipientId]="selectedRecipientId"-->
+<!--  (updateSidebar)="handleUpdateSidebar()">-->
+<!--</app-recipient-info>-->
