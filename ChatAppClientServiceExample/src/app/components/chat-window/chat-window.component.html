@@ -1,8 +1,8 @@
 <div class="chat-content">
   <!-- Header hiển thị thông tin người nhận -->
-  <app-chat-header [recipientInfo]="recipientInfo"></app-chat-header>
+  <app-chat-header *ngIf="recipientInfo" [recipientInfo]="recipientInfo"></app-chat-header>
 
-  <div class="chat-window">
+  <div class="chat-window" *ngIf="recipientId; else selectChatMessage">
     <div class="chat-messages">
       <!-- Vòng lặp hiển thị các tin nhắn -->
       <div *ngFor="let message of messages; let i = index"
@@ -34,7 +34,7 @@
     </div>
 
     <!-- Khu vực nhập tin nhắn -->
-    <div class="message-input">
+    <div class="message-input" *ngIf="recipientId">
       <input
         type="text"
         [(ngModel)]="newMessage"
@@ -42,12 +42,27 @@
         (keydown.enter)="onSendMessage()"
         aria-label="Type a message"
       />
-      <input type="file" (change)="onFileSelected($event)" #fileInput />
+
+      <!-- File Input Icon -->
+      <label for="fileInput" class="icon-button">
+        <i class="fas fa-paperclip"></i>
+      </label>
+      <input type="file" id="fileInput" (change)="onFileSelected($event)" #fileInput style="display: none;" />
+
+      <!-- Send Button Icon -->
       <button
         (click)="onSendMessage()"
-        [disabled]="!newMessage.trim() && !attachmentFile">
-        Send
+        [disabled]="!newMessage.trim() && !attachmentFile"
+        class="icon-button">
+        <i class="fas fa-paper-plane"></i>
       </button>
     </div>
   </div>
+
+  <!-- Template for the select chat message -->
+  <ng-template #selectChatMessage>
+    <div class="select-chat-message">
+      <p>Please select a conversation or user to view the chat messages.</p>
+    </div>
+  </ng-template>
 </div>

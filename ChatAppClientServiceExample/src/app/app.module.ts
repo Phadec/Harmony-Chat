@@ -20,6 +20,7 @@ import { ChatHeaderComponent } from './components/chat-header/chat-header.compon
 import { BlockedUsersModalComponent } from './components/blocked-users-modal/blocked-users-modal.component';
 import {MatDialogActions, MatDialogContent} from "@angular/material/dialog";
 import {MatIcon} from "@angular/material/icon";
+import { RecipientInfoComponent } from './components/recipient-info/recipient-info.component';
 
 @NgModule({
   declarations: [
@@ -36,6 +37,7 @@ import {MatIcon} from "@angular/material/icon";
     ChatLayoutComponent,
     ChatHeaderComponent,
     BlockedUsersModalComponent,
+    RecipientInfoComponent,
   ],
   imports: [
     BrowserModule,

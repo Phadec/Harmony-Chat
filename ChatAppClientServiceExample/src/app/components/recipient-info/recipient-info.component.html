@@ -1,0 +1,18 @@
+<div class="recipient-info-container" *ngIf="recipientInfo">
+  <img [src]="getAvatarUrl(recipientInfo.avatar)" alt="Avatar" class="recipient-avatar">
+  <h3 class="recipient-name">{{ recipientInfo.fullName }}</h3>
+  <p class="tag-name">{{ recipientInfo.tagName }}</p>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons">
+    <button (click)="onChangeNickname()" class="action-button">
+      <i class="fas fa-edit"></i> Đổi biệt danh
+    </button>
+    <button (click)="onRemoveFriend()" class="action-button">
+      <i class="fas fa-user-minus"></i> Xóa kết bạn
+    </button>
+    <button (click)="onBlockUser()" class="action-button">
+      <i class="fas fa-ban"></i> Chặn
+    </button>
+  </div>
+</div>

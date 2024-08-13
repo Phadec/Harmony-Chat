@@ -62,17 +62,16 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       this.chatService.getChats(this.recipientId).subscribe(
         (response: any) => {
           this.messages = response.$values || [];
-          this.cdr.detectChanges();
-          this.scrollToBottom();
+          this.cdr.detectChanges(); // Force UI update
+          this.scrollToBottom(); // Scroll to bottom after loading messages
 
-          // Check if each message has an attachment and display it
+          // Check for attachments and mark the last message as read
           this.messages.forEach(message => {
             if (message.attachmentUrl && message.attachmentOriginalName) {
               console.log(`Attachment found: ${message.attachmentOriginalName} at ${message.attachmentUrl}`);
             }
           });
 
-          // Mark the last message as read
           if (this.messages.length > 0) {
             const lastMessage = this.messages[this.messages.length - 1];
             if (!lastMessage.isRead) {
@@ -111,9 +110,9 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       const isDuplicate = this.messages.some(msg => msg.id === message.id);
       if (!isDuplicate) {
         this.messages = [...this.messages, message];
-        this.cdr.detectChanges();
-        this.scrollToBottom();
-        this.markMessageAsRead(message.id); // Đánh dấu tin nhắn là đã đọc khi nhận được
+        this.cdr.detectChanges(); // Force UI update
+        this.scrollToBottom(); // Scroll to bottom after receiving a message
+        this.markMessageAsRead(message.id); // Mark message as read
         console.log(`New message received by recipient ${this.recipientId} from user ${message.userId}:`, message);
       }
     }
@@ -160,14 +159,16 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
       this.chatService.sendMessage(formData).subscribe(
         (response) => {
-          this.newMessage = ''; // Xóa nội dung nhập sau khi gửi tin nhắn
+          this.newMessage = ''; // Clear input after sending
           this.attachmentFile = null; // Reset attachment file
 
-          this.handleReceivedMessage(response); // Thêm tin nhắn mới vào giao diện
+          this.handleReceivedMessage(response); // Add the new message to UI
           console.log(`Message sent by user ${this.currentUserId} to recipient ${this.recipientId}:`, response);
 
-          // Gửi thông báo tin nhắn mới với đối tượng chat đầy đủ
+          // Notify about the new message
           this.signalRService.sendNewMessageNotification(response);
+
+          this.scrollToBottom(); // Scroll to bottom after sending a message
         },
         (error) => {
           console.error('Error sending message:', error);

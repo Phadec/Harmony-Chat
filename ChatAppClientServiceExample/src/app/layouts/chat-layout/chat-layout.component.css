@@ -6,14 +6,28 @@
   overflow: hidden; /* Hide overflow to prevent unwanted scrollbars */
 }
 
+@media screen and (max-width: 1200px) {
+  app-recipient-info {
+    width: 300px;
+  }
+
+  app-sidebar {
+    max-width: 250px;
+  }
+}
+
+
 /* Sidebar styles */
 app-sidebar {
-  flex: 0 0 25%; /* Sidebar takes 25% of the width */
-  max-width: 300px; /* Max width of the sidebar */
+  flex: 0 0 30%; /* Sidebar takes 30% of the width */
+  max-width: 350px; /* Max width of the sidebar */
   background-color: #2c2f33; /* Sidebar background color */
   color: #ffffff; /* Text color for sidebar */
   display: flex;
   flex-direction: column;
+  /*overflow-y: auto; !* Allow vertical scrolling if content exceeds height *!*/
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.15); /* Add shadow for better separation */
+  border-right: 1px solid #dcdcdc; /* Add a subtle border for better separation */
 }
 
 /* Chat window styles */
@@ -22,7 +36,17 @@ app-chat-window {
   display: flex;
   flex-direction: column;
   background-color: #f9f9f9; /* Chat window background color */
-  border-left: 1px solid #dcdcdc; /* Optional: A separator between the sidebar and chat window */
+  padding: 0; /* Remove any padding to make it snug with the sidebar */
+  margin: 0; /* Remove any margins */
+  overflow: hidden; /* Ensure content doesn't overflow */
+}
+
+/* Additional adjustments to ensure snug fit */
+body, html {
+  margin: 0; /* Remove default margins */
+  padding: 0; /* Remove default padding */
+  height: 100%; /* Full height */
+  overflow: hidden; /* Prevent scrolling */
 }
 
 /* Chat messages container inside chat window */
@@ -31,6 +55,7 @@ app-chat-window {
   overflow-y: auto; /* Enable vertical scrolling for messages */
   padding: 20px; /* Padding around messages */
   background-color: #ffffff; /* Messages background color */
+  border-radius: 10px; /* Rounded corners */
 }
 
 /* Message input container */
