@@ -1,0 +1,22 @@
+<h2 mat-dialog-title>Thêm thành viên mới</h2>
+<mat-dialog-content>
+  <div *ngIf="friendsNotInGroup.length > 0; else noFriends">
+    <mat-selection-list [multiple]="true" (selectionChange)="onSelectionChange($event)">
+      <mat-list-option *ngFor="let friend of friendsNotInGroup" [value]="friend">
+        <div class="friend-item">
+          <img class="avatar" [src]="friend.avatar" alt="{{ friend.firstName }} {{ friend.lastName }}" />
+          <span>{{ friend.firstName }} {{ friend.lastName }} ({{ friend.username }})</span>
+        </div>
+      </mat-list-option>
+    </mat-selection-list>
+  </div>
+  <ng-template #noFriends>
+    <p>Không có bạn bè nào có thể thêm vào nhóm.</p>
+  </ng-template>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Hủy</button>
+  <button mat-button (click)="onConfirm()" [disabled]="!hasSelectedFriends">
+    Xác nhận
+  </button>
+</mat-dialog-actions>

@@ -31,6 +31,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatListModule } from '@angular/material/list';
+import { RenameGroupDialogComponent } from './components/rename-group-dialog/rename-group-dialog.component';
+import { AddMemberDialogComponent } from './components/add-member-dialog/add-member-dialog.component';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 @NgModule({
   declarations: [
@@ -51,7 +55,9 @@ import { MatNativeDateModule } from '@angular/material/core';
     ChangeNicknameDialogComponent,
     ConfirmDialogComponent,
     CreateGroupDialogComponent,
-    UpdateUserDialogComponent
+    UpdateUserDialogComponent,
+    RenameGroupDialogComponent,
+    AddMemberDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -65,12 +71,14 @@ import { MatNativeDateModule } from '@angular/material/core';
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
-    MatDatepickerModule, // Correct placement
-    MatNativeDateModule // Correct placement
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatListModule // Move this to imports
   ],
   providers: [
     FriendsService,
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    provideAnimationsAsync()
   ],
   bootstrap: [AppComponent]
 })

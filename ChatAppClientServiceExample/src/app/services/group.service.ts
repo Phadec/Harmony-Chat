@@ -42,13 +42,9 @@ export class GroupService {
     return this.http.get(`${this.apiUrl}/user-groups-with-details/${userId}`);
   }
 
-  renameGroup(request: { GroupId: string, NewName: string }): Observable<any> {
-    const formData = new FormData();
-    formData.append('GroupId', request.GroupId);
-    formData.append('NewName', request.NewName);
-    return this.http.put(`${this.apiUrl}/rename-group`, formData);
+  renameGroup(groupId: string, newName: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/rename-group`, { groupId, newName });
   }
-
   updateGroupAdmin(request: { GroupId: string, UserId: string }): Observable<any> {
     const formData = new FormData();
     formData.append('GroupId', request.GroupId);
@@ -68,5 +64,8 @@ export class GroupService {
     formData.append('GroupId', request.GroupId);
     formData.append('AvatarFile', request.AvatarFile);
     return this.http.post(`${this.apiUrl}/update-avatar`, formData);
+  }
+  getFriendsNotInGroup(groupId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${groupId}/non-members`);
   }
 }

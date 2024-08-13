@@ -12,6 +12,7 @@ import { AuthService } from "../../services/auth.service";
 import { Router } from "@angular/router";
 import { UserService } from "../../services/user.service";
 import {UpdateUserDialogComponent} from "../update-user-dialog/update-user-dialog.component";
+import {CreateGroupDialogComponent} from "../create-group-dialog/create-group-dialog.component";
 
 @Component({
   selector: 'app-sidebar',
@@ -494,5 +495,30 @@ export class SidebarComponent implements OnInit {
   }
   getAvatarUrl(avatar: string): string {
     return `https://localhost:7267/${avatar}`;
+  }
+  // Phương thức để mở hộp thoại tạo nhóm mới
+  onCreateGroup(): void {
+    const dialogRef = this.dialog.open(CreateGroupDialogComponent, {
+      width: '400px',
+      data: {}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const formData = new FormData();
+        formData.append('name', result.name);  // Tên nhóm
+        formData.append('members', JSON.stringify(result.members));  // Các thành viên được chọn
+
+        this.groupService.createGroupChat(formData).subscribe(
+          () => {
+            console.log('Group created successfully');
+            this.loadGroups();  // Tải lại danh sách nhóm sau khi tạo nhóm mới
+          },
+          error => {
+            console.error('Failed to create group:', error);
+          }
+        );
+      }
+    });
   }
 }

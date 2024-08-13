@@ -383,7 +383,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
 
         [HttpPut("rename-group")]
-        public async Task<IActionResult> RenameGroup([FromForm] RenameGroupDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> RenameGroup([FromBody] RenameGroupDto request, CancellationToken cancellationToken)
         {
             try
             {
@@ -602,6 +602,61 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "An error occurred while processing your request." });
             }
         }
+        [HttpGet("{groupId}/non-members")]
+        public async Task<IActionResult> GetFriendsNotInGroup(Guid groupId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (authenticatedUserId == null)
+                {
+                    return Forbid("You are not authorized to view this group's non-members.");
+                }
+
+                var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
+
+                // Lấy danh sách bạn bè của người dùng hiện tại
+                var friends = await _context.Friendships
+                    .Where(f => f.UserId == authenticatedUserIdGuid)
+                    .Select(f => f.Friend)
+                    .ToListAsync(cancellationToken);
+
+                if (!friends.Any())
+                {
+                    return Ok(new List<UserDto>()); // Trả về danh sách rỗng nếu không có bạn bè nào
+                }
+
+                // Lấy danh sách UserIds của những thành viên đã có trong nhóm
+                var groupMemberIds = await _context.GroupMembers
+                    .Where(gm => gm.GroupId == groupId)
+                    .Select(gm => gm.UserId)
+                    .ToListAsync(cancellationToken);
+
+                // Lọc ra những bạn bè không nằm trong nhóm
+                var nonMembers = friends
+                    .Where(f => !groupMemberIds.Contains(f.Id))
+                    .Select(f => new UserDto
+                    {
+                        Id = f.Id,
+                        Username = f.Username,
+                        FirstName = f.FirstName,
+                        LastName = f.LastName,
+                        Birthday = f.Birthday,
+                        Email = f.Email,
+                        Avatar = f.Avatar,
+                        Status = f.Status
+                    })
+                    .ToList();
+
+                return Ok(nonMembers);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching non-members for group {GroupId}", groupId);
+                return StatusCode(500, new { Message = "An error occurred while processing your request." });
+            }
+        }
+
 
 
     }

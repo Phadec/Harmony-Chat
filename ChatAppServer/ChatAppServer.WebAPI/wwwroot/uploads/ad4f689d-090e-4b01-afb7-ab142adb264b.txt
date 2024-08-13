@@ -1,0 +1,18 @@
+Tra cứu tt sinh viên                          |
+mssv
+tên                                           |
+năm sinh
+điểm trung bình
+
+GD1 : Đăng Nhập
+USER
+PASS                                          |            Data
+
+GD2 : Tra Cứu                                           Sv.txt       UTF8 mỗi sv 1 dòng
+Tìm theo tên (ByName  1 phần của tên đầy đủ)       MSSV (tab) năm sinh (2 trường)     
+Tìm theo điểm (ByScore)                                
+Exit                                                         Diem.txt
+
+
+                                                   MSSV      danh sách điểm 
+                                                    (Thứ tự sinh viên khác nhau giữa 2 ds)

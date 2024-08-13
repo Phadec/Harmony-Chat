@@ -1,10 +1,9 @@
 <div class="recipient-info-container" *ngIf="recipientInfo">
   <img [src]="getAvatarUrl(recipientInfo.avatar)" alt="Avatar" class="recipient-avatar">
   <h3 class="recipient-name">{{ recipientInfo.name }}</h3>
-
   <!-- Display members if it's a group -->
   <div *ngIf="recipientInfo.isGroup" class="group-members">
-    <h4>Thành viên:</h4>
+
     <ul>
       <li *ngFor="let member of recipientInfo.members.$values">
         <div class="member-info">
@@ -40,9 +39,15 @@
         <button (click)="onAddMember()" class="action-button">
           <i class="fas fa-user-plus"></i> Thêm thành viên
         </button>
+        <button (click)="onRenameGroup()" class="action-button">
+          <i class="fas fa-edit"></i> Đổi tên nhóm
+        </button>
       </ng-container>
       <button (click)="onDeleteChat()" class="action-button">
         <i class="fas fa-trash-alt"></i> Xóa đoạn chat
+      </button>
+      <button (click)="onLeaveGroup()" class="action-button">
+        <i class="fas fa-sign-out-alt"></i> Rời khỏi nhóm
       </button>
     </ng-container>
 
@@ -59,9 +64,6 @@
       </button>
       <button (click)="onDeleteChat()" class="action-button">
         <i class="fas fa-trash-alt"></i> Xóa đoạn chat
-      </button>
-      <button (click)="onCreateGroup()" class="action-button">
-        <i class="fas fa-users"></i> Tạo nhóm
       </button>
     </ng-template>
   </div>

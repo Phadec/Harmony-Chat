@@ -82,14 +82,22 @@
     </ul>
 
     <!-- Groups -->
-    <ul *ngIf="selectedTab === 'groups'">
-      <li *ngFor="let group of groups" (click)="onSelectRecipient(group.id)">
-        <img [src]="getAvatarUrl(group.avatar)" alt="Avatar">
-        <div class="group-details">
-          <h4>{{ group.name }}</h4>
-        </div>
-      </li>
-    </ul>
+    <div *ngIf="selectedTab === 'groups'">
+      <!-- Nút tạo nhóm mới -->
+      <button (click)="onCreateGroup()" class="create-group-button">
+        <i class="fas fa-plus"></i> Tạo nhóm mới
+      </button>
+
+      <!-- Danh sách các nhóm -->
+      <ul>
+        <li *ngFor="let group of groups" (click)="onSelectRecipient(group.id)">
+          <img [src]="getAvatarUrl(group.avatar)" alt="Avatar">
+          <div class="group-details">
+            <h4>{{ group.name }}</h4>
+          </div>
+        </li>
+      </ul>
+    </div>
 
     <!-- Friends -->
     <ul *ngIf="selectedTab === 'friends'">
@@ -104,7 +112,6 @@
 
     <!-- Friend Requests -->
     <div *ngIf="selectedTab === 'requests'">
-
       <!-- Nhận lời mời kết bạn -->
       <h3 class="section-title">Friend Requests Received</h3>
       <ul class="request-list">
@@ -140,7 +147,6 @@
           </div>
         </li>
       </ul>
-
     </div>
 
     <!-- Settings -->
@@ -179,7 +185,3 @@
 
   </div>
 </div>
-<!--<app-recipient-info-->
-<!--  [recipientId]="selectedRecipientId"-->
-<!--  (updateSidebar)="handleUpdateSidebar()">-->
-<!--</app-recipient-info>-->

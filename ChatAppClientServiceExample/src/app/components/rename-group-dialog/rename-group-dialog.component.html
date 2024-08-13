@@ -1,0 +1,11 @@
+<h2 mat-dialog-title>Đổi tên nhóm</h2>
+<mat-dialog-content>
+  <mat-form-field appearance="fill">
+    <mat-label>Tên nhóm mới</mat-label>
+    <input matInput [(ngModel)]="newName" placeholder="Nhập tên nhóm mới">
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Hủy</button>
+  <button mat-button (click)="onSave()">Lưu</button>
+</mat-dialog-actions>
