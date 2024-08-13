@@ -24,19 +24,18 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
             _emailService = emailService;
         }
-
         [HttpGet("search")]
         public async Task<IActionResult> SearchUserByTagName(string tagName, CancellationToken cancellationToken)
         {
             try
             {
-                // Kiểm tra xem tagName có hợp lệ không
+                // Validate the tagName
                 if (string.IsNullOrWhiteSpace(tagName))
                 {
                     return BadRequest(new { message = "TagName is required" });
                 }
 
-                // Xác thực người dùng hiện tại
+                // Authenticate the current user
                 var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (authenticatedUserId == null)
                 {
@@ -45,13 +44,13 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 _logger.LogInformation($"Searching for user with tagName: {tagName}");
 
-                // Đảm bảo tagName bắt đầu bằng '@'
+                // Ensure tagName starts with '@'
                 if (!tagName.StartsWith("@"))
                 {
                     tagName = "@" + tagName;
                 }
 
-                // Tìm kiếm người dùng theo TagName
+                // Find the user by TagName
                 var user = await _context.Users
                     .Where(u => u.TagName.ToLower() == tagName.ToLower())
                     .Select(u => new
@@ -63,7 +62,7 @@ namespace ChatAppServer.WebAPI.Controllers
                         u.Email,
                         u.Avatar,
                         u.Status,
-                        u.TagName // Include TagName in the response
+                        u.TagName
                     })
                     .FirstOrDefaultAsync(cancellationToken);
 
@@ -75,7 +74,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
 
-                // Kiểm tra xem người tìm kiếm có bị chặn bởi người dùng được tìm kiếm hoặc ngược lại hay không
+                // Check if the authenticated user is blocked by or has blocked the searched user
                 var isBlockedByUser = await _context.UserBlocks
                     .AnyAsync(ub => ub.UserId == authenticatedUserIdGuid && ub.BlockedUserId == user.Id, cancellationToken);
 
@@ -88,9 +87,27 @@ namespace ChatAppServer.WebAPI.Controllers
                     return NotFound(new { message = "User not found" });
                 }
 
-                _logger.LogInformation($"User with tagName {tagName} found");
+                // Check if the authenticated user has sent a friend request to the searched user
+                var friendRequest = await _context.FriendRequests
+                    .FirstOrDefaultAsync(fr => fr.SenderId == authenticatedUserIdGuid && fr.ReceiverId == user.Id && fr.Status == "Pending", cancellationToken);
 
-                return Ok(user);
+                var response = new
+                {
+                    user.Id,
+                    user.Username,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    user.Avatar,
+                    user.Status,
+                    user.TagName,
+                    HasSentRequest = friendRequest != null,
+                    RequestId = friendRequest?.Id // Returns null if no friend request was sent
+                };
+
+                _logger.LogInformation($"User with tagName {tagName} found with friend request status");
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -98,6 +115,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { message = "An error occurred while processing your request." });
             }
         }
+
         [HttpPut("{userId}/update-user")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
         {

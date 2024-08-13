@@ -4,7 +4,7 @@
   height: 100%;
   background-color: #fff;
   border-right: 1px solid #e0e0e0;
-  padding: 20px;
+  padding: 25px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -211,19 +211,6 @@ button:hover {
   color: #777;
 }
 
-/* General Sidebar Styling */
-.sidebar {
-  width: 300px;
-  height: 100%;
-  background-color: #fff;
-  border-right: 1px solid #e0e0e0;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
 /* Sidebar Header with Artistic Font */
 .sidebar h2 {
   font-size: 1.5rem;
@@ -231,4 +218,92 @@ button:hover {
   margin-bottom: 20px;
   text-align: center;
   font-family: 'Pacifico', cursive; /* Áp dụng font chữ nghệ thuật */
+}
+.section-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 5px;
+}
+
+.request-list, .sent-request-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.request-item, .sent-request-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.request-avatar {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.icon-group {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.icon-button:hover {
+  color: #007bff;
+}
+
+.reject-button {
+  color: #dc3545;
+}
+
+.cancel-button {
+  color: #ff6f61;
+}
+
+.request-details h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.request-details h5 {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.request-details p {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+}
+.request-item:hover, .sent-request-item:hover {
+  background-color: #f9f9f9;
+  transition: background-color 0.3s ease;
+}
+
+.icon-button:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+.tag-name {
+  font-size: 14px; /* Kích thước chữ cho tagName */
+  color: #888; /* Màu sắc chữ nhạt hơn để phân biệt với tên đầy đủ */
+  margin-bottom: 5px; /* Khoảng cách giữa tagName và lastMessage */
+}
+.relationship-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }

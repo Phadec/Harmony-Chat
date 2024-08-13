@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import {Component, OnInit, Output, EventEmitter, ChangeDetectorRef} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ChatService } from '../../services/chat.service';
 import { FriendsService } from '../../services/friends.service';
@@ -30,7 +30,7 @@ export class SidebarComponent implements OnInit {
   selectedRecipientId: string | null = null;
   searchQuery: string = '';
   selectedTab: string = 'recent';
-  sentRequests: { [key: string]: { HasSentRequest: boolean, RequestId: string | null } } = {};
+
 
   @Output() selectRecipient = new EventEmitter<string>();
 
@@ -41,13 +41,13 @@ export class SidebarComponent implements OnInit {
     private groupService: GroupService,
     private authService: AuthService,
     private userService: UserService,
+    private cdr: ChangeDetectorRef,
     private router: Router,
     public dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    const savedTab = localStorage.getItem('selectedTab') || 'recent';
-    this.selectedTab = savedTab;
+    this.selectedTab = 'recent';
 
     this.loadRelationships();
     this.loadFriends();
@@ -55,6 +55,7 @@ export class SidebarComponent implements OnInit {
     this.loadSentFriendRequests();
     this.loadBlockedUsers();
     this.loadGroups();
+    this.loadSentFriendRequests();
 
     this.signalRService.hubConnection.on('UpdateRelationships', () => {
       this.loadRelationships();
@@ -68,7 +69,12 @@ export class SidebarComponent implements OnInit {
   selectTab(tab: string): void {
     this.selectedTab = tab;
     localStorage.setItem('selectedTab', tab);
+
+    // Reset search query and filtered users when switching tabs
+    this.searchQuery = '';
+    this.filteredUsers = [];
   }
+
 
   loadRelationships(): void {
     this.chatService.getRelationships().subscribe(
@@ -217,8 +223,12 @@ export class SidebarComponent implements OnInit {
     if (this.searchTerm.trim() !== '') {
       this.userService.searchUserByTagName(this.searchTerm).subscribe(
         data => {
-          this.filteredUsers = [data];
-          this.checkFriendRequestStatus(data.id); // Kiểm tra trạng thái yêu cầu kết bạn
+          // Data will now include `HasSentRequest` and `RequestId`
+          this.filteredUsers = [{
+            ...data,
+            hasSentRequest: data.hasSentRequest,
+            requestId: data.requestId
+          }];
         },
         error => {
           console.error('Error searching users:', error);
@@ -230,16 +240,9 @@ export class SidebarComponent implements OnInit {
     }
   }
 
+
   isFriend(userId: string): boolean {
     return this.friends.some(friend => friend.id === userId);
-  }
-
-  isRequestSent(userId: string): boolean {
-    return !!this.sentRequests[userId]?.HasSentRequest;
-  }
-
-  getRequestId(userId: string): string | null {
-    return this.sentRequests[userId]?.RequestId || null;
   }
 
   onAddFriend(userId: string): void {
@@ -250,58 +253,33 @@ export class SidebarComponent implements OnInit {
     }
 
     this.friendsService.addFriend(currentUserId, userId).subscribe(
-      () => {
-        console.log('Friend request sent successfully');
-        this.checkFriendRequestStatus(userId); // Kiểm tra lại trạng thái sau khi gửi yêu cầu kết bạn
+      (response) => {
+        console.log('Friend request sent successfully', response);
+        this.searchUsers();
+
+        // Ép buộc Angular phát hiện và cập nhật giao diện
+        this.cdr.detectChanges();
       },
       error => {
         console.error('Error sending friend request:', error);
       }
     );
   }
-  getSentRequest(userId: string) {
-    return this.sentRequests[userId];
-  }
 
-  checkFriendRequestStatus(userId: string): void {
-    const currentUserId = localStorage.getItem('userId')!;
-    this.friendsService.hasSentFriendRequest(currentUserId, userId).subscribe(
-      response => {
-        // Kiểm tra xem response có chứa RequestId không
-        if (response.HasSentRequest) {
-          this.sentRequests[userId] = {
-            HasSentRequest: true,
-            RequestId: response.RequestId || null
-          };
-        } else {
-          this.sentRequests[userId] = {
-            HasSentRequest: false,
-            RequestId: null
-          };
-        }
-      },
-      error => {
-        console.error('Error checking friend request status:', error);
-        this.sentRequests[userId] = {
-          HasSentRequest: false,
-          RequestId: null
-        };
-      }
-    );
-  }
-
-  onCancelFriendRequest(requestId: string | null): void {
+  onCancelFriendRequest(requestId: string, context: 'search' | 'friendRequests'): void {
     if (requestId) {
       const currentUserId = localStorage.getItem('userId')!;
       this.friendsService.cancelFriendRequest(currentUserId, requestId).subscribe(
         () => {
           console.log('Friend request cancelled successfully');
-          this.sentRequests = Object.keys(this.sentRequests).reduce((result, key) => {
-            if (this.sentRequests[key].RequestId !== requestId) {
-              result[key] = this.sentRequests[key];
-            }
-            return result;
-          }, {} as { [key: string]: { HasSentRequest: boolean; RequestId: string | null } });
+
+          // Kiểm tra ngữ cảnh để gọi phương thức thích hợp
+          if (context === 'search') {
+            this.searchUsers();
+          } else if (context === 'friendRequests') {
+            this.loadFriendRequests(); // Load lại danh sách lời mời nhận được
+            this.loadSentFriendRequests(); // Load lại danh sách lời mời đã gửi
+          }
         },
         error => {
           console.error('Error cancelling friend request:', error);

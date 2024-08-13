@@ -42,20 +42,17 @@ namespace ChatAppServer.WebAPI.Controllers
                     .Include(fr => fr.Receiver)
                     .ToListAsync(cancellationToken);
 
-                if (!sentRequests.Any())
-                {
-                    return NotFound("No sent friend requests found.");
-                }
-
+                // Không cần kiểm tra `sentRequests.Any()`
                 var sentRequestsDto = sentRequests.Select(fr => new SentFriendRequestDto
                 {
                     Id = fr.Id,
                     ReceiverId = fr.ReceiverId,
-                    TagName = fr.Receiver.TagName, // Should be Receiver instead of Sender
+                    TagName = fr.Receiver.TagName, // Đúng là Receiver thay vì Sender
                     RequestDate = fr.RequestDate,
                     Status = fr.Status
                 }).ToList();
 
+                // Trả về mảng rỗng nếu không tìm thấy yêu cầu nào
                 return Ok(sentRequestsDto);
             }
             catch (Exception ex)
@@ -283,12 +280,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     .Include(f => f.Friend)
                     .ToListAsync(cancellationToken);
 
-                if (!friendships.Any())
-                {
-                    return NotFound("No friends found.");
-                }
-
-                // Tạo danh sách các bạn bè dựa trên UserId và FriendId
+                // Không trả về lỗi 404 nếu không có bạn bè, mà trả về một danh sách rỗng
                 var friendsDto = friendships.Select(f => new FriendDto
                 {
                     Id = f.UserId == userId ? f.Friend.Id : f.User.Id, // Lấy Id của bạn bè
@@ -301,6 +293,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     Nickname = f.Nickname
                 }).ToList();
 
+                // Trả về danh sách bạn bè (có thể là danh sách rỗng)
                 return Ok(friendsDto);
             }
             catch (Exception ex)
@@ -684,50 +677,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while fetching blocked users.");
             }
         }
-        [HttpGet("{userId}/has-sent-friend-request/{friendId}")]
-        public async Task<IActionResult> HasSentFriendRequest(Guid userId, Guid friendId, CancellationToken cancellationToken)
-        {
-            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
-            {
-                return Forbid("You are not authorized to view this user's friend requests.");
-            }
-
-            if (userId == Guid.Empty || friendId == Guid.Empty)
-            {
-                return BadRequest("Invalid userId or friendId.");
-            }
-
-            try
-            {
-                // Truy vấn để lấy yêu cầu kết bạn
-                var friendRequest = await _context.FriendRequests
-                    .FirstOrDefaultAsync(fr => fr.SenderId == userId && fr.ReceiverId == friendId && fr.Status == "Pending", cancellationToken);
-
-                if (friendRequest != null)
-                {
-                    return Ok(new
-                    {
-                        HasSentRequest = true,
-                        RequestId = friendRequest.Id // Trả về requestId nếu yêu cầu tồn tại
-                    });
-                }
-                else
-                {
-                    return Ok(new
-                    {
-                        HasSentRequest = false,
-                        RequestId = (Guid?)null // Trả về null nếu không có yêu cầu nào tồn tại
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while checking friend request status for user {UserId} and friend {FriendId}.", userId, friendId);
-                return StatusCode(500, "An error occurred while processing your request.");
-            }
-        }
-
 
     }
 }

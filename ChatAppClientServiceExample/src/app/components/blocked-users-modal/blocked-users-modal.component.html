@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Blocked Users</h2>
+<h2 mat-dialog-title class="dialog-title">Blocked Users</h2>
 <mat-dialog-content>
   <ul class="blocked-users-list">
     <li *ngFor="let user of blockedUsers">
@@ -7,11 +7,13 @@
         <span class="user-name">{{ user.blockedFullName }}</span>
       </div>
       <button (click)="unblockUser(user.blockedUserId)" mat-icon-button color="warn">
-        <i class="fas fa-user-times"></i> <!-- Font Awesome icon for Unblock -->
+        <i class="fas fa-user-times"></i> <!-- Icon for Unblock -->
       </button>
     </li>
   </ul>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button (click)="onClose()">Close</button>
+  <button mat-icon-button (click)="onClose()" aria-label="Close">
+    <i class="fas fa-times close-icon"></i> <!-- Close Icon -->
+  </button>
 </mat-dialog-actions>

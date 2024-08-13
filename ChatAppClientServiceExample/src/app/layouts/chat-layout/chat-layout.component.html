@@ -1,4 +1,5 @@
 <div class="chat-layout">
   <app-sidebar (selectRecipient)="onRecipientSelected($event)"></app-sidebar>
-<!--  <app-chat-window [recipientId]="selectedRecipientId"></app-chat-window>-->
+  <app-chat-window [recipientId]="selectedRecipientId"></app-chat-window>
+  <app-recipient-info [recipientId]="selectedRecipientId"></app-recipient-info>
 </div>

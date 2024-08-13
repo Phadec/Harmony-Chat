@@ -32,6 +32,7 @@
         <img [src]="getAvatarUrl(relationship.avatar)" alt="Avatar">
         <div class="relationship-details">
           <h4>{{ relationship.fullName }}</h4>
+          <p class="tag-name">{{ relationship.tagName }}</p> <!-- Hiển thị tagName -->
           <p>{{ relationship.lastMessage }}</p>
         </div>
         <span class="timestamp">{{ relationship.timestamp }}</span>
@@ -39,36 +40,34 @@
       </li>
     </ul>
 
-    <ul *ngIf="filteredUsers.length > 0">
+    <!-- Search Users -->
+    <ul *ngIf="filteredUsers.length > 0 && searchQuery.startsWith('@') && selectedTab === 'recent'">
       <li *ngFor="let user of filteredUsers">
         <img [src]="getAvatarUrl(user.avatar)" alt="Avatar">
         <div class="user-details">
           <h4>{{ user.firstName }} {{ user.lastName }}</h4>
-          <p>{{ user.email }}</p>
           <span>{{ user.tagName }}</span>
         </div>
         <div class="user-actions">
-          <!-- Nếu là bạn bè, cho phép chọn người dùng -->
-          <button *ngIf="isFriend(user.id)" (click)="onSelectRecipient(user.id)">
-            Chat
+          <!-- Nếu người dùng đã là bạn bè -->
+          <button *ngIf="isFriend(user.id)" (click)="onSelectRecipient(user.id)" class="icon-button">
+            <i class="fas fa-comments"></i> <!-- Biểu tượng chat -->
           </button>
-          <!-- Nếu đã gửi yêu cầu kết bạn, hiển thị nút Cancel -->
-          <button *ngIf="getSentRequest(user.id)?.HasSentRequest"
-                  (click)="onCancelFriendRequest(getSentRequest(user.id)?.RequestId || null)"
+          <!-- Nếu đã gửi yêu cầu kết bạn, hiển thị nút Hủy -->
+          <button *ngIf="user.hasSentRequest"
+                  (click)="onCancelFriendRequest(user.requestId,'search')"
                   class="icon-button">
-            <i class="fas fa-user-times"></i> <!-- Biểu tượng Cancel Friend Request -->
+            <i class="fas fa-user-times"></i> <!-- Biểu tượng hủy yêu cầu kết bạn -->
           </button>
-
-          <!-- Nếu chưa gửi yêu cầu kết bạn, hiển thị nút Add Friend -->
-          <button *ngIf="!isFriend(user.id) && !getSentRequest(user.id)?.HasSentRequest"
+          <!-- Nếu chưa gửi yêu cầu kết bạn, hiển thị nút Kết bạn -->
+          <button *ngIf="!isFriend(user.id) && !user.hasSentRequest"
                   (click)="onAddFriend(user.id)"
                   class="icon-button">
-            <i class="fas fa-user-plus"></i> <!-- Biểu tượng Add Friend -->
+            <i class="fas fa-user-plus"></i> <!-- Biểu tượng kết bạn -->
           </button>
         </div>
       </li>
     </ul>
-
 
     <!-- Groups -->
     <ul *ngIf="selectedTab === 'groups'">
@@ -86,36 +85,51 @@
         <img [src]="getAvatarUrl(friend.avatar)" alt="Avatar">
         <div class="friend-details">
           <h4>{{ friend.fullName }}</h4>
-        </div>
-        <div class="icon-group">
-          <button (click)="onRemoveFriend(friend.id)" title="Remove">
-            <i class="fas fa-user-minus"></i>
-          </button>
-          <button (click)="onBlockUser(friend.id)" title="Block">
-            <i class="fas fa-user-lock"></i>
-          </button>
+          <p class="tag-name">{{ friend.tagname }}</p>
         </div>
       </li>
     </ul>
 
     <!-- Friend Requests -->
-    <ul *ngIf="selectedTab === 'requests'">
-      <li *ngFor="let request of friendRequests">
-        <img [src]="getAvatarUrl(request.avatar)" alt="Avatar">
-        <div class="request-details">
-          <h4>{{ request.senderName }}</h4>
-          <h5>({{ request.tagName }})</h5>
-        </div>
-        <div class="icon-group">
-          <button (click)="onAcceptRequest(request.id)" title="Accept">
-            <i class="fas fa-check"></i>
-          </button>
-          <button (click)="onRejectRequest(request.id)" title="Reject">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </li>
-    </ul>
+    <div *ngIf="selectedTab === 'requests'">
+
+      <!-- Nhận lời mời kết bạn -->
+      <h3 class="section-title">Friend Requests Received</h3>
+      <ul class="request-list">
+        <li *ngFor="let request of friendRequests" class="request-item">
+          <img [src]="getAvatarUrl(request.avatar)" alt="Avatar" class="request-avatar">
+          <div class="request-details">
+            <h4>{{ request.senderName }}</h4>
+            <h5>({{ request.tagName }})</h5>
+          </div>
+          <div class="icon-group">
+            <button (click)="onAcceptRequest(request.id)" class="icon-button" title="Accept">
+              <i class="fas fa-check"></i>
+            </button>
+            <button (click)="onRejectRequest(request.id)" class="icon-button reject-button" title="Reject">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Lời mời kết bạn đã gửi -->
+      <h3 class="section-title">Friend Requests Sent</h3>
+      <ul class="sent-request-list">
+        <li *ngFor="let sentRequest of sentFriendRequests" class="sent-request-item">
+          <div class="request-details">
+            <h4>Sent to: {{ sentRequest.tagName }}</h4>
+            <p>Request Date: {{ sentRequest.requestDate | date:'short' }}</p>
+          </div>
+          <div class="icon-group">
+            <button (click)="onCancelFriendRequest(sentRequest.id,'friendRequests')" class="icon-button cancel-button" title="Cancel Request">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </li>
+      </ul>
+
+    </div>
 
     <!-- Settings -->
     <ul *ngIf="selectedTab === 'settings'" class="settings-list">
@@ -143,8 +157,9 @@
     <div class="no-content" *ngIf="friends.length === 0 && selectedTab === 'friends'">
       No friends found.
     </div>
-    <div class="no-content" *ngIf="friendRequests.length === 0 && selectedTab === 'requests'">
-      No friend requests.
+    <div class="no-content" *ngIf="friendRequests.length === 0 && sentFriendRequests.length === 0 && selectedTab === 'requests'">
+      No friend requests or sent requests.
     </div>
+
   </div>
 </div>
