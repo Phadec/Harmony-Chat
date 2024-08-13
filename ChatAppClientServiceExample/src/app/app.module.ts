@@ -12,15 +12,25 @@ import { ChangePasswordComponent } from './components/change-password/change-pas
 import { ConfirmEmailComponent } from './components/confirm-email/confirm-email.component';
 import { FriendsService } from './services/friends.service';
 import { AuthInterceptor } from './auth.interceptor';
-import {ChatWindowComponent} from "./components/chat-window/chat-window.component";
+import { ChatWindowComponent } from './components/chat-window/chat-window.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { MessageInputComponent } from './components/message-input/message-input.component';
 import { ChatLayoutComponent } from './layouts/chat-layout/chat-layout.component';
 import { ChatHeaderComponent } from './components/chat-header/chat-header.component';
 import { BlockedUsersModalComponent } from './components/blocked-users-modal/blocked-users-modal.component';
-import {MatDialogActions, MatDialogContent} from "@angular/material/dialog";
-import {MatIcon} from "@angular/material/icon";
 import { RecipientInfoComponent } from './components/recipient-info/recipient-info.component';
+import { ChangeNicknameDialogComponent } from './components/change-nickname-dialog/change-nickname-dialog.component';
+import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
+import { CreateGroupDialogComponent } from './components/create-group-dialog/create-group-dialog.component';
+import { UpdateUserDialogComponent } from './components/update-user-dialog/update-user-dialog.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 @NgModule({
   declarations: [
@@ -38,6 +48,10 @@ import { RecipientInfoComponent } from './components/recipient-info/recipient-in
     ChatHeaderComponent,
     BlockedUsersModalComponent,
     RecipientInfoComponent,
+    ChangeNicknameDialogComponent,
+    ConfirmDialogComponent,
+    CreateGroupDialogComponent,
+    UpdateUserDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -45,9 +59,14 @@ import { RecipientInfoComponent } from './components/recipient-info/recipient-in
     FormsModule,
     AppRoutingModule,
     ReactiveFormsModule,
-    MatDialogActions,
-    MatDialogContent,
-    MatIcon
+    BrowserAnimationsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatDatepickerModule, // Correct placement
+    MatNativeDateModule // Correct placement
   ],
   providers: [
     FriendsService,

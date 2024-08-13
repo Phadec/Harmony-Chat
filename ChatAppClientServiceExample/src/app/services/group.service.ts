@@ -12,16 +12,8 @@ export class GroupService {
 
   constructor(private http: HttpClient) {}
 
-  createGroupChat(request: FormGroup): Observable<any> {
-    const formData = new FormData();
-    formData.append('Name', request.get('Name')?.value);
-    formData.append('AvatarFile', request.get('AvatarFile')?.value);
-    const memberIds = request.get('MemberIds')?.value;
-    memberIds.forEach((id: string) => {
-      formData.append('MemberIds', id);
-    });
-
-    return this.http.post(`${this.apiUrl}/create-group-chat`, formData);
+  createGroupChat(request: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/create-group-chat`, request);
   }
 
   addGroupChatMember(request: { GroupId: string, UserId: string }): Observable<any> {

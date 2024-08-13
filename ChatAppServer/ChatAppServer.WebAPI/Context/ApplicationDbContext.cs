@@ -18,10 +18,12 @@ namespace ChatAppServer.WebAPI.Models
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<UserToken> Tokens { get; set; }
         public DbSet<UserBlock> UserBlocks { get; set; }
-
+        public DbSet<MessageReadStatus> MessageReadStatuses { get; set; }
+        public DbSet<UserDeletedMessage> UserDeletedMessages { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
 
             // Configure User entity
             modelBuilder.Entity<User>(entity =>
@@ -124,6 +126,27 @@ namespace ChatAppServer.WebAPI.Models
                     .HasForeignKey(e => e.GroupId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+            modelBuilder.Entity<MessageReadStatus>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Chat)
+                    .WithMany()
+                    .HasForeignKey(e => e.MessageId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(e => e.IsRead)
+                    .IsRequired()
+                    .HasDefaultValue(false);
+
+                entity.Property(e => e.ReadAt)
+                    .IsRequired(false);
+            });
 
             modelBuilder.Entity<Friendship>(entity =>
             {
@@ -149,6 +172,12 @@ namespace ChatAppServer.WebAPI.Models
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.TokenExpiration).IsRequired();
+            });
+            modelBuilder.Entity<UserDeletedMessage>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.UserId, e.MessageId }).IsUnique();
+                entity.Property(e => e.DeletedAt).IsRequired();
             });
 
             // Configure Token entity

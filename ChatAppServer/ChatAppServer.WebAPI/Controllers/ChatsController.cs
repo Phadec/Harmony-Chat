@@ -42,9 +42,10 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
 
-                // Get the latest message for each private contact
+                // Lấy tin nhắn mới nhất từ các cuộc trò chuyện riêng tư, bỏ qua những tin nhắn đã bị xóa
                 var latestPrivateChats = await _context.Chats
                     .Where(c => (c.UserId == userId && c.ToUserId.HasValue) || (c.ToUserId == userId))
+                    .Where(c => !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == c.Id))
                     .GroupBy(c => c.UserId == userId ? c.ToUserId : c.UserId)
                     .Select(g => g.OrderByDescending(c => c.Date).FirstOrDefault())
                     .ToListAsync(cancellationToken);
@@ -54,26 +55,20 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     if (latestChat != null)
                     {
-                        // Determine IsSentByUser
                         bool isSentByUser = latestChat.UserId == userId;
 
-                        // Query user information based on contactId
                         var contact = await _context.Users.FirstOrDefaultAsync(u => u.Id == (isSentByUser ? latestChat.ToUserId : latestChat.UserId), cancellationToken);
-
                         if (contact == null)
                         {
-                            continue; // Skip this chat if the contact is not found
+                            continue; // Bỏ qua nếu không tìm thấy người liên lạc
                         }
 
-                        // Determine contact name and tag name
                         string contactFullName = $"{contact.FirstName} {contact.LastName}";
                         string contactTagName = contact?.TagName ?? string.Empty;
 
                         var friendship = await _context.Friendships.FirstOrDefaultAsync(f => (f.UserId == userId && f.FriendId == contact.Id), cancellationToken);
-
                         string contactNickname = friendship?.Nickname ?? string.Empty;
 
-                        // HasNewMessage should only be true if the message is not read AND it was sent to the current user (not by them)
                         bool hasNewMessage = !isSentByUser && !latestChat.IsRead;
 
                         var result = new
@@ -97,19 +92,19 @@ namespace ChatAppServer.WebAPI.Controllers
                     }
                 }
 
-                // Get distinct group IDs
+                // Lấy tin nhắn mới nhất từ các nhóm, bỏ qua những tin nhắn đã bị xóa
                 var groupIds = await _context.Chats
                     .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
                     .Select(c => c.GroupId.Value)
                     .Distinct()
                     .ToListAsync(cancellationToken);
 
-                // Get the latest message for each group
                 var latestGroupChats = new List<object>();
                 foreach (var groupId in groupIds)
                 {
                     var latestChat = await _context.Chats
                         .Where(c => c.GroupId == groupId)
+                        .Where(c => !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == c.Id))
                         .OrderByDescending(c => c.Date)
                         .FirstOrDefaultAsync(cancellationToken);
 
@@ -120,11 +115,11 @@ namespace ChatAppServer.WebAPI.Controllers
 
                         if (group == null || sender == null)
                         {
-                            continue; // Skip this chat if the group or sender is not found
+                            continue; // Bỏ qua nếu không tìm thấy nhóm hoặc người gửi
                         }
 
-                        // HasNewMessage should only be true if the message is not read AND it was sent by someone else (not the current user)
-                        bool hasNewMessage = latestChat.UserId != userId && !latestChat.IsRead;
+                        bool hasNewMessage = !await _context.MessageReadStatuses
+                            .AnyAsync(mrs => mrs.MessageId == latestChat.Id && mrs.UserId == userId, cancellationToken);
 
                         latestGroupChats.Add(new
                         {
@@ -145,7 +140,6 @@ namespace ChatAppServer.WebAPI.Controllers
                     }
                 }
 
-                // Combine results and sort by the latest message date
                 var combinedChats = privateChatResults.Concat(latestGroupChats)
                     .OrderByDescending(chat => ((dynamic)chat).ChatDate)
                     .ToList();
@@ -158,6 +152,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "Internal server error. Please try again later." });
             }
         }
+
+
 
         [HttpGet("{userId}/recipient-info/{recipientId}")]
         public async Task<IActionResult> GetRecipientInfo(Guid userId, Guid recipientId, CancellationToken cancellationToken)
@@ -267,76 +263,65 @@ namespace ChatAppServer.WebAPI.Controllers
                 return NotFound("Message not found or not authorized to mark as read.");
 
             // Ensure the user is the intended recipient or a member of the group
-            if (message.ToUserId.HasValue)
+            if (message.GroupId.HasValue)
             {
-                // Kiểm tra nếu người dùng hiện tại là người gửi tin nhắn thì không được phép đánh dấu là đã đọc
+                // Check if the user is a member of the group and not the sender
+                var isMember = await _context.GroupMembers
+                    .AnyAsync(gm => gm.GroupId == message.GroupId && gm.UserId == userGuid, cancellationToken);
+
+                if (!isMember || message.UserId == userGuid)
+                {
+                    return Forbid("You are not authorized to mark this message as read.");
+                }
+
+                var readStatus = await _context.MessageReadStatuses
+                    .FirstOrDefaultAsync(rs => rs.MessageId == message.Id && rs.UserId == userGuid, cancellationToken);
+
+                if (readStatus == null)
+                {
+                    readStatus = new MessageReadStatus
+                    {
+                        Id = Guid.NewGuid(),
+                        MessageId = message.Id,
+                        UserId = userGuid,
+                        IsRead = true,
+                        ReadAt = DateTime.UtcNow
+                    };
+                    _context.MessageReadStatuses.Add(readStatus);
+                }
+                else
+                {
+                    readStatus.IsRead = true;
+                    readStatus.ReadAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+
+                // Notify the current user (the reader) to update their UI
+                await _hubContext.Clients.User(userGuid.ToString()).SendAsync("UpdateRelationships");
+            }
+            else if (message.ToUserId.HasValue)
+            {
+                // Ensure the user is the intended recipient and not the sender
                 if (message.ToUserId.Value != userGuid || message.UserId == userGuid)
                 {
                     return Forbid("You are not authorized to mark this message as read.");
                 }
-            }
-            else if (message.GroupId.HasValue)
-            {
-                var isMember = await _context.GroupMembers
-                    .AnyAsync(gm => gm.GroupId == message.GroupId && gm.UserId == userGuid, cancellationToken);
 
-                if (!isMember)
-                {
-                    return Forbid("You are not authorized to mark this message as read.");
-                }
+                message.IsRead = true;
+                message.ReadAt = DateTime.UtcNow;
 
-                // Người gửi tin nhắn trong nhóm không thể tự đánh dấu tin nhắn của họ là đã đọc
-                if (message.UserId == userGuid)
-                {
-                    return BadRequest("You cannot mark your own message as read.");
-                }
+                await _context.SaveChangesAsync(cancellationToken);
+
+                await _hubContext.Clients.User(message.UserId.ToString()).SendAsync("MessageRead", message.Id);
             }
             else
             {
                 return BadRequest("Invalid message context.");
             }
 
-            // Mark the message as read
-            message.IsRead = true;
-            message.ReadAt = DateTime.UtcNow;
-
-            try
-            {
-                // Save changes to the database
-                await _context.SaveChangesAsync(cancellationToken);
-
-                // Notify all other members of the group that the message has been read
-                if (message.GroupId.HasValue)
-                {
-                    var groupMembers = await _context.GroupMembers
-                        .Where(gm => gm.GroupId == message.GroupId && gm.UserId != userGuid)
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var member in groupMembers)
-                    {
-                        await _hubContext.Clients.User(member.UserId.ToString()).SendAsync("MessageRead", message.Id);
-                    }
-                }
-                else
-                {
-                    // Notify the sender if it's a private message
-                    await _hubContext.Clients.User(message.UserId.ToString()).SendAsync("MessageRead", message.Id);
-                }
-
-                // Notify the current user (the reader) to update their UI
-                await _hubContext.Clients.User(userGuid.ToString()).SendAsync("UpdateRelationships");
-            }
-            catch (Exception ex)
-            {
-                // Log the exception for debugging purposes
-                _logger.LogError(ex, "Failed to mark message as read.");
-                return BadRequest("There was an issue marking the message as read. Please try again.");
-            }
-
             return Ok();
         }
-
-
 
         [HttpGet("get-chats")]
         public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
@@ -360,28 +345,23 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 if (!isGroup)
                 {
-                    // Kiểm tra xem người dùng đã bị chặn hoặc đã chặn người dùng khác
-                    var isBlocked = await _context.UserBlocks
-                        .AnyAsync(ub => (ub.UserId == authenticatedUserIdGuid && ub.BlockedUserId == recipientId) ||
-                                        (ub.UserId == recipientId && ub.BlockedUserId == authenticatedUserIdGuid), cancellationToken);
-
-                    if (isBlocked)
-                    {
-                        return Forbid("You are not authorized to view these chats.");
-                    }
-
+                    // Lấy tin nhắn riêng tư giữa userId và recipientId, đồng thời bỏ qua tin nhắn đã bị xóa bởi userId
                     var privateChats = await _context.Chats
-                        .Where(c => (c.UserId == userId && c.ToUserId == recipientId) || (c.UserId == recipientId && c.ToUserId == userId))
-                        .OrderBy(c => c.Date) // Sắp xếp theo thời gian gửi tin nhắn
-                        .Select(chat => new
+                        .Where(c =>
+                            ((c.UserId == userId && c.ToUserId == recipientId) ||
+                             (c.UserId == recipientId && c.ToUserId == userId)) &&
+                            !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == c.Id))
+                        .OrderBy(c => c.Date)
+                        .Select(c => new
                         {
-                            chat.Id,
-                            chat.UserId,
-                            chat.ToUserId,
-                            Message = chat.Message ?? string.Empty,
-                            AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-                            chat.Date,
-                            isRead = chat.IsRead,
+                            c.Id,
+                            c.UserId,
+                            c.ToUserId,
+                            Message = c.Message ?? string.Empty,  // Xử lý giá trị null
+                            AttachmentUrl = c.AttachmentUrl ?? string.Empty,  // Xử lý giá trị null
+                            c.Date,
+                            IsRead = c.IsRead  // Xử lý giá trị null
+
                         })
                         .ToListAsync(cancellationToken);
 
@@ -389,6 +369,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 }
                 else
                 {
+                    // Kiểm tra xem userId có phải là thành viên của group hay không
                     var isMember = await _context.GroupMembers
                         .AnyAsync(gm => gm.GroupId == recipientId && gm.UserId == authenticatedUserIdGuid, cancellationToken);
 
@@ -397,22 +378,28 @@ namespace ChatAppServer.WebAPI.Controllers
                         return Forbid("You are not authorized to view these group chats.");
                     }
 
+                    // Lấy tin nhắn trong group, đồng thời bỏ qua tin nhắn đã bị xóa bởi userId
                     var groupChats = await _context.Chats
-                        .Where(p => p.GroupId == recipientId)
-                        .Include(p => p.User)
-                        .OrderBy(p => p.Date) // Sắp xếp theo thời gian gửi tin nhắn
-                        .Select(chat => new
-                        {
-                            chat.Id,
-                            chat.UserId,
-                            SenderFullName = chat.User != null ? (chat.User.FirstName + " " + chat.User.LastName) : "Unknown",
-                            SenderTagName = chat.User != null ? chat.User.TagName : "Unknown",
-                            chat.GroupId,
-                            Message = chat.Message ?? string.Empty,
-                            AttachmentUrl = chat.AttachmentUrl ?? string.Empty,
-                            chat.Date
-                        })
-                        .ToListAsync(cancellationToken);
+                         .Where(p => p.GroupId == recipientId &&
+                 !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == p.Id))
+                     .OrderBy(p => p.Date)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.UserId,
+                    SenderFullName = p.User != null ? (p.User.FirstName + " " + p.User.LastName) : "Unknown",
+                    SenderTagName = p.User != null ? p.User.TagName : string.Empty,
+                    p.GroupId,
+                    Message = p.Message ?? string.Empty,  // Xử lý giá trị null
+                    AttachmentUrl = p.AttachmentUrl ?? string.Empty,  // Xử lý giá trị null
+                    p.Date,
+                    IsRead = _context.MessageReadStatuses
+                    .Where(mrs => mrs.MessageId == p.Id && mrs.UserId == userId)
+                    .Select(mrs => mrs.IsRead)
+                    .FirstOrDefault()  // Lấy giá trị IsRead từ bảng MessageReadStatuses
+                })
+     .ToListAsync(cancellationToken);
+
 
                     return Ok(groupChats);
                 }
@@ -423,6 +410,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "Internal server error. Please try again later." });
             }
         }
+
+
 
         [HttpPost("send-message")]
         public async Task<IActionResult> SendMessage([FromForm] SendMessageDto request, CancellationToken cancellationToken)
@@ -489,6 +478,18 @@ namespace ChatAppServer.WebAPI.Controllers
 
                     await _context.AddAsync(chat, cancellationToken);
                     await _context.SaveChangesAsync(cancellationToken);
+                    // Tự động đánh dấu tin nhắn là đã đọc cho người gửi
+                    var readStatus = new MessageReadStatus
+                    {
+                        Id = Guid.NewGuid(),
+                        MessageId = chat.Id,
+                        UserId = request.UserId,
+                        IsRead = true,
+                        ReadAt = DateTime.UtcNow
+                    };
+                    _context.MessageReadStatuses.Add(readStatus);
+                    await _context.SaveChangesAsync(cancellationToken);
+
 
                     await _hubContext.Clients.Group(request.RecipientId.ToString()).SendAsync("ReceiveGroupMessage", new
                     {
@@ -575,6 +576,92 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+        [HttpDelete("{userId}/delete-chats/{recipientId}")]
+        public async Task<IActionResult> DeleteChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
+        {
+            if (userId == Guid.Empty || recipientId == Guid.Empty)
+            {
+                return BadRequest(new { Message = "Invalid userId or recipientId." });
+            }
+
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to delete these chats.");
+            }
+
+            var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
+
+            try
+            {
+                bool isGroup = await _context.Groups.AnyAsync(g => g.Id == recipientId, cancellationToken);
+
+                if (!isGroup)
+                {
+                    var privateChatIds = await _context.Chats
+                        .Where(c => (c.UserId == userId && c.ToUserId == recipientId) || (c.UserId == recipientId && c.ToUserId == userId))
+                        .Select(c => c.Id)
+                        .ToListAsync(cancellationToken);
+
+                    if (privateChatIds.Count == 0)
+                    {
+                        return NotFound("No chats found between the specified users.");
+                    }
+
+                    foreach (var chatId in privateChatIds)
+                    {
+                        if (!await _context.UserDeletedMessages.AnyAsync(udm => udm.UserId == userId && udm.MessageId == chatId, cancellationToken))
+                        {
+                            var deletedMessage = new UserDeletedMessage
+                            {
+                                Id = Guid.NewGuid(),
+                                UserId = userId,
+                                MessageId = chatId,
+                                DeletedAt = DateTime.UtcNow
+                            };
+                            _context.UserDeletedMessages.Add(deletedMessage);
+                        }
+                    }
+                }
+                else
+                {
+                    var groupChatIds = await _context.Chats
+                        .Where(c => c.GroupId == recipientId)
+                        .Select(c => c.Id)
+                        .ToListAsync(cancellationToken);
+
+                    if (groupChatIds.Count == 0)
+                    {
+                        return NotFound("No chats found for the specified group.");
+                    }
+
+                    foreach (var chatId in groupChatIds)
+                    {
+                        if (!await _context.UserDeletedMessages.AnyAsync(udm => udm.UserId == userId && udm.MessageId == chatId, cancellationToken))
+                        {
+                            var deletedMessage = new UserDeletedMessage
+                            {
+                                Id = Guid.NewGuid(),
+                                UserId = userId,
+                                MessageId = chatId,
+                                DeletedAt = DateTime.UtcNow
+                            };
+                            _context.UserDeletedMessages.Add(deletedMessage);
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+
+                return Ok(new { Message = "Chats deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in DeleteChats for user {UserId} and recipient {RecipientId}", userId, recipientId);
+                return StatusCode(500, new { Message = "Internal server error. Please try again later." });
+            }
+        }
+
 
 
         private async Task<bool> AreFriends(Guid userId1, Guid userId2, CancellationToken cancellationToken)
@@ -584,5 +671,6 @@ namespace ChatAppServer.WebAPI.Controllers
                    await _context.Users
                 .AnyAsync(u => u.Id == userId2 && u.Friends.Any(f => f.FriendId == userId1), cancellationToken);
         }
+
     }
 }

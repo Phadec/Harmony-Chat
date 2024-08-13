@@ -1,18 +1,68 @@
 <div class="recipient-info-container" *ngIf="recipientInfo">
   <img [src]="getAvatarUrl(recipientInfo.avatar)" alt="Avatar" class="recipient-avatar">
-  <h3 class="recipient-name">{{ recipientInfo.fullName }}</h3>
-  <p class="tag-name">{{ recipientInfo.tagName }}</p>
+  <h3 class="recipient-name">{{ recipientInfo.name }}</h3>
+
+  <!-- Display members if it's a group -->
+  <div *ngIf="recipientInfo.isGroup" class="group-members">
+    <h4>Thành viên:</h4>
+    <ul>
+      <li *ngFor="let member of recipientInfo.members.$values">
+        <div class="member-info">
+          <img [src]="getAvatarUrl(member.avatar)" alt="{{member.fullName}}" class="member-avatar">
+          <div class="member-details">
+            <p class="member-name">{{ member.fullName }} <span class="member-tag">{{ member.tagName }}</span></p>
+            <p class="member-status" [ngClass]="{'online': member.status === 'online', 'offline': member.status === 'offline'}">{{ member.status }}</p>
+          </div>
+        </div>
+
+        <!-- Admin controls for group members -->
+        <div *ngIf="recipientInfo.isAdmin && member.userId !== currentUser.id" class="admin-controls">
+          <button (click)="onPromoteToAdmin(member.userId)" class="icon-button" title="Thăng cấp lên admin">
+            <i class="fas fa-arrow-up"></i>
+          </button>
+          <button (click)="onDemoteFromAdmin(member.userId)" class="icon-button" title="Hạ cấp khỏi admin">
+            <i class="fas fa-arrow-down"></i>
+          </button>
+          <button (click)="onRemoveGroupMember(member.userId)" class="icon-button" title="Xóa thành viên">
+            <i class="fas fa-user-minus"></i>
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
 
   <!-- Action Buttons -->
   <div class="action-buttons">
-    <button (click)="onChangeNickname()" class="action-button">
-      <i class="fas fa-edit"></i> Đổi biệt danh
-    </button>
-    <button (click)="onRemoveFriend()" class="action-button">
-      <i class="fas fa-user-minus"></i> Xóa kết bạn
-    </button>
-    <button (click)="onBlockUser()" class="action-button">
-      <i class="fas fa-ban"></i> Chặn
-    </button>
+    <!-- Show different buttons based on whether it's a group or individual friendship -->
+    <ng-container *ngIf="recipientInfo.isGroup; else individualActions">
+      <!-- Group Admin actions -->
+      <ng-container *ngIf="recipientInfo.isAdmin">
+        <button (click)="onAddMember()" class="action-button">
+          <i class="fas fa-user-plus"></i> Thêm thành viên
+        </button>
+      </ng-container>
+      <button (click)="onDeleteChat()" class="action-button">
+        <i class="fas fa-trash-alt"></i> Xóa đoạn chat
+      </button>
+    </ng-container>
+
+    <!-- Individual Friendship actions -->
+    <ng-template #individualActions>
+      <button (click)="onChangeNickname()" class="action-button">
+        <i class="fas fa-edit"></i> Đổi biệt danh
+      </button>
+      <button (click)="onRemoveFriend()" class="action-button">
+        <i class="fas fa-user-minus"></i> Xóa kết bạn
+      </button>
+      <button (click)="onBlockUser()" class="action-button">
+        <i class="fas fa-ban"></i> Chặn
+      </button>
+      <button (click)="onDeleteChat()" class="action-button">
+        <i class="fas fa-trash-alt"></i> Xóa đoạn chat
+      </button>
+      <button (click)="onCreateGroup()" class="action-button">
+        <i class="fas fa-users"></i> Tạo nhóm
+      </button>
+    </ng-template>
   </div>
 </div>

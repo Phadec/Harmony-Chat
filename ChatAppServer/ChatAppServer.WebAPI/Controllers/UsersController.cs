@@ -88,8 +88,12 @@ namespace ChatAppServer.WebAPI.Controllers
                 }
 
                 // Check if the authenticated user has sent a friend request to the searched user
-                var friendRequest = await _context.FriendRequests
+                var friendRequestSent = await _context.FriendRequests
                     .FirstOrDefaultAsync(fr => fr.SenderId == authenticatedUserIdGuid && fr.ReceiverId == user.Id && fr.Status == "Pending", cancellationToken);
+
+                // Check if the searched user has sent a friend request to the authenticated user
+                var friendRequestReceived = await _context.FriendRequests
+                    .FirstOrDefaultAsync(fr => fr.SenderId == user.Id && fr.ReceiverId == authenticatedUserIdGuid && fr.Status == "Pending", cancellationToken);
 
                 var response = new
                 {
@@ -101,8 +105,10 @@ namespace ChatAppServer.WebAPI.Controllers
                     user.Avatar,
                     user.Status,
                     user.TagName,
-                    HasSentRequest = friendRequest != null,
-                    RequestId = friendRequest?.Id // Returns null if no friend request was sent
+                    HasSentRequest = friendRequestSent != null,
+                    RequestId = friendRequestSent?.Id, // Returns null if no friend request was sent
+                    HasReceivedRequest = friendRequestReceived != null,
+                    ReceivedRequestId = friendRequestReceived?.Id // Returns null if no friend request was received
                 };
 
                 _logger.LogInformation($"User with tagName {tagName} found with friend request status");
@@ -115,6 +121,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { message = "An error occurred while processing your request." });
             }
         }
+
 
         [HttpPut("{userId}/update-user")]
         public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
@@ -384,7 +391,8 @@ namespace ChatAppServer.WebAPI.Controllers
                     user.Email,
                     user.Avatar,
                     user.Status,
-                    user.ShowOnlineStatus
+                    user.ShowOnlineStatus,
+                    user.TagName
                 });
             }
             catch (Exception ex)

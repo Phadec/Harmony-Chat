@@ -1,0 +1,44 @@
+<h2 mat-dialog-title>Update Profile</h2>
+<mat-dialog-content>
+  <form [formGroup]="updateUserForm">
+    <mat-form-field>
+      <mat-label>First Name</mat-label>
+      <input matInput formControlName="FirstName">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Last Name</mat-label>
+      <input matInput formControlName="LastName">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Birthday</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="Birthday">
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="Email">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Tag Name</mat-label>
+      <input matInput formControlName="TagName">
+    </mat-form-field>
+
+    <!-- Corrected Avatar Upload Section -->
+    <div class="file-upload-wrapper">
+      <label for="file-upload" class="file-upload">
+        <i class="fas fa-upload file-upload-icon"></i> <!-- Use a font awesome icon -->
+        <span class="file-upload-text">Choose File</span>
+      </label>
+      <input id="file-upload" type="file" (change)="onFileChange($event)" class="file-upload-input">
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onUpdate()" [disabled]="!updateUserForm.valid">Update</button>
+</mat-dialog-actions>

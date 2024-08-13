@@ -11,6 +11,7 @@ import { BlockedUsersModalComponent } from "../blocked-users-modal/blocked-users
 import { AuthService } from "../../services/auth.service";
 import { Router } from "@angular/router";
 import { UserService } from "../../services/user.service";
+import {UpdateUserDialogComponent} from "../update-user-dialog/update-user-dialog.component";
 
 @Component({
   selector: 'app-sidebar',
@@ -56,6 +57,63 @@ export class SidebarComponent implements OnInit {
     this.loadBlockedUsers();
     this.loadGroups();
     this.loadSentFriendRequests();
+    this.subscribeToSignalREvents();
+  }
+  subscribeToSignalREvents(): void {
+    this.signalRService.messageReceived$.subscribe(() => {
+      this.loadRelationships();
+    });
+
+    this.signalRService.messageRead$.subscribe((chatId) => {
+      console.log(`Message ${chatId} has been read.`);
+      this.loadRelationships();
+    });
+    this.signalRService.friendRequestSent$.subscribe((friendRequest) => {
+      console.log('Friend request sent:', friendRequest);
+      this.loadSentFriendRequests(); // Tải lại danh sách yêu cầu kết bạn đã gửi
+    });
+
+    this.signalRService.connectedUsers$.subscribe((users) => {
+      console.log('Connected users updated:', users);
+      // Cập nhật giao diện người dùng khi danh sách kết nối thay đổi
+    });
+
+    // Lắng nghe các sự kiện liên quan đến bạn bè và người dùng
+    this.signalRService.hubConnection.on('NicknameChanged', (userId, nickname) => {
+      console.log(`Nickname changed for user ${userId}. New nickname: ${nickname}`);
+      this.loadFriends(); // Tải lại danh sách bạn bè để cập nhật biệt danh
+    });
+
+    this.signalRService.hubConnection.on('FriendRequestReceived', (userId, requestId) => {
+      console.log(`New friend request received from ${userId}. Request ID: ${requestId}`);
+      this.loadFriendRequests(); // Tải lại danh sách yêu cầu kết bạn
+    });
+
+    this.signalRService.hubConnection.on('FriendRemoved', (userId) => {
+      console.log(`Friend removed: ${userId}`);
+      this.loadFriends(); // Tải lại danh sách bạn bè khi bạn bè bị xóa
+    });
+
+    this.signalRService.hubConnection.on('UserBlocked', (userId) => {
+      console.log(`User blocked: ${userId}`);
+      this.loadBlockedUsers(); // Tải lại danh sách người dùng bị chặn
+    });
+
+    this.signalRService.hubConnection.on('UserUnblocked', (userId) => {
+      console.log(`User unblocked: ${userId}`);
+      this.loadBlockedUsers(); // Tải lại danh sách người dùng bị bỏ chặn
+    });
+
+    this.signalRService.hubConnection.on('FriendRequestAccepted', (userId) => {
+      console.log(`Friend request accepted by ${userId}`);
+      this.loadFriendRequests(); // Tải lại danh sách yêu cầu kết bạn khi một yêu cầu được chấp nhận
+      this.loadFriends(); // Tải lại danh sách bạn bè sau khi yêu cầu kết bạn được chấp nhận
+    });
+
+    this.signalRService.hubConnection.on('FriendRequestRejected', (userId) => {
+      console.log(`Friend request rejected by ${userId}`);
+      this.loadFriendRequests(); // Tải lại danh sách yêu cầu kết bạn khi một yêu cầu bị từ chối
+    });
 
     this.signalRService.hubConnection.on('UpdateRelationships', () => {
       this.loadRelationships();
@@ -328,29 +386,49 @@ export class SidebarComponent implements OnInit {
     // Logic to change language
   }
 
-  onAcceptRequest(requestId: string): void {
+  onAcceptRequest(requestId: string, context: 'search' | 'friendRequests'): void {
     const userId = localStorage.getItem('userId')!;
-    this.friendsService.acceptFriendRequest(userId, requestId).subscribe(() => {
-      this.loadFriendRequests();
-      this.loadFriends();
-    });
+    this.friendsService.acceptFriendRequest(userId, requestId).subscribe(
+      () => {
+        console.log('Friend request accepted successfully');
+
+        // Kiểm tra ngữ cảnh để gọi phương thức thích hợp
+        if (context === 'search') {
+          this.searchUsers();
+        } else if (context === 'friendRequests') {
+          this.loadFriendRequests(); // Load lại danh sách lời mời nhận được
+          this.loadFriends(); // Load lại danh sách bạn bè sau khi chấp nhận lời mời kết bạn
+        }
+      },
+      error => {
+        console.error('Error accepting friend request:', error);
+      }
+    );
   }
 
-  onRejectRequest(requestId: string): void {
+
+  onRejectRequest(requestId: string, context: 'search' | 'friendRequests'): void {
     const userId = localStorage.getItem('userId')!;
-    this.friendsService.rejectFriendRequest(userId, requestId).subscribe(() => {
-      this.loadFriendRequests();
-    });
+    this.friendsService.rejectFriendRequest(userId, requestId).subscribe(
+      () => {
+        console.log('Friend request rejected successfully');
+
+        // Kiểm tra ngữ cảnh để gọi phương thức thích hợp
+        if (context === 'search') {
+          this.searchUsers();
+        } else if (context === 'friendRequests') {
+          this.loadFriendRequests(); // Load lại danh sách lời mời nhận được
+          this.loadSentFriendRequests(); // Load lại danh sách lời mời đã gửi
+        }
+      },
+      error => {
+        console.error('Error rejecting friend request:', error);
+      }
+    );
   }
 
-  onCancelSentRequest(requestId: string): void {
-    const userId = localStorage.getItem('userId')!;
-    this.friendsService.cancelFriendRequest(userId, requestId).subscribe(() => {
-      this.loadSentFriendRequests();
-    });
-  }
 
-  onRemoveFriend(friendId: string): void {
+  onRemoveFriend(friendId: string,context: 'search' | 'friendRequests'): void {
     const userId = localStorage.getItem('userId')!;
     this.friendsService.removeFriend(userId, friendId).subscribe({
       next: () => {
@@ -395,7 +473,25 @@ export class SidebarComponent implements OnInit {
       }
     });
   }
+  handleUpdateSidebar(): void {
+    // Cập nhật lại dữ liệu mà bạn muốn trong SidebarComponent
+    this.loadFriends();
+    this.loadFriendRequests();
+    this.loadSentFriendRequests();
+    // hoặc bất kỳ hành động nào khác bạn muốn thực hiện khi nhận được sự kiện
+  }
+  openUpdateUserDialog(): void {
+    const dialogRef = this.dialog.open(UpdateUserDialogComponent, {
+      width: '400px' // Adjust width as needed
+    });
 
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('User profile updated successfully.');
+        // Handle any post-update actions if necessary
+      }
+    });
+  }
   getAvatarUrl(avatar: string): string {
     return `https://localhost:7267/${avatar}`;
   }

@@ -16,11 +16,10 @@ export class FriendsService {
   }
 
   changeNickname(userId: string, friendId: string, nickname: string): Observable<any> {
-    const formData = new FormData();
-    formData.append('FriendId', friendId);
-    formData.append('Nickname', nickname);
-    return this.http.post(`${this.apiUrl}/${userId}/change-nickname`, formData);
+    const payload = { FriendId: friendId, Nickname: nickname };
+    return this.http.post(`${this.apiUrl}/${userId}/change-nickname`, payload);
   }
+
 
   addFriend(userId: string, friendId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${userId}/add/${friendId}`, {});
@@ -61,7 +60,7 @@ export class FriendsService {
   getBlockedUsers(userId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/${userId}/blocked-users`);
   }
-  getFriendInfo(userId: string, friendId: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/${userId}/friend-info/${friendId}`);
+  getFriendInfo(userId: string, entityId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${userId}/relationship-info/${entityId}`);
   }
 }

@@ -2,6 +2,7 @@
 using ChatAppServer.WebAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -14,11 +15,12 @@ namespace ChatAppServer.WebAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<FriendsController> _logger;
-
-        public FriendsController(ApplicationDbContext context, ILogger<FriendsController> logger)
+        private readonly IHubContext<ChatHub> _hubContext;
+        public FriendsController(ApplicationDbContext context, ILogger<FriendsController> logger, IHubContext<ChatHub> hubContext)
         {
             _context = context;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         [HttpGet("{userId}/get-sent-friend-requests")]
@@ -92,6 +94,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     friendship.Nickname = string.Empty; // Hoặc null, tùy theo cách bạn quản lý dữ liệu
                     _logger.LogInformation($"Nickname for friend {request.FriendId} removed by user {userId}");
+                    // Phát sự kiện SignalR thông báo cho bạn của người dùng về việc thay đổi biệt danh
+                    await _hubContext.Clients.User(request.FriendId.ToString()).SendAsync("NicknameChanged", userId, request.Nickname);
                 }
                 else
                 {
@@ -131,13 +135,13 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest("Invalid userId or friendId");
             }
 
-            // Kiểm tra xem userId có đang cố gắng tự thêm mình làm bạn bè không
+            // Check if user is trying to add themselves as a friend
             if (userId == friendId)
             {
                 return BadRequest("You cannot add yourself as a friend.");
             }
 
-            // Kiểm tra nếu userId bị chặn bởi friendId
+            // Check if userId is blocked by friendId
             var isBlocked = await _context.UserBlocks
                 .AnyAsync(ub => ub.UserId == friendId && ub.BlockedUserId == userId, cancellationToken);
 
@@ -146,7 +150,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return BadRequest("You cannot send a friend request to this user.");
             }
 
-            // Kiểm tra nếu friendId bị chặn bởi userId
+            // Check if friendId is blocked by userId
             var isBlockedReverse = await _context.UserBlocks
                 .AnyAsync(ub => ub.UserId == userId && ub.BlockedUserId == friendId, cancellationToken);
 
@@ -157,6 +161,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
+                // Check if they are already friends
                 bool isAlreadyFriend = await _context.Users
                     .AnyAsync(u => u.Id == userId && u.Friends.Any(f => f.FriendId == friendId), cancellationToken);
 
@@ -165,6 +170,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     return BadRequest("You are already friends with this user.");
                 }
 
+                // Check if a friend request has already been sent by the user
                 bool requestAlreadyExists = await _context.FriendRequests
                     .AnyAsync(fr => fr.SenderId == userId && fr.ReceiverId == friendId && fr.Status == "Pending", cancellationToken);
 
@@ -173,6 +179,38 @@ namespace ChatAppServer.WebAPI.Controllers
                     return BadRequest("Friend request already sent.");
                 }
 
+                // Check if a friend request from friendId to userId exists
+                var reciprocalRequest = await _context.FriendRequests
+                    .FirstOrDefaultAsync(fr => fr.SenderId == friendId && fr.ReceiverId == userId && fr.Status == "Pending", cancellationToken);
+
+                if (reciprocalRequest != null)
+                {
+                    // Automatically accept the friend request since both users sent requests to each other
+                    var user = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+                    var sender = await _context.Users.Include(u => u.Friends).FirstOrDefaultAsync(u => u.Id == friendId, cancellationToken);
+
+                    if (user == null || sender == null)
+                    {
+                        return NotFound("User or friend not found.");
+                    }
+
+                    user.AddFriend(friendId);
+                    sender.AddFriend(userId);
+
+                    _context.FriendRequests.Remove(reciprocalRequest);
+                    _context.Users.Update(user);
+                    _context.Users.Update(sender);
+
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    await _hubContext.Clients.User(friendId.ToString()).SendAsync("FriendRequestAccepted", userId);
+                    await _hubContext.Clients.User(userId.ToString()).SendAsync("FriendRequestAccepted", friendId);
+                    _logger.LogInformation($"Friend request between {userId} and {friendId} automatically accepted.");
+
+                    return Ok(new { Message = "Friend request automatically accepted." });
+                }
+
+                // If no reciprocal request, create a new friend request
                 var friendRequest = new FriendRequest
                 {
                     SenderId = userId,
@@ -192,6 +230,8 @@ namespace ChatAppServer.WebAPI.Controllers
                     friendRequest.Status
                 };
 
+                await _hubContext.Clients.User(friendId.ToString()).SendAsync("FriendRequestReceived", userId, friendRequest.Id);
+                await _hubContext.Clients.User(userId.ToString()).SendAsync("FriendRequestSent", friendRequest);
                 _logger.LogInformation($"Friend request from {userId} to {friendId} created.");
 
                 return Ok(result);
@@ -202,7 +242,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
-
 
 
         [HttpDelete("{userId}/remove/{friendId}")]
@@ -245,6 +284,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 _context.Users.Update(user);
                 _context.Users.Update(friend);
                 await _context.SaveChangesAsync(cancellationToken);
+                await _hubContext.Clients.User(friendId.ToString()).SendAsync("FriendRemoved", userId);
 
                 _logger.LogInformation($"Friendship between {userId} and {friendId} removed.");
 
@@ -395,7 +435,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 _context.FriendRequests.Remove(friendRequest);
                 _context.Users.Update(user);
                 _context.Users.Update(sender);
-
+                await _hubContext.Clients.User(friendRequest.SenderId.ToString()).SendAsync("FriendRequestAccepted", userId);
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"Friend request {requestId} accepted by {userId}.");
@@ -433,6 +473,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 _context.FriendRequests.Remove(friendRequest);
                 await _context.SaveChangesAsync(cancellationToken);
+                await _hubContext.Clients.User(friendRequest.SenderId.ToString()).SendAsync("FriendRequestRejected", userId);
 
                 _logger.LogInformation($"Friend request {requestId} rejected by {userId}.");
 
@@ -473,7 +514,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"Friend request {requestId} canceled by {userId}.");
-
+                await _hubContext.Clients.User(friendRequest.ReceiverId.ToString()).SendAsync("FriendRequestCanceled", userId);
                 return Ok(new { Message = "Friend request canceled successfully." });
             }
             catch (Exception ex)
@@ -482,41 +523,73 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
-        [HttpGet("{userId}/friend-info/{friendId}")]
-        public async Task<IActionResult> GetFriendInfo(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        [HttpGet("{userId}/relationship-info/{entityId}")]
+        public async Task<IActionResult> GetRelationshipInfo(Guid userId, Guid entityId, CancellationToken cancellationToken)
         {
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
             {
-                return Forbid("You are not authorized to view this friend's information.");
+                return Forbid("You are not authorized to view this information.");
             }
 
-            if (userId == Guid.Empty || friendId == Guid.Empty)
+            if (userId == Guid.Empty || entityId == Guid.Empty)
             {
-                return BadRequest("Invalid userId or friendId.");
+                return BadRequest("Invalid userId or entityId.");
             }
 
             try
             {
-                // Tìm thông tin về mối quan hệ bạn bè
+                // Check if the entity is a group
+                var group = await _context.Groups
+                    .Include(g => g.Members)
+                        .ThenInclude(m => m.User) // Include User information for each member
+                    .FirstOrDefaultAsync(g => g.Id == entityId, cancellationToken);
+
+                if (group != null)
+                {
+                    // Check if the current user is an admin of the group
+                    var isAdmin = group.Members.Any(m => m.UserId == userId && m.IsAdmin);
+
+                    // Return group information
+                    var groupInfo = new
+                    {
+                        IsGroup = true,
+                        IsAdmin = isAdmin, // Indicate if the current user is an admin
+                        Id = group.Id,
+                        Name = group.Name,
+                        Avatar = group.Avatar,
+                        Members = group.Members.Select(m => new
+                        {
+                            m.UserId,
+                            FullName = $"{m.User.FirstName} {m.User.LastName}",
+                            m.User.Avatar,
+                            m.User.TagName,
+                            m.User.Status
+                        }).ToList()
+                    };
+
+                    return Ok(groupInfo);
+                }
+
+                // Check if the entity is a friend relationship
                 var friendship = await _context.Friendships
                     .Include(f => f.Friend)
                     .Include(f => f.User)
-                    .FirstOrDefaultAsync(f => (f.UserId == userId && f.FriendId == friendId) ||
-                                              (f.UserId == friendId && f.FriendId == userId), cancellationToken);
+                    .FirstOrDefaultAsync(f => (f.UserId == userId && f.FriendId == entityId) ||
+                                              (f.UserId == entityId && f.FriendId == userId), cancellationToken);
 
                 if (friendship == null)
                 {
-                    return NotFound("Friendship not found.");
+                    return NotFound("Relationship not found.");
                 }
 
-                // Lấy thông tin chi tiết về bạn bè
+                // Get friend information
                 var friend = friendship.UserId == userId ? friendship.Friend : friendship.User;
-
                 var friendInfo = new
                 {
+                    IsGroup = false,
                     Id = friend.Id,
-                    FullName = $"{friend.FirstName} {friend.LastName}",
+                    Name = $"{friend.FirstName} {friend.LastName}",
                     Nickname = friendship.Nickname,
                     Avatar = friend.Avatar,
                     TagName = friend.TagName,
@@ -527,10 +600,11 @@ namespace ChatAppServer.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while fetching friend info for user {UserId} and friend {FriendId}.", userId, friendId);
+                _logger.LogError(ex, "An error occurred while fetching relationship info for user {UserId} and entity {EntityId}.", userId, entityId);
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
 
 
         [HttpPost("{userId}/block/{blockedUserId}")]
@@ -590,7 +664,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"User {userId} blocked user {blockedUserId}");
-
+                await _hubContext.Clients.User(blockedUserId.ToString()).SendAsync("UserBlocked", userId);
                 return Ok(new { Message = "User blocked successfully" });
             }
             catch (Exception ex)
@@ -629,6 +703,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"User {userId} unblocked user {blockedUserId}");
+                await _hubContext.Clients.User(blockedUserId.ToString()).SendAsync("UserUnblocked", userId);
 
                 return Ok(new { Message = "User unblocked successfully" });
             }

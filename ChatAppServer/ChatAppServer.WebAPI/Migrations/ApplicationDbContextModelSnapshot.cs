@@ -162,6 +162,35 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.ToTable("GroupMembers");
                 });
 
+            modelBuilder.Entity("ChatAppServer.WebAPI.Models.MessageReadStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MessageReadStatuses");
+                });
+
             modelBuilder.Entity("ChatAppServer.WebAPI.Models.PendingUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -304,6 +333,29 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.ToTable("UserBlocks");
                 });
 
+            modelBuilder.Entity("ChatAppServer.WebAPI.Models.UserDeletedMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "MessageId")
+                        .IsUnique();
+
+                    b.ToTable("UserDeletedMessages");
+                });
+
             modelBuilder.Entity("ChatAppServer.WebAPI.Models.UserToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -405,6 +457,25 @@ namespace ChatAppServer.WebAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Group");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ChatAppServer.WebAPI.Models.MessageReadStatus", b =>
+                {
+                    b.HasOne("Chat", "Chat")
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChatAppServer.WebAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chat");
 
                     b.Navigation("User");
                 });

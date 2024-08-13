@@ -1,3 +1,4 @@
+/* Container for recipient information */
 .recipient-info-container {
   width: 280px; /* Adjusted to be less wide */
   padding: 20px;
@@ -21,18 +22,109 @@
   font-size: 20px;
   font-weight: bold;
   margin-bottom: 5px;
+  text-align: center;
 }
 
 .tag-name {
   font-size: 13px;
   color: #777;
   margin-bottom: 20px;
+  text-align: center;
+}
+
+.group-members {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.group-members h4 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.group-members ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.group-members li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.member-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.member-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-name {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.member-tag {
+  font-size: 0.9em;
+  color: #777;
+  margin-left: 5px;
+}
+
+.member-status {
+  font-size: 0.9em;
+}
+
+.member-status.online {
+  color: #28a745;
+}
+
+.member-status.offline {
+  color: #dc3545;
+}
+
+.admin-controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.icon-button i {
+  font-size: 1.2em;
+  color: #555;
+}
+
+.icon-button:hover i {
+  color: #000;
 }
 
 .action-buttons {
   display: flex;
   flex-direction: column;
   width: 100%;
+  margin-top: 20px;
 }
 
 .action-button {
