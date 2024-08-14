@@ -52,7 +52,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 string avatarUrl = null;
                 if (request.AvatarFile != null)
                 {
-                    (string savedFileName, string originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                    (string savedFileName, string originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatars/");
                     avatarUrl = Path.Combine("avatars", savedFileName).Replace("\\", "/");
                 }
 
@@ -580,7 +580,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     var oldAvatarPath = group.Avatar;
 
                     // Validate the file type and size if necessary
-                    var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                    var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatars/");
                     group.Avatar = Path.Combine("avatars", savedFileName).Replace("\\", "/");
 
                     // Delete the old avatar file if it exists

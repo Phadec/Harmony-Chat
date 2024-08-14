@@ -61,7 +61,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     private cdr: ChangeDetectorRef,
     private groupService: GroupService,
   ) {
-    this.currentUser = { id: localStorage.getItem('userId') };
+    this.currentUser = { id: sessionStorage.getItem('userId') };
   }
 
 
@@ -74,7 +74,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
   }
 
   loadRecipientInfo(): void {
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
     if (userId && this.recipientId) {
       this.friendsService.getFriendInfo(userId, this.recipientId).subscribe(
         (data) => {
@@ -96,7 +96,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result !== undefined) {
-        const userId = localStorage.getItem('userId')!;
+        const userId = sessionStorage.getItem('userId')!;
         const friendId = this.recipientInfo.id;
         const nickname = result;
 
@@ -125,7 +125,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result === true) {
-        this.friendsService.removeFriend(localStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
+        this.friendsService.removeFriend(sessionStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
           () => {
             console.log('Friend removed successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
@@ -150,7 +150,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result === true) {
-        this.friendsService.blockUser(localStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
+        this.friendsService.blockUser(sessionStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
           () => {
             console.log('User blocked successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
@@ -176,7 +176,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     dialogRef.afterClosed().subscribe(result => {
       if (result === true) {
         const recipientId = this.recipientInfo?.id;
-        const userId = localStorage.getItem('userId');
+        const userId = sessionStorage.getItem('userId');
 
         if (!recipientId || !userId) {
           console.error('Recipient ID or User ID is missing.');
@@ -352,11 +352,12 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
       }
     });
   }
-
   onChangeGroupAvatar(): void {
+    const currentAvatarUrl = this.getAvatarUrl(this.recipientInfo?.avatar) || ''; // Lấy URL của avatar hiện tại
+
     const dialogRef = this.dialog.open(AvatarUploadDialogComponent, {
       width: '400px',
-      data: {}
+      data: { currentAvatar: currentAvatarUrl } // Truyền avatar hiện tại vào hộp thoại
     });
 
     dialogRef.afterClosed().subscribe((file: File) => {
@@ -365,6 +366,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
       }
     });
   }
+
 
   uploadGroupAvatar(file: File): void {
     if (this.recipientInfo && this.recipientInfo.isGroup) {

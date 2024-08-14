@@ -23,7 +23,7 @@ export class BlockedUsersModalComponent implements OnInit {
   }
 
   loadBlockedUsers(): void {
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
     if (userId) {
       this.friendsService.getBlockedUsers(userId).subscribe(
         (response: { $values: BlockedUserDto[] }) => {
@@ -37,7 +37,7 @@ export class BlockedUsersModalComponent implements OnInit {
 }
 
   unblockUser(blockedUserId: string): void {
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
     if (userId) {
       this.friendsService.unblockUser(userId, blockedUserId).subscribe(
         () => {

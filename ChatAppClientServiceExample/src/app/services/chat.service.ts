@@ -12,12 +12,12 @@ export class ChatService {
   constructor(private http: HttpClient) {}
 
   getRelationships(): Observable<any> {
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
     return this.http.get(`${this.apiUrl}/get-relationships`, { params: { userId: userId || '' } });
   }
 
   getChats(recipientId: string): Observable<any> {
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
     return this.http.get<any>(`${this.apiUrl}/get-chats?userId=${userId}&recipientId=${recipientId}`);
   }
 

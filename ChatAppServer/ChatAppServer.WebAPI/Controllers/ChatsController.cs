@@ -369,6 +369,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             c.ToUserId,
                             Message = c.Message ?? string.Empty,  // Xử lý giá trị null
                             AttachmentUrl = c.AttachmentUrl ?? string.Empty,  // Xử lý giá trị null
+                            AttachmentOriginalName = c.AttachmentOriginalName ?? string.Empty,
                             c.Date,
                             IsRead = c.IsRead  // Xử lý giá trị null
 
@@ -402,6 +403,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     p.GroupId,
                     Message = p.Message ?? string.Empty,  // Xử lý giá trị null
                     AttachmentUrl = p.AttachmentUrl ?? string.Empty,  // Xử lý giá trị null
+                    AttachmentOriginalName = p.AttachmentOriginalName ?? string.Empty,
                     p.Date,
                     IsRead = _context.MessageReadStatuses
                     .Where(mrs => mrs.MessageId == p.Id && mrs.UserId == userId)

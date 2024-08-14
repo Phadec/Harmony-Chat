@@ -20,7 +20,7 @@ export class SignalRService {
   constructor() {
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl('https://localhost:7267/chat-hub', {
-        accessTokenFactory: () => localStorage.getItem('token') || ''
+        accessTokenFactory: () => sessionStorage.getItem('token') || ''
       })
       .configureLogging(signalR.LogLevel.Information)
       .withAutomaticReconnect()

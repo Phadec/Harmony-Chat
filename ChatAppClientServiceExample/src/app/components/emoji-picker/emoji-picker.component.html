@@ -1,0 +1,33 @@
+<div>
+  <h2 mat-dialog-title>Choose Emoji</h2>
+
+  <mat-dialog-content>
+    <!-- Search bar -->
+    <div style="margin-bottom: 10px;">
+      <input type="text" [(ngModel)]="searchTerm" (input)="filterEmojis()" placeholder="Search emojis..." style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+    </div>
+
+    <!-- Recently used emojis -->
+    <div *ngIf="recentEmojis.length > 0" style="margin-bottom: 10px;">
+      <h4>Recently Used</h4>
+      <div>
+        <span *ngFor="let emoji of recentEmojis" (click)="selectEmoji(emoji)" style="font-size: 24px; cursor: pointer; margin: 5px;">
+          {{ emoji }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Emoji list -->
+    <div>
+      <div>
+        <span *ngFor="let emoji of filteredEmojis" (click)="selectEmoji(emoji)" style="font-size: 24px; cursor: pointer; margin: 5px;">
+          {{ emoji }}
+        </span>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="dialogRef.close()">Close</button>
+  </mat-dialog-actions>
+</div>

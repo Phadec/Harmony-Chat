@@ -72,6 +72,7 @@
   scrollbar-width: none; /* Hide scrollbar for Firefox */
 }
 
+/* Sidebar Content Styling */
 .sidebar-content ul {
   list-style-type: none;
   padding: 0;
@@ -91,17 +92,17 @@
   align-items: center;
   border-bottom: 1px solid #e9ecef;
   cursor: pointer;
-  transition: background-color 0.3s ease, padding 0.3s ease;
   padding: 10px 0;
-  width: 100%; /* Make sure li elements take full width */
+  max-width: 100%;
+  width: 300px;
+  transition: background-color 0.3s ease; /* Smooth background color transition */
 }
 
 .sidebar-content li:hover {
-  background-color: #f1f3f5;
-  padding-left: 10px;
+  background-color: #e0e0e0; /* Darker background color on hover */
 }
 
-/* Avatar Styling */
+/* Ensure that image and text stay in place */
 .sidebar-content img {
   border-radius: 50%;
   width: 45px;
@@ -109,6 +110,7 @@
   margin-right: 15px;
   object-fit: cover;
 }
+
 
 /* Details Styling */
 .relationship-details,
@@ -321,46 +323,39 @@ button:hover {
   background-color: #007bff;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 25px;
   font-size: 1rem;
-  border-radius: 4px;
+  border-radius: 8px; /* Slightly rounded corners */
   cursor: pointer;
   margin-bottom: 15px;
   width: 100%;
   justify-content: center;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
 }
 
 .create-group-button i {
-  margin-right: 8px;
+  margin-right: 10px; /* Increase space between icon and text */
+  font-size: 1.25rem; /* Slightly increase icon size */
 }
 
 .create-group-button:hover {
   background-color: #0056b3;
-  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Enhance the shadow on hover */
 }
+
+.create-group-button:active {
+  background-color: #004085;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3); /* Reduce shadow on active state */
+  transform: translateY(0); /* Ensure no movement on click */
+}
+
 
 /* Additional Styling for Sidebar Components */
 .sidebar-content ul {
   width: 100%; /* Ensure full width of sidebar content */
 }
 
-.group-content {
-  width: 100%; /* Full width of group content */
-}
-
-.group-content ul {
-  width: 100%; /* Full width of group list */
-}
-
-.group-content li {
-  width: 100%; /* Ensure each group list item takes full width */
-  padding-left: 10px; /* Additional padding for hover effect */
-}
-
-.group-content li:hover {
-  padding-left: 15px; /* Increase padding on hover for a subtle effect */
-}
 /* Header Container Styling */
 .header-container {
   display: flex;

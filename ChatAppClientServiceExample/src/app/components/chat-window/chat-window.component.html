@@ -27,33 +27,47 @@
             <video *ngSwitchCase="'video'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
                    (click)="openAttachmentPreview(message.attachmentUrl, 'video')" style="cursor: pointer;"></video>
 
+            <!-- Audio attachment -->
+            <audio *ngSwitchCase="'audio'" controls [src]="getAttachmentUrl(message.attachmentUrl)" style="width: 100%;"></audio>
+
             <!-- PDF attachment -->
-            <a *ngSwitchCase="'pdf'" [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">{{ message.attachmentOriginalName }}</a>
+            <a *ngSwitchCase="'pdf'" [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+              <i class="fas fa-file-pdf"></i> {{ message.attachmentOriginalName }}
+            </a>
+
+            <!-- DOCX attachment -->
+            <a *ngSwitchCase="'docx'" [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+              <i class="fas fa-file-word"></i> {{ message.attachmentOriginalName }}
+            </a>
 
             <!-- Other attachments -->
-            <a *ngSwitchDefault [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">{{ message.attachmentOriginalName }}</a>
+            <a *ngSwitchDefault [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+              {{ message.attachmentOriginalName }}
+            </a>
           </ng-container>
         </div>
 
         <!-- Display 'Read' status if this is the last read message -->
         <div *ngIf="message.isRead && message.userId === currentUserId && i === messages.length - 1" class="message-status">
-          Đã đọc
+          Seen
         </div>
       </div>
     </div>
 
     <!-- Message input area -->
     <div class="message-input" *ngIf="recipientId">
+      <div class="emoji-picker">
+        <i class="fas fa-smile" (click)="onEmojiClick()" title="Insert emoji"></i>
+      </div>
+
       <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..."
              (keydown.enter)="onSendMessage()" aria-label="Type a message" />
 
-      <!-- File input icon -->
       <label for="fileInput" class="icon-button">
         <i class="fas fa-paperclip"></i>
       </label>
       <input type="file" id="fileInput" (change)="onFileSelected($event)" #fileInput style="display: none;" />
 
-      <!-- Send button -->
       <button (click)="onSendMessage()" [disabled]="!newMessage.trim() && !attachmentFile" class="icon-button">
         <i class="fas fa-paper-plane"></i>
       </button>

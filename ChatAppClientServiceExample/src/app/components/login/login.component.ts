@@ -18,9 +18,9 @@ export class LoginComponent {
     this.authService.login(this.username, this.password).subscribe({
       next: (response) => {
         // Assuming response contains userId and token
-        localStorage.setItem('userId', response.id);
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('userAvatar', response.avatar);
+        sessionStorage.setItem('userId', response.id);
+        sessionStorage.setItem('token', response.token);
+        sessionStorage.setItem('userAvatar', response.avatar);
 
         console.log("Login successful");
         console.log("User ID:", response.id);

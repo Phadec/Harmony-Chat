@@ -4,6 +4,7 @@ import { ChatService } from '../../services/chat.service';
 import { RecipientInfo } from '../../models/recipient-info.model';
 import { MatDialog } from '@angular/material/dialog';
 import { AttachmentPreviewDialogComponent } from '../attachment-preview-dialog/attachment-preview-dialog.component';
+import {EmojiPickerComponent} from "../emoji-picker/emoji-picker.component";
 
 @Component({
   selector: 'app-chat-window',
@@ -15,16 +16,18 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   @ViewChild('chatMessages', {static: false}) private chatMessagesContainer!: ElementRef;
   messages: any[] = [];
   newMessage: string = '';
-  currentUserId = localStorage.getItem('userId');
+  currentUserId = sessionStorage.getItem('userId');
   recipientInfo: RecipientInfo | null = null; // Thông tin người nhận (bạn bè hoặc nhóm)
   attachmentFile: File | null = null; // Biến lưu trữ tệp đính kèm
+  emojiPickerVisible: boolean = false;
 
   constructor(
     private chatService: ChatService,
     private signalRService: SignalRService,
     private cdr: ChangeDetectorRef,
     public dialog: MatDialog
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     this.signalRService.startConnection();
@@ -193,12 +196,17 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       return 'image';
     } else if (extension && ['mp4', 'webm', 'ogg'].includes(extension)) {
       return 'video';
+    } else if (extension && ['mp3', 'wav', 'ogg'].includes(extension)) {
+      return 'audio';
     } else if (extension && extension === 'pdf') {
       return 'pdf';
+    } else if (extension && extension === 'docx') {
+      return 'docx';
     } else {
       return 'other';
     }
   }
+
 
   getAttachmentUrl(attachmentUrl: string): string {
     return `https://localhost:7267/${attachmentUrl}`;
@@ -206,8 +214,20 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
   openAttachmentPreview(attachmentUrl: string, type: string): void {
     this.dialog.open(AttachmentPreviewDialogComponent, {
-      data: { url: this.getAttachmentUrl(attachmentUrl), type: type },
+      data: {url: this.getAttachmentUrl(attachmentUrl), type: type},
       panelClass: 'custom-dialog-container'
+    });
+  }
+
+  onEmojiClick(): void {
+    const dialogRef = this.dialog.open(EmojiPickerComponent, {
+      width: '500px'
+    });
+
+    dialogRef.afterClosed().subscribe((emoji: string) => {
+      if (emoji) {
+        this.newMessage += emoji;  // Thêm emoji vào tin nhắn hiện tại
+      }
     });
   }
 }

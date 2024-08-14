@@ -16,7 +16,7 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     // Thêm token vào header cho các yêu cầu khác
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
       request = request.clone({
         setHeaders: {

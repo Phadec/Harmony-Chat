@@ -244,4 +244,5 @@ public sealed class ChatHub : Hub
         await UpdateConnectedUsersList();
         await base.OnDisconnectedAsync(exception);
     }
+
 }

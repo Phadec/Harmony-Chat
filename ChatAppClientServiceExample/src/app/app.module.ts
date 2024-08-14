@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -31,14 +31,16 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatListModule } from '@angular/material/list';
-import { RenameGroupDialogComponent } from './components/rename-group-dialog/rename-group-dialog.component';
-import { AddMemberDialogComponent } from './components/add-member-dialog/add-member-dialog.component';
-import {MatIcon} from "@angular/material/icon";
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { MatIconModule } from '@angular/material/icon';
 import { AvatarUploadDialogComponent } from './components/avatar-upload-dialog/avatar-upload-dialog.component';
 import { ChangePasswordDialogComponent } from './components/change-password-dialog/change-password-dialog.component';
 import { ImagePreviewDialogComponent } from './components/image-preview-dialog/image-preview-dialog.component';
 import { AttachmentPreviewDialogComponent } from './components/attachment-preview-dialog/attachment-preview-dialog.component';
+import { EmojiModule } from '@ctrl/ngx-emoji-mart/ngx-emoji';
+import {AddMemberDialogComponent} from "./components/add-member-dialog/add-member-dialog.component";
+import {RenameGroupDialogComponent} from "./components/rename-group-dialog/rename-group-dialog.component";
+import {PickerComponent} from "@ctrl/ngx-emoji-mart";
+import { EmojiPickerComponent } from './components/emoji-picker/emoji-picker.component';
 
 @NgModule({
   declarations: [
@@ -59,12 +61,13 @@ import { AttachmentPreviewDialogComponent } from './components/attachment-previe
     ConfirmDialogComponent,
     CreateGroupDialogComponent,
     UpdateUserDialogComponent,
-    RenameGroupDialogComponent,
-    AddMemberDialogComponent,
     AvatarUploadDialogComponent,
     ChangePasswordDialogComponent,
     ImagePreviewDialogComponent,
     AttachmentPreviewDialogComponent,
+    AddMemberDialogComponent,
+    RenameGroupDialogComponent,
+    EmojiPickerComponent
   ],
   imports: [
     BrowserModule,
@@ -75,19 +78,22 @@ import { AttachmentPreviewDialogComponent } from './components/attachment-previe
     BrowserAnimationsModule,
     MatDialogModule,
     MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
+    MatFormFieldModule, // Để sử dụng mat-form-field, mat-label
+    MatInputModule,     // Để sử dụng matInput
     MatCheckboxModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatListModule,
-    MatIcon// Move this to imports
+    MatListModule,      // Để sử dụng mat-selection-list, mat-list-option
+    MatIconModule,      // Để sử dụng mat-icon
+    EmojiModule,
+    PickerComponent,
+    // Để sử dụng emoji-mart
   ],
   providers: [
     FriendsService,
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-    provideAnimationsAsync()
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],  // Thêm dòng này
   bootstrap: [AppComponent]
 })
 export class AppModule { }

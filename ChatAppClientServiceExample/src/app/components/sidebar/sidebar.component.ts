@@ -52,7 +52,6 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit(): void {
     this.selectedTab = 'recent';
-    this.userAvatar = localStorage.getItem('userAvatar') || '';
     this.loadRelationships();
     this.loadFriends();
     this.loadFriendRequests();
@@ -60,6 +59,7 @@ export class SidebarComponent implements OnInit {
     this.loadBlockedUsers();
     this.loadGroups();
     this.subscribeToSignalREvents();
+    this.loadCurrentUserAvatar();
   }
 
   subscribeToSignalREvents(): void {
@@ -130,7 +130,7 @@ export class SidebarComponent implements OnInit {
 
   selectTab(tab: string): void {
     this.selectedTab = tab;
-    localStorage.setItem('selectedTab', tab);
+    sessionStorage.setItem('selectedTab', tab);
 
     // Reset search query and filtered users when switching tabs
     this.searchQuery = '';
@@ -160,7 +160,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadFriends(): void {
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
 
     if (!userId) {
       console.error('User ID not found in localStorage.');
@@ -191,7 +191,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadFriendRequests(): void {
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
 
     if (!userId) {
       console.error('User ID not found in localStorage.');
@@ -220,7 +220,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadGroups(): void {
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
 
     if (!userId) {
       console.error('User ID not found in localStorage.');
@@ -246,7 +246,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadSentFriendRequests(): void {
-    const userId = localStorage.getItem('userId')!;
+    const userId = sessionStorage.getItem('userId')!;
     this.friendsService.getSentFriendRequests(userId).subscribe(
       (response) => {
         this.sentFriendRequests = response.$values; // Gán đúng $values cho mảng sentFriendRequests
@@ -258,7 +258,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadBlockedUsers(): void {
-    const userId = localStorage.getItem('userId')!;
+    const userId = sessionStorage.getItem('userId')!;
     this.friendsService.getBlockedUsers(userId).subscribe(
       (response) => {
         this.blockedUsers = response.$values; // Gán đúng $values cho mảng blockedUsers
@@ -306,7 +306,7 @@ export class SidebarComponent implements OnInit {
   }
 
   onAddFriend(userId: string): void {
-    const currentUserId = localStorage.getItem('userId');
+    const currentUserId = sessionStorage.getItem('userId');
     if (!currentUserId) {
       console.error('User ID not found in localStorage.');
       return;
@@ -328,7 +328,7 @@ export class SidebarComponent implements OnInit {
 
   onCancelFriendRequest(requestId: string, context: 'search' | 'friendRequests'): void {
     if (requestId) {
-      const currentUserId = localStorage.getItem('userId')!;
+      const currentUserId = sessionStorage.getItem('userId')!;
       this.friendsService.cancelFriendRequest(currentUserId, requestId).subscribe(
         () => {
           console.log('Friend request cancelled successfully');
@@ -388,7 +388,7 @@ export class SidebarComponent implements OnInit {
   }
 
   onAcceptRequest(requestId: string, context: 'search' | 'friendRequests'): void {
-    const userId = localStorage.getItem('userId')!;
+    const userId = sessionStorage.getItem('userId')!;
     this.friendsService.acceptFriendRequest(userId, requestId).subscribe(
       () => {
         console.log('Friend request accepted successfully');
@@ -409,7 +409,7 @@ export class SidebarComponent implements OnInit {
   }
 
   onRejectRequest(requestId: string, context: 'search' | 'friendRequests'): void {
-    const userId = localStorage.getItem('userId')!;
+    const userId = sessionStorage.getItem('userId')!;
     this.friendsService.rejectFriendRequest(userId, requestId).subscribe(
       () => {
         console.log('Friend request rejected successfully');
@@ -430,7 +430,7 @@ export class SidebarComponent implements OnInit {
   }
 
   onRemoveFriend(friendId: string, context: 'search' | 'friendRequests'): void {
-    const userId = localStorage.getItem('userId')!;
+    const userId = sessionStorage.getItem('userId')!;
     this.friendsService.removeFriend(userId, friendId).subscribe({
       next: () => {
         this.loadFriends(); // Tải lại danh sách bạn bè sau khi xóa thành công
@@ -443,10 +443,10 @@ export class SidebarComponent implements OnInit {
   }
 
   signOut(): void {
-    const userId = localStorage.getItem('userId')!;
+    const userId = sessionStorage.getItem('userId')!;
     this.authService.logout(userId).subscribe({
       next: () => {
-        localStorage.removeItem('userId');
+        sessionStorage.removeItem('userId');
         this.router.navigate(['/login']);
       },
       error: (err) => {
@@ -490,7 +490,7 @@ export class SidebarComponent implements OnInit {
     dialogRef.componentInstance.groupCreated.subscribe((result: any) => {
       if (result) {
         const formData = new FormData();
-        const currentUserId = localStorage.getItem('userId');
+        const currentUserId = sessionStorage.getItem('userId');
 
         formData.append('name', result.name);
 
@@ -535,7 +535,23 @@ export class SidebarComponent implements OnInit {
       }
     });
   }
-
+  // Lấy thông tin người dùng hiện tại và gán vào userAvatar
+  loadCurrentUserAvatar(): void {
+    const currentUserId = sessionStorage.getItem('userId');
+    if (currentUserId) {
+      this.userService.getUserInfo(currentUserId).subscribe(
+        (userInfo) => {
+          this.userAvatar = userInfo.avatar || ''; // Giả sử avatar nằm trong thuộc tính avatar
+          sessionStorage.setItem('userAvatar', this.userAvatar);
+        },
+        (error) => {
+          console.error('Failed to load user info', error);
+        }
+      );
+    } else {
+      console.error('No currentUserId found in sessionStorage');
+    }
+  }
 
   openImagePreview(avatarUrl: string): void {
     this.dialog.open(ImagePreviewDialogComponent, {

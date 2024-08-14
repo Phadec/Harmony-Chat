@@ -13,7 +13,10 @@ export class AvatarUploadDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<AvatarUploadDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
-  ) {}
+  ) {
+    // Gán avatar hiện tại vào avatarPreview
+    this.avatarPreview = data.currentAvatar || null;
+  }
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
