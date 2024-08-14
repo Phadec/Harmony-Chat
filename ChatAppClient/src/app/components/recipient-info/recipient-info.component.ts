@@ -5,7 +5,6 @@ import { MatDialog } from "@angular/material/dialog";
 import { ChangeNicknameDialogComponent } from "../change-nickname-dialog/change-nickname-dialog.component";
 import { ConfirmDialogComponent } from "../confirm-dialog/confirm-dialog.component";
 import { GroupService } from "../../services/group.service";
-import { CreateGroupDialogComponent } from "../create-group-dialog/create-group-dialog.component";
 import { RenameGroupDialogComponent } from "../rename-group-dialog/rename-group-dialog.component";
 import { AddMemberDialogComponent } from "../add-member-dialog/add-member-dialog.component";
 import { AvatarUploadDialogComponent } from "../avatar-upload-dialog/avatar-upload-dialog.component";

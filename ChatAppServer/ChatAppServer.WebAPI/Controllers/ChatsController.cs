@@ -208,8 +208,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 var friendship = await _context.Friendships
                     .Include(f => f.Friend)
                     .Include(f => f.User)
-                    .FirstOrDefaultAsync(f => (f.UserId == userId && f.FriendId == recipientId) ||
-                                              (f.UserId == recipientId && f.FriendId == userId), cancellationToken);
+                    .FirstOrDefaultAsync(f => (f.UserId == userId && f.FriendId == recipientId), cancellationToken);
 
                 if (friendship != null)
                 {
