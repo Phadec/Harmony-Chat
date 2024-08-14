@@ -1,0 +1,62 @@
+/* Căn chỉnh tổng thể cho dialog */
+.mat-dialog-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Cải thiện giao diện của form field */
+mat-form-field {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Cải thiện giao diện cho selection list */
+mat-selection-list {
+  width: 100%;
+  max-height: 200px; /* Đặt chiều cao tối đa cho danh sách, có thể cuộn nếu danh sách dài */
+  overflow-y: auto; /* Thêm thanh cuộn khi danh sách vượt quá chiều cao tối đa */
+  margin-bottom: 20px;
+}
+
+mat-list-option {
+  margin-bottom: 5px;
+}
+
+/* Căn chỉnh các nút trong dialog */
+.mat-dialog-actions {
+  display: flex;
+  justify-content: flex-end; /* Canh nút về bên phải */
+  gap: 10px; /* Thêm khoảng cách giữa các nút */
+  width: 100%;
+}
+/* Định dạng avatar */
+.friend-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Tạo hình tròn cho avatar */
+  margin-right: 10px; /* Thêm khoảng cách giữa avatar và thông tin */
+  object-fit: cover; /* Đảm bảo ảnh không bị méo */
+  vertical-align: middle; /* Canh giữa avatar với văn bản */
+}
+
+/* Định dạng thông tin bạn bè để hiển thị ngang hàng với avatar */
+mat-list-option {
+  display: flex;
+  align-items: center; /* Canh giữa các phần tử theo chiều dọc */
+  padding: 10px 0; /* Khoảng cách trên dưới giữa các tùy chọn */
+}
+
+/* Định dạng thông tin bạn bè */
+.friend-info {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tên tagname */
+.friend-tagname {
+  font-size: 0.85em; /* Kích thước chữ nhỏ hơn cho tagname */
+  color: gray; /* Màu xám nhạt cho tagname */
+}

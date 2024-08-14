@@ -53,7 +53,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 if (request.AvatarFile != null)
                 {
                     (string savedFileName, string originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
-                    avatarUrl = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+                    avatarUrl = Path.Combine("avatars", savedFileName).Replace("\\", "/");
                 }
 
                 var group = new Group
@@ -112,6 +112,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "An error occurred while processing your request." });
             }
         }
+
 
         [HttpPost("add-group-chat-member")]
         public async Task<IActionResult> AddMember([FromForm] AddGroupMemberDto request, CancellationToken cancellationToken)
@@ -575,9 +576,22 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 if (request.AvatarFile != null)
                 {
+                    // Save the current avatar path before updating
+                    var oldAvatarPath = group.Avatar;
+
                     // Validate the file type and size if necessary
                     var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
-                    group.Avatar = Path.Combine("avatar", savedFileName).Replace("\\", "/");
+                    group.Avatar = Path.Combine("avatars", savedFileName).Replace("\\", "/");
+
+                    // Delete the old avatar file if it exists
+                    if (!string.IsNullOrEmpty(oldAvatarPath))
+                    {
+                        var fullOldAvatarPath = Path.Combine("wwwroot", oldAvatarPath.Replace("/", "\\"));
+                        if (System.IO.File.Exists(fullOldAvatarPath))
+                        {
+                            System.IO.File.Delete(fullOldAvatarPath);
+                        }
+                    }
                 }
                 else
                 {
@@ -602,6 +616,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "An error occurred while processing your request." });
             }
         }
+
         [HttpGet("{groupId}/non-members")]
         public async Task<IActionResult> GetFriendsNotInGroup(Guid groupId, CancellationToken cancellationToken)
         {

@@ -1,0 +1,11 @@
+.preview-dialog {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.preview-image, .preview-video {
+  max-width: 100%;
+  max-height: 80vh;
+}

@@ -1,38 +1,41 @@
 /* General Sidebar Styling */
 .sidebar {
-  width: 300px; /* Đặt chiều rộng cụ thể để thanh bên không quá rộng */
+  width: 300px;
   height: 100%;
-  background-color: #fff;
+  background-color: #f8f9fa;
   border-right: 1px solid #e0e0e0;
   padding: 25px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  font-family: 'Arial', sans-serif;
 }
 
 /* Sidebar Header */
 .sidebar h2 {
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 20px;
+  font-size: 1.75rem;
+  color: #343a40;
+  margin-bottom: 25px;
   text-align: center;
+  font-family: 'Pacifico', cursive;
 }
 
 /* Search Input Styling */
 .sidebar-search input {
-  width: 120%;
-  padding: 10px;
-  border-radius: 20px;
-  border: 1px solid #ddd;
-  font-size: 0.9rem;
+  width: 100%;
+  padding: 12px;
+  border-radius: 25px;
+  border: 1px solid #ced4da;
+  font-size: 0.95rem;
   margin-bottom: 20px;
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .sidebar-search input:focus {
   border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
 /* Icons Row Styling */
@@ -40,7 +43,7 @@
   display: flex;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .sidebar-icons button {
@@ -49,12 +52,13 @@
   cursor: pointer;
   font-size: 1.5rem;
   color: #007bff;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, transform 0.3s ease;
 }
 
 .sidebar-icons button.active,
 .sidebar-icons button:hover {
   color: #0056b3;
+  transform: scale(1.1);
 }
 
 /* Sidebar Content Styling */
@@ -64,37 +68,45 @@
   flex-direction: column;
   align-items: flex-start;
   padding: 0;
-  overflow-y: hidden;
-  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
 }
 
-/* List Styling */
 .sidebar-content ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
   width: 100%;
+  max-height: calc(100vh - 200px); /* Adjust the height to avoid overflow */
+  overflow-y: auto; /* Ensure content can scroll */
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.sidebar-content ul::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari, and Edge */
 }
 
 .sidebar-content li {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #e9ecef;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  width: 100%;
+  transition: background-color 0.3s ease, padding 0.3s ease;
+  padding: 10px 0;
+  width: 100%; /* Make sure li elements take full width */
 }
 
 .sidebar-content li:hover {
-  background-color: #f7f7f7;
+  background-color: #f1f3f5;
+  padding-left: 10px;
 }
 
 /* Avatar Styling */
 .sidebar-content img {
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  margin-right: 10px; /* Khoảng cách giữa ảnh và thông tin */
+  width: 45px;
+  height: 45px;
+  margin-right: 15px;
   object-fit: cover;
 }
 
@@ -114,20 +126,20 @@
 .friend-details h4,
 .request-details h4 {
   margin: 0;
-  font-size: 1rem;
-  color: #333;
+  font-size: 1.05rem;
+  color: #495057;
 }
 
 .relationship-details p,
 .user-details p,
 .request-details h5 {
   margin: 0;
-  font-size: 0.85rem;
-  color: #777;
+  font-size: 0.875rem;
+  color: #6c757d;
 }
 
 .timestamp {
-  color: #aaa;
+  color: #adb5bd;
   font-size: 0.8rem;
   margin-left: auto;
 }
@@ -135,14 +147,14 @@
 .notification-dot {
   width: 10px;
   height: 10px;
-  background-color: red;
+  background-color: #dc3545;
   border-radius: 50%;
   margin-left: 10px;
 }
 
 /* No Content Message Styling */
 .no-content {
-  color: #aaa;
+  color: #adb5bd;
   font-size: 1rem;
   text-align: center;
   padding: 20px;
@@ -154,7 +166,7 @@ button {
   border: none;
   cursor: pointer;
   font-size: 24px;
-  color: #000;
+  color: #495057;
   transition: color 0.3s ease;
 }
 
@@ -172,26 +184,28 @@ button:hover {
 .settings-item {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
-  border-bottom: 1px solid #ddd;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e9ecef;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, padding-left 0.3s;
 }
 
 .settings-item:hover {
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
+  padding-left: 10px;
 }
 
 .settings-icon {
   font-size: 20px;
   margin-right: 10px;
-  color: #333;
+  color: #495057;
 }
 
 .settings-text {
   font-size: 16px;
-  color: #333;
+  color: #495057;
 }
+
 /* Group Details Styling */
 .group-details {
   display: flex;
@@ -201,50 +215,47 @@ button:hover {
 
 .group-details h4 {
   margin: 0;
-  font-size: 0.9rem; /* Thay đổi kích thước chữ ở đây */
-  color: #333;
+  font-size: 1.05rem;
+  color: #495057;
 }
 
 .group-details p {
   margin: 0;
-  font-size: 0.8rem; /* Thay đổi kích thước chữ cho phần nội dung nếu cần */
-  color: #777;
+  font-size: 0.875rem;
+  color: #6c757d;
 }
 
-/* Sidebar Header with Artistic Font */
-.sidebar h2 {
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 20px;
-  text-align: center;
-  font-family: 'Pacifico', cursive; /* Áp dụng font chữ nghệ thuật */
-}
+/* Section Title */
 .section-title {
   font-size: 18px;
-  margin-bottom: 10px;
-  color: #333;
-  border-bottom: 2px solid #eaeaea;
-  padding-bottom: 5px;
+  margin-bottom: 15px;
+  color: #343a40;
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 8px;
 }
 
-.request-list, .sent-request-list {
+/* Request List Styling */
+.request-list,
+.sent-request-list {
   list-style-type: none;
   padding: 0;
   margin: 0;
 }
 
-.request-item, .sent-request-item {
+.request-item,
+.sent-request-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
-  border-bottom: 1px solid #eaeaea;
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.3s ease;
 }
 
 .request-avatar {
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
 }
 
 .icon-group {
@@ -256,11 +267,12 @@ button:hover {
   background-color: transparent;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .icon-button:hover {
   color: #007bff;
+  transform: scale(1.1);
 }
 
 .reject-button {
@@ -273,55 +285,127 @@ button:hover {
 
 .request-details h4 {
   margin: 0;
-  font-size: 16px;
-  color: #333;
+  font-size: 1.05rem;
+  color: #495057;
 }
 
 .request-details h5 {
   margin: 0;
-  font-size: 14px;
-  color: #666;
+  font-size: 0.875rem;
+  color: #6c757d;
 }
 
-.request-details p {
-  margin: 0;
-  font-size: 12px;
-  color: #999;
-}
-.request-item:hover, .sent-request-item:hover {
-  background-color: #f9f9f9;
-  transition: background-color 0.3s ease;
+.request-item:hover,
+.sent-request-item:hover {
+  background-color: #f1f3f5;
 }
 
-.icon-button:hover {
-  transform: scale(1.1);
-  transition: transform 0.2s ease;
-}
+/* Tag Name Styling */
 .tag-name {
-  font-size: 14px; /* Kích thước chữ cho tagName */
-  color: #888; /* Màu sắc chữ nhạt hơn để phân biệt với tên đầy đủ */
-  margin-bottom: 5px; /* Khoảng cách giữa tagName và lastMessage */
+  font-size: 0.875rem;
+  color: #868e96;
+  margin-bottom: 5px;
 }
+
+/* Relationship Details */
 .relationship-details {
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
+
+/* Create Group Button */
 .create-group-button {
   display: flex;
   align-items: center;
   background-color: #007bff;
   color: white;
   border: none;
-  padding: 8px 16px;
-  font-size: 16px;
+  padding: 10px 20px;
+  font-size: 1rem;
   border-radius: 4px;
   cursor: pointer;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   width: 100%;
   justify-content: center;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .create-group-button i {
   margin-right: 8px;
 }
+
+.create-group-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+/* Additional Styling for Sidebar Components */
+.sidebar-content ul {
+  width: 100%; /* Ensure full width of sidebar content */
+}
+
+.group-content {
+  width: 100%; /* Full width of group content */
+}
+
+.group-content ul {
+  width: 100%; /* Full width of group list */
+}
+
+.group-content li {
+  width: 100%; /* Ensure each group list item takes full width */
+  padding-left: 10px; /* Additional padding for hover effect */
+}
+
+.group-content li:hover {
+  padding-left: 15px; /* Increase padding on hover for a subtle effect */
+}
+/* Header Container Styling */
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Distributes space between header text and avatar */
+  margin-bottom: 20px;
+  width: 100%; /* Ensures full width */
+}
+
+/* Header Title Styling */
+.header-container h2 {
+  font-size: 1.75rem;
+  color: #343a40;
+  margin: 0; /* Removes default margin */
+  font-family: 'Pacifico', cursive; /* Custom font */
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  object-fit: cover;
+  margin-left: 10px; /* Optional: Add some space between text and avatar */
+  transition: transform 0.3s ease;
+}
+
+.header-with-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* User Avatar Styling */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  object-fit: cover;
+  transition: transform 0.3s ease; /* Smooth transformation effect */
+}
+
+/* Hover Effect for User Avatar */
+.user-avatar:hover {
+  transform: scale(1.1); /* Slightly enlarge the avatar on hover */
+}
+

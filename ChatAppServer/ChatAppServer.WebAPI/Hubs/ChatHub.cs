@@ -89,6 +89,20 @@ public sealed class ChatHub : Hub
         var connectedUsers = UserConnections.Keys.ToList();
         await Clients.All.SendAsync("UpdateConnectedUsers", connectedUsers);
     }
+    public async Task<string> GetUserFullNameAsync(Guid userId)
+    {
+        var user = await _context.Users
+            .Where(u => u.Id == userId)
+            .Select(u => new { u.FirstName, u.LastName })
+            .FirstOrDefaultAsync();
+
+        if (user == null)
+        {
+            return "Unknown User";
+        }
+
+        return $"{user.FirstName} {user.LastName}";
+    }
 
     public async Task NotifyNewMessage(Chat chat)
     {
@@ -99,6 +113,9 @@ public sealed class ChatHub : Hub
         }
 
         List<Guid> affectedUsers = new List<Guid>();
+
+        // Lấy tên người gửi
+        var senderFullName = await GetUserFullNameAsync(chat.UserId);
 
         if (chat.GroupId.HasValue)
         {
@@ -121,6 +138,7 @@ public sealed class ChatHub : Hub
                         {
                             chat.Id,
                             chat.UserId, // Đây là UserId của người gửi
+                            SenderFullName = senderFullName, // Thêm tên đầy đủ người gửi
                             chat.GroupId,
                             chat.Message,
                             chat.AttachmentUrl,
@@ -146,6 +164,7 @@ public sealed class ChatHub : Hub
                     {
                         chat.Id,
                         chat.UserId, // Đây là UserId của người gửi
+                        SenderFullName = senderFullName, // Thêm tên đầy đủ người gửi
                         chat.ToUserId, // Đây là UserId của người nhận
                         chat.Message,
                         chat.AttachmentUrl,
@@ -177,7 +196,6 @@ public sealed class ChatHub : Hub
             }
         }
     }
-
 
 
     // Phương thức thông báo khi tin nhắn đã được đọc

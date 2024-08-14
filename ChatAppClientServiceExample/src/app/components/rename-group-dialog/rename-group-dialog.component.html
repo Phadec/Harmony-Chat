@@ -1,11 +1,16 @@
-<h2 mat-dialog-title>Đổi tên nhóm</h2>
+<h2 mat-dialog-title style="text-align: center; font-size: 24px; margin-bottom: 20px;">Change Group Name</h2>
 <mat-dialog-content>
-  <mat-form-field appearance="fill">
-    <mat-label>Tên nhóm mới</mat-label>
-    <input matInput [(ngModel)]="newName" placeholder="Nhập tên nhóm mới">
-  </mat-form-field>
+  <form style="display: flex; flex-direction: column; gap: 16px;">
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>New Group Name</mat-label>
+      <input matInput [(ngModel)]="newName" placeholder="Enter the new group name"
+             style="padding: 10px; border-radius: 5px; font-size: 1em;">
+    </mat-form-field>
+  </form>
 </mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button (click)="onCancel()">Hủy</button>
-  <button mat-button (click)="onSave()">Lưu</button>
+<mat-dialog-actions style="display: flex; justify-content: space-between; padding: 10px;">
+  <!-- Cancel Button -->
+  <button mat-button (click)="onCancel()" style="color: #f44336;">Cancel</button>
+  <!-- Save Button -->
+  <button mat-button (click)="onSave()" [disabled]="!newName" style="color: #007bff;">Save</button>
 </mat-dialog-actions>

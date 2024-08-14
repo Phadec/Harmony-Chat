@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Thêm thành viên mới</h2>
+<h2 mat-dialog-title>Add New Members</h2>
 <mat-dialog-content>
   <div *ngIf="friendsNotInGroup.length > 0; else noFriends">
     <mat-selection-list [multiple]="true" (selectionChange)="onSelectionChange($event)">
@@ -11,12 +11,12 @@
     </mat-selection-list>
   </div>
   <ng-template #noFriends>
-    <p>Không có bạn bè nào có thể thêm vào nhóm.</p>
+    <p>No friends available to add to the group.</p>
   </ng-template>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button (click)="onCancel()">Hủy</button>
+  <button mat-button (click)="onCancel()">Cancel</button>
   <button mat-button (click)="onConfirm()" [disabled]="!hasSelectedFriends">
-    Xác nhận
+    Confirm
   </button>
 </mat-dialog-actions>

@@ -1,17 +1,66 @@
-<h2 mat-dialog-title>Tạo nhóm mới</h2>
-<mat-dialog-content>
-  <mat-form-field appearance="fill">
-    <mat-label>Tên nhóm</mat-label>
-    <input matInput [(ngModel)]="groupName">
+<h2 mat-dialog-title style="text-align: center; font-size: 1.5em; margin-bottom: 20px;">Tạo nhóm mới</h2>
+<mat-dialog-content style="display: flex; flex-direction: column; gap: 20px;">
+
+  <!-- Form field cho tên nhóm -->
+  <mat-form-field appearance="outline" class="styled-input" style="width: 100%;">
+    <mat-label>Name of group</mat-label>
+    <input matInput [(ngModel)]="groupName" placeholder="Enter a group name">
+    <mat-icon matSuffix>group</mat-icon>
   </mat-form-field>
 
-  <mat-selection-list [(ngModel)]="selectedMembers">
-    <mat-list-option *ngFor="let friend of friends" [value]="friend.id">
-      {{ friend.name }}
-    </mat-list-option>
-  </mat-selection-list>
+  <!-- Container chứa phần chọn avatar và chọn thành viên -->
+  <div style="display: flex; justify-content: space-between; gap: 20px;">
+
+    <!-- Phần chọn avatar -->
+    <div style="flex: 1; text-align: center;">
+      <div *ngIf="avatarPreview" style="margin-bottom: 10px;">
+        <img [src]="avatarPreview" alt="Avatar Preview" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);">
+      </div>
+      <label for="avatar-upload" style="cursor: pointer; color: #007bff; font-weight: bold; display: inline-flex; align-items: center;">
+        <i class="fas fa-camera" style="margin-right: 8px;"></i> Choose an avatar
+      </label>
+      <input id="avatar-upload" type="file" (change)="onAvatarSelected($event)" style="display: none;" />
+    </div>
+
+    <!-- Phần chọn thành viên -->
+    <div style="flex: 2;">
+      <!-- Thanh tìm kiếm thành viên -->
+      <mat-form-field appearance="fill" class="styled-input" style="width: 100%; margin-bottom: 10px;">
+        <mat-label>Search for friends</mat-label>
+        <input matInput [(ngModel)]="searchQuery" placeholder="Nhập tên để tìm kiếm" (input)="filterFriends()">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <!-- Danh sách bạn bè -->
+      <mat-selection-list [(ngModel)]="selectedMembers" class="friend-list" style="max-height: 200px; overflow-y: auto;">
+        <mat-list-option *ngFor="let friend of filteredFriends" [value]="friend.id" style="padding: 10px; border-radius: 8px; transition: background-color 0.3s;">
+          <div style="display: flex; align-items: center;">
+            <img [src]="getAvatarUrl(friend.avatar)" alt="{{ friend.fullName }}"
+                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; flex-direction: column;">
+              <span style="color: black; font-weight: bold;">{{ friend.fullName }}</span>
+              <span style="font-size: 0.85em; color: gray;">{{ friend.tagname }}</span>
+            </div>
+          </div>
+        </mat-list-option>
+      </mat-selection-list>
+    </div>
+
+  </div>
+
 </mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button (click)="onCancel()">Hủy</button>
-  <button mat-button (click)="onConfirm()" [disabled]="!groupName || selectedMembers.length === 0">Tạo nhóm</button>
+
+<mat-dialog-actions style="justify-content: space-between; padding: 10px;">
+  <button mat-button (click)="onCancel()"
+          style="background-color: #f44336; color: white; width: 60px; height: 60px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2);">
+    <i class="fas fa-times" style="font-size: 24px; color: white;"></i>
+  </button>
+  <!-- Nút tạo nhóm chỉ kích hoạt nếu đã chọn ít nhất 2 thành viên, có tên nhóm và hình đại diện -->
+  <button mat-button
+          (click)="onConfirm()"
+          [disabled]="!groupName || selectedMembers.length < 2 || !avatarFile"
+          style="background-color: #007bff; color: white; width: 60px; height: 60px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2);"
+          mat-flat-button>
+    <i class="fas fa-check-circle" style="font-size: 24px; color: white;"></i>
+  </button>
 </mat-dialog-actions>

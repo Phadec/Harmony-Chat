@@ -42,7 +42,7 @@ namespace ChatAppServer.WebAPI.Controllers
             {
                 var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
 
-                // Lấy tin nhắn mới nhất từ các cuộc trò chuyện riêng tư, bỏ qua những tin nhắn đã bị xóa
+                // Retrieve the latest private chats, only between friends and excluding deleted messages
                 var latestPrivateChats = await _context.Chats
                     .Where(c => (c.UserId == userId && c.ToUserId.HasValue) || (c.ToUserId == userId))
                     .Where(c => !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == c.Id))
@@ -56,11 +56,21 @@ namespace ChatAppServer.WebAPI.Controllers
                     if (latestChat != null)
                     {
                         bool isSentByUser = latestChat.UserId == userId;
+                        var contactId = isSentByUser ? latestChat.ToUserId : latestChat.UserId;
 
-                        var contact = await _context.Users.FirstOrDefaultAsync(u => u.Id == (isSentByUser ? latestChat.ToUserId : latestChat.UserId), cancellationToken);
+                        // Check if the contact is a friend
+                        var isFriend = await _context.Friendships
+                            .AnyAsync(f => (f.UserId == userId && f.FriendId == contactId) || (f.UserId == contactId && f.FriendId == userId), cancellationToken);
+
+                        if (!isFriend)
+                        {
+                            continue; // Skip if the contact is not a friend
+                        }
+
+                        var contact = await _context.Users.FirstOrDefaultAsync(u => u.Id == contactId, cancellationToken);
                         if (contact == null)
                         {
-                            continue; // Bỏ qua nếu không tìm thấy người liên lạc
+                            continue; // Skip if the contact cannot be found
                         }
 
                         string contactFullName = $"{contact.FirstName} {contact.LastName}";
@@ -76,7 +86,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             RelationshipType = "Private",
                             ChatId = latestChat.Id,
                             ChatDate = latestChat.Date,
-                            ContactId = isSentByUser ? latestChat.ToUserId : latestChat.UserId,
+                            ContactId = contactId,
                             ContactFullName = contactFullName,
                             ContactTagName = contactTagName,
                             ContactNickname = contactNickname,
@@ -92,7 +102,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     }
                 }
 
-                // Lấy tin nhắn mới nhất từ các nhóm, bỏ qua những tin nhắn đã bị xóa
+                // Retrieve the latest group chats, excluding deleted messages
                 var groupIds = await _context.Chats
                     .Where(c => c.GroupId.HasValue && c.Group.Members.Any(m => m.UserId == userId))
                     .Select(c => c.GroupId.Value)
@@ -115,7 +125,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
                         if (group == null || sender == null)
                         {
-                            continue; // Bỏ qua nếu không tìm thấy nhóm hoặc người gửi
+                            continue; // Skip if the group or sender cannot be found
                         }
 
                         bool hasNewMessage = !await _context.MessageReadStatuses

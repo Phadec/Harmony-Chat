@@ -1,9 +1,9 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { SignalRService } from '../../services/signalr.service';
 import { ChatService } from '../../services/chat.service';
-import { FriendsService } from '../../services/friends.service';
-import { ChangeDetectorRef } from '@angular/core';
 import { RecipientInfo } from '../../models/recipient-info.model';
+import { MatDialog } from '@angular/material/dialog';
+import { AttachmentPreviewDialogComponent } from '../attachment-preview-dialog/attachment-preview-dialog.component';
 
 @Component({
   selector: 'app-chat-window',
@@ -22,10 +22,9 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   constructor(
     private chatService: ChatService,
     private signalRService: SignalRService,
-    private friendService: FriendsService,
-    private cdr: ChangeDetectorRef
-  ) {
-  }
+    private cdr: ChangeDetectorRef,
+    public dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
     this.signalRService.startConnection();
@@ -86,7 +85,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     }
   }
 
-
   loadRecipientInfo(): void {
     if (this.recipientId && this.currentUserId) {
       this.chatService.getRecipientInfo(this.currentUserId, this.recipientId).subscribe(
@@ -113,7 +111,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         this.cdr.detectChanges(); // Force UI update
         this.scrollToBottom(); // Scroll to bottom after receiving a message
         this.markMessageAsRead(message.id); // Mark message as read
-        console.log(`New message received by recipient ${this.recipientId} from user ${message.userId}:`, message);
+        console.log(`New message received by recipient ${this.recipientId} from user ${message.userId} (${message.fullName}):`, message);
       }
     }
   }
@@ -204,5 +202,12 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
   getAttachmentUrl(attachmentUrl: string): string {
     return `https://localhost:7267/${attachmentUrl}`;
+  }
+
+  openAttachmentPreview(attachmentUrl: string, type: string): void {
+    this.dialog.open(AttachmentPreviewDialogComponent, {
+      data: { url: this.getAttachmentUrl(attachmentUrl), type: type },
+      panelClass: 'custom-dialog-container'
+    });
   }
 }

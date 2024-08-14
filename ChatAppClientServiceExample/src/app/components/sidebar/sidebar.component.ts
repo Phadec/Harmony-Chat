@@ -1,4 +1,4 @@
-import {Component, OnInit, Output, EventEmitter, ChangeDetectorRef} from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ChatService } from '../../services/chat.service';
 import { FriendsService } from '../../services/friends.service';
@@ -11,8 +11,10 @@ import { BlockedUsersModalComponent } from "../blocked-users-modal/blocked-users
 import { AuthService } from "../../services/auth.service";
 import { Router } from "@angular/router";
 import { UserService } from "../../services/user.service";
-import {UpdateUserDialogComponent} from "../update-user-dialog/update-user-dialog.component";
-import {CreateGroupDialogComponent} from "../create-group-dialog/create-group-dialog.component";
+import { UpdateUserDialogComponent } from "../update-user-dialog/update-user-dialog.component";
+import { CreateGroupDialogComponent } from "../create-group-dialog/create-group-dialog.component";
+import {ChangePasswordDialogComponent} from "../change-password-dialog/change-password-dialog.component";
+import {ImagePreviewDialogComponent} from "../image-preview-dialog/image-preview-dialog.component";
 
 @Component({
   selector: 'app-sidebar',
@@ -32,8 +34,7 @@ export class SidebarComponent implements OnInit {
   selectedRecipientId: string | null = null;
   searchQuery: string = '';
   selectedTab: string = 'recent';
-
-
+  userAvatar: string = '';
   @Output() selectRecipient = new EventEmitter<string>();
 
   constructor(
@@ -45,21 +46,22 @@ export class SidebarComponent implements OnInit {
     private userService: UserService,
     private cdr: ChangeDetectorRef,
     private router: Router,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+
   ) {}
 
   ngOnInit(): void {
     this.selectedTab = 'recent';
-
+    this.userAvatar = localStorage.getItem('userAvatar') || '';
     this.loadRelationships();
     this.loadFriends();
     this.loadFriendRequests();
     this.loadSentFriendRequests();
     this.loadBlockedUsers();
     this.loadGroups();
-    this.loadSentFriendRequests();
     this.subscribeToSignalREvents();
   }
+
   subscribeToSignalREvents(): void {
     this.signalRService.messageReceived$.subscribe(() => {
       this.loadRelationships();
@@ -69,6 +71,7 @@ export class SidebarComponent implements OnInit {
       console.log(`Message ${chatId} has been read.`);
       this.loadRelationships();
     });
+
     this.signalRService.friendRequestSent$.subscribe((friendRequest) => {
       console.log('Friend request sent:', friendRequest);
       this.loadSentFriendRequests(); // Tải lại danh sách yêu cầu kết bạn đã gửi
@@ -133,7 +136,6 @@ export class SidebarComponent implements OnInit {
     this.searchQuery = '';
     this.filteredUsers = [];
   }
-
 
   loadRelationships(): void {
     this.chatService.getRelationships().subscribe(
@@ -299,7 +301,6 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-
   isFriend(userId: string): boolean {
     return this.friends.some(friend => friend.id === userId);
   }
@@ -314,10 +315,10 @@ export class SidebarComponent implements OnInit {
     this.friendsService.addFriend(currentUserId, userId).subscribe(
       (response) => {
         console.log('Friend request sent successfully', response);
-        this.searchUsers();
+        this.searchUsers();  // Tải lại kết quả tìm kiếm để cập nhật tình trạng lời mời kết bạn
 
-        // Ép buộc Angular phát hiện và cập nhật giao diện
-        this.cdr.detectChanges();
+        this.loadFriends();  // Tải lại danh sách bạn bè sau khi gửi lời mời kết bạn
+        this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
       },
       error => {
         console.error('Error sending friend request:', error);
@@ -348,7 +349,6 @@ export class SidebarComponent implements OnInit {
       console.warn('Request ID is null or undefined');
     }
   }
-
 
   onSelectRecipient(recipientId: string): void {
     this.selectedRecipientId = recipientId;
@@ -399,6 +399,7 @@ export class SidebarComponent implements OnInit {
         } else if (context === 'friendRequests') {
           this.loadFriendRequests(); // Load lại danh sách lời mời nhận được
           this.loadFriends(); // Load lại danh sách bạn bè sau khi chấp nhận lời mời kết bạn
+          this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
         }
       },
       error => {
@@ -406,7 +407,6 @@ export class SidebarComponent implements OnInit {
       }
     );
   }
-
 
   onRejectRequest(requestId: string, context: 'search' | 'friendRequests'): void {
     const userId = localStorage.getItem('userId')!;
@@ -420,6 +420,7 @@ export class SidebarComponent implements OnInit {
         } else if (context === 'friendRequests') {
           this.loadFriendRequests(); // Load lại danh sách lời mời nhận được
           this.loadSentFriendRequests(); // Load lại danh sách lời mời đã gửi
+          this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
         }
       },
       error => {
@@ -428,37 +429,16 @@ export class SidebarComponent implements OnInit {
     );
   }
 
-
-  onRemoveFriend(friendId: string,context: 'search' | 'friendRequests'): void {
+  onRemoveFriend(friendId: string, context: 'search' | 'friendRequests'): void {
     const userId = localStorage.getItem('userId')!;
     this.friendsService.removeFriend(userId, friendId).subscribe({
       next: () => {
         this.loadFriends(); // Tải lại danh sách bạn bè sau khi xóa thành công
+        this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
       },
       error: (error) => {
         console.error('Error removing friend:', error);
       }
-    });
-  }
-
-  onBlockUser(blockedUserId: string): void {
-    const userId = localStorage.getItem('userId')!;
-
-    this.friendsService.blockUser(userId, blockedUserId).subscribe(
-      () => {
-        this.loadFriends(); // Cập nhật danh sách bạn bè sau khi chặn
-        this.loadBlockedUsers(); // Cập nhật danh sách người bị chặn
-      },
-      (error) => {
-        console.error('Error blocking user:', error);
-      }
-    );
-  }
-
-  onUnblockUser(blockedUserId: string): void {
-    const userId = localStorage.getItem('userId')!;
-    this.friendsService.unblockUser(userId, blockedUserId).subscribe(() => {
-      this.loadBlockedUsers();
     });
   }
 
@@ -474,13 +454,15 @@ export class SidebarComponent implements OnInit {
       }
     });
   }
+
   handleUpdateSidebar(): void {
     // Cập nhật lại dữ liệu mà bạn muốn trong SidebarComponent
     this.loadFriends();
     this.loadFriendRequests();
     this.loadSentFriendRequests();
-    // hoặc bất kỳ hành động nào khác bạn muốn thực hiện khi nhận được sự kiện
+    this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
   }
+
   openUpdateUserDialog(): void {
     const dialogRef = this.dialog.open(UpdateUserDialogComponent, {
       width: '400px' // Adjust width as needed
@@ -490,35 +472,75 @@ export class SidebarComponent implements OnInit {
       if (result) {
         console.log('User profile updated successfully.');
         // Handle any post-update actions if necessary
+        this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
       }
     });
   }
+
   getAvatarUrl(avatar: string): string {
     return `https://localhost:7267/${avatar}`;
   }
-  // Phương thức để mở hộp thoại tạo nhóm mới
+
   onCreateGroup(): void {
     const dialogRef = this.dialog.open(CreateGroupDialogComponent, {
-      width: '400px',
+      width: '1000px', height: '500px',
       data: {}
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.componentInstance.groupCreated.subscribe((result: any) => {
       if (result) {
         const formData = new FormData();
-        formData.append('name', result.name);  // Tên nhóm
-        formData.append('members', JSON.stringify(result.members));  // Các thành viên được chọn
+        const currentUserId = localStorage.getItem('userId');
+
+        formData.append('name', result.name);
+
+        if (currentUserId) {
+          formData.append('MemberIds', currentUserId);
+        }
+
+        result.members.forEach((memberId: string) => {
+          formData.append('MemberIds', memberId);
+        });
+
+        if (result.avatarFile) {
+          formData.append('AvatarFile', result.avatarFile);
+        }
 
         this.groupService.createGroupChat(formData).subscribe(
           () => {
             console.log('Group created successfully');
             this.loadGroups();  // Tải lại danh sách nhóm sau khi tạo nhóm mới
+            this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
           },
           error => {
             console.error('Failed to create group:', error);
           }
         );
       }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      this.loadGroups();  // Đảm bảo rằng danh sách nhóm được cập nhật khi dialog đóng lại
+      this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
+    });
+  }
+  openChangePasswordDialog(): void {
+    const dialogRef = this.dialog.open(ChangePasswordDialogComponent, {
+      width: '400px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Password changed successfully.');
+      }
+    });
+  }
+
+
+  openImagePreview(avatarUrl: string): void {
+    this.dialog.open(ImagePreviewDialogComponent, {
+      data: this.getAvatarUrl(avatarUrl),
+      panelClass: 'custom-dialog-container'
     });
   }
 }

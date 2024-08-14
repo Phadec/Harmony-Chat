@@ -23,9 +23,8 @@ export class UserService {
   }
 
 
-  // Cập nhật thông tin người dùng
   updateUser(userId: string, formData: FormData): Observable<any> {
-    return this.http.put(`${this.apiUrl}/update/${userId}`, formData);
+    return this.http.put(`${this.apiUrl}/${userId}/update-user`, formData);
   }
 
 

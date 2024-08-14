@@ -7,17 +7,6 @@ body, html {
   display: flex;
   overflow: hidden;
 }
-
-/* Sidebar */
-.sidebar {
-  width: 280px;
-  background: #343a40;
-  padding: 20px;
-  color: #ffffff;
-  overflow-y: auto;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.15);
-}
-
 /* Chat Content */
 .chat-content {
   flex-grow: 1;

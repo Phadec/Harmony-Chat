@@ -1,0 +1,6 @@
+<div class="preview-dialog">
+  <ng-container [ngSwitch]="data.type">
+    <img *ngSwitchCase="'image'" [src]="data.url" alt="Image Preview" class="preview-image">
+    <video *ngSwitchCase="'video'" controls [src]="data.url" class="preview-video"></video>
+  </ng-container>
+</div>

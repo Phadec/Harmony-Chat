@@ -20,6 +20,7 @@ export class LoginComponent {
         // Assuming response contains userId and token
         localStorage.setItem('userId', response.id);
         localStorage.setItem('token', response.token);
+        localStorage.setItem('userAvatar', response.avatar);
 
         console.log("Login successful");
         console.log("User ID:", response.id);

@@ -1,11 +1,13 @@
-<h2 mat-dialog-title>Đổi biệt danh</h2>
+<h2 mat-dialog-title style="text-align: center; font-size: 24px;">Change of Nickname</h2>
 <mat-dialog-content>
-  <mat-form-field appearance="fill">
-    <mat-label>Biệt danh mới</mat-label>
-    <input matInput [(ngModel)]="newNickname">
-  </mat-form-field>
+  <form style="display: flex; flex-direction: column; gap: 16px;">
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>New Nickname</mat-label>
+      <input matInput [(ngModel)]="newNickname">
+    </mat-form-field>
+  </form>
 </mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button color="primary" (click)="onSave()">OK</button>
+<mat-dialog-actions style="justify-content: space-between;">
+  <button mat-button (click)="onCancel()" style="color: #f44336;">Cancel</button>
+  <button mat-button color="primary" (click)="onSave()" style="color: #007bff;">OK</button>
 </mat-dialog-actions>

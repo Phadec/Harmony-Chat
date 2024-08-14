@@ -1,6 +1,6 @@
 <div class="chat-header" *ngIf="recipientInfo">
   <div class="chat-info">
-    <img [src]="'https://localhost:7267/' + recipientInfo.avatar" alt="Avatar" class="avatar">
+    <img [src]="'https://localhost:7267/' + recipientInfo.avatar" alt="Avatar" class="avatar" (click)="openImagePreview()">
     <div class="chat-details">
       <div class="chat-name">
         {{ recipientInfo.nickname || recipientInfo.fullName }}

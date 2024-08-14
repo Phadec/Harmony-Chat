@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>Change your group avatar</h2>
+<mat-dialog-content>
+  <div *ngIf="avatarPreview" style="text-align: center; margin-bottom: 20px;">
+    <img [src]="avatarPreview" alt="Avatar Preview" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;">
+  </div>
+  <div style="text-align: center;">
+    <label for="avatar-upload" style="cursor: pointer; color: #007bff; font-weight: bold; display: inline-flex; align-items: center;">
+      <i class="fas fa-camera" style="margin-right: 8px;"></i> Choose an avatar
+    </label>
+    <input id="avatar-upload" type="file" (change)="onFileSelected($event)" style="display: none;">
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Hủy</button>
+  <button mat-button (click)="onConfirm()" [disabled]="!avatarFile">Xác nhận</button>
+</mat-dialog-actions>

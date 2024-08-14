@@ -496,7 +496,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
         [HttpPost("change-user-password")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request, CancellationToken cancellationToken)
         {
             try
             {

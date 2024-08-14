@@ -10,6 +10,7 @@ import { UserService } from '../../services/user.service'; // Assuming you have 
 })
 export class UpdateUserDialogComponent implements OnInit {
   updateUserForm: FormGroup;
+  avatarPreview: string | null = null; // Biến để lưu bản xem trước của avatar
 
   constructor(
     private fb: FormBuilder,
@@ -41,6 +42,11 @@ export class UpdateUserDialogComponent implements OnInit {
           Email: user.email,
           TagName: user.tagName,
         });
+
+        // Nếu người dùng đã có avatar, hiển thị bản xem trước
+        if (user.avatar) {
+          this.avatarPreview = this.getAvatarUrl(user.avatar);
+        }
       });
     }
   }
@@ -51,8 +57,14 @@ export class UpdateUserDialogComponent implements OnInit {
       this.updateUserForm.patchValue({
         AvatarFile: file
       });
+
+      // Tạo bản xem trước cho hình ảnh được chọn
+      const reader = new FileReader();
+      reader.onload = e => this.avatarPreview = reader.result as string;
+      reader.readAsDataURL(file);
     }
   }
+
   onUpdate(): void {
     if (this.updateUserForm.valid) {
       const formData = new FormData();
@@ -78,5 +90,9 @@ export class UpdateUserDialogComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  getAvatarUrl(avatar: string): string {
+    return `https://localhost:7267/${avatar}`;
   }
 }

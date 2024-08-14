@@ -8,7 +8,6 @@ import { RegisterComponent } from './components/register/register.component';
 import { LoginComponent } from './components/login/login.component';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
-import { ChangePasswordComponent } from './components/change-password/change-password.component';
 import { ConfirmEmailComponent } from './components/confirm-email/confirm-email.component';
 import { FriendsService } from './services/friends.service';
 import { AuthInterceptor } from './auth.interceptor';
@@ -34,7 +33,12 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatListModule } from '@angular/material/list';
 import { RenameGroupDialogComponent } from './components/rename-group-dialog/rename-group-dialog.component';
 import { AddMemberDialogComponent } from './components/add-member-dialog/add-member-dialog.component';
+import {MatIcon} from "@angular/material/icon";
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { AvatarUploadDialogComponent } from './components/avatar-upload-dialog/avatar-upload-dialog.component';
+import { ChangePasswordDialogComponent } from './components/change-password-dialog/change-password-dialog.component';
+import { ImagePreviewDialogComponent } from './components/image-preview-dialog/image-preview-dialog.component';
+import { AttachmentPreviewDialogComponent } from './components/attachment-preview-dialog/attachment-preview-dialog.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +47,6 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
     LoginComponent,
     ForgotPasswordComponent,
     ResetPasswordComponent,
-    ChangePasswordComponent,
     ConfirmEmailComponent,
     ChatWindowComponent,
     SidebarComponent,
@@ -58,6 +61,10 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
     UpdateUserDialogComponent,
     RenameGroupDialogComponent,
     AddMemberDialogComponent,
+    AvatarUploadDialogComponent,
+    ChangePasswordDialogComponent,
+    ImagePreviewDialogComponent,
+    AttachmentPreviewDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -73,7 +80,8 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
     MatCheckboxModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatListModule // Move this to imports
+    MatListModule,
+    MatIcon// Move this to imports
   ],
   providers: [
     FriendsService,

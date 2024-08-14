@@ -1,5 +1,11 @@
 <div class="sidebar">
-  <h2>Harmony Chat</h2>
+  <div class="header-container">
+    <h2>Harmony Chat</h2>
+    <img [src]="getAvatarUrl(userAvatar)"
+         alt="User Avatar"
+         class="user-avatar"
+         (click)="openImagePreview(userAvatar)">
+  </div>
 
   <!-- Thanh tìm kiếm -->
   <div class="sidebar-search">
@@ -84,19 +90,23 @@
     <!-- Groups -->
     <div *ngIf="selectedTab === 'groups'">
       <!-- Nút tạo nhóm mới -->
-      <button (click)="onCreateGroup()" class="create-group-button">
-        <i class="fas fa-plus"></i> Tạo nhóm mới
-      </button>
+      <div class="create-group-wrapper">
+        <button (click)="onCreateGroup()" class="create-group-button">
+          <i class="fas fa-plus"></i> Create new group
+        </button>
+      </div>
 
       <!-- Danh sách các nhóm -->
-      <ul>
-        <li *ngFor="let group of groups" (click)="onSelectRecipient(group.id)">
-          <img [src]="getAvatarUrl(group.avatar)" alt="Avatar">
-          <div class="group-details">
-            <h4>{{ group.name }}</h4>
-          </div>
-        </li>
-      </ul>
+      <div class="group-content">
+        <ul>
+          <li *ngFor="let group of groups" (click)="onSelectRecipient(group.id)">
+            <img [src]="getAvatarUrl(group.avatar)" alt="Avatar">
+            <div class="group-details">
+              <h4>{{ group.name }}</h4>
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
 
     <!-- Friends -->
@@ -162,6 +172,10 @@
       <li (click)="openUpdateUserDialog()" class="settings-item">
         <i class="fas fa-user-edit settings-icon"></i>
         <span class="settings-text">Update Profile</span>
+      </li>
+      <li (click)="openChangePasswordDialog()" class="settings-item">
+        <i class="fas fa-key settings-icon"></i>
+        <span class="settings-text">Change Password</span>
       </li>
       <li (click)="signOut()" class="settings-item">
         <i class="fas fa-sign-out-alt settings-icon"></i>

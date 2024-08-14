@@ -1,13 +1,15 @@
 import { Component, Input, OnInit, OnChanges, ChangeDetectorRef, Output, EventEmitter } from '@angular/core';
-import {FriendsService} from "../../services/friends.service";
-import {ChatService} from "../../services/chat.service";
-import {MatDialog} from "@angular/material/dialog";
-import {ChangeNicknameDialogComponent} from "../change-nickname-dialog/change-nickname-dialog.component";
-import {ConfirmDialogComponent} from "../confirm-dialog/confirm-dialog.component";
-import {GroupService} from "../../services/group.service";
-import {CreateGroupDialogComponent} from "../create-group-dialog/create-group-dialog.component";
-import {RenameGroupDialogComponent} from "../rename-group-dialog/rename-group-dialog.component";
-import {AddMemberDialogComponent} from "../add-member-dialog/add-member-dialog.component";
+import { FriendsService } from "../../services/friends.service";
+import { ChatService } from "../../services/chat.service";
+import { MatDialog } from "@angular/material/dialog";
+import { ChangeNicknameDialogComponent } from "../change-nickname-dialog/change-nickname-dialog.component";
+import { ConfirmDialogComponent } from "../confirm-dialog/confirm-dialog.component";
+import { GroupService } from "../../services/group.service";
+import { CreateGroupDialogComponent } from "../create-group-dialog/create-group-dialog.component";
+import { RenameGroupDialogComponent } from "../rename-group-dialog/rename-group-dialog.component";
+import { AddMemberDialogComponent } from "../add-member-dialog/add-member-dialog.component";
+import { AvatarUploadDialogComponent } from "../avatar-upload-dialog/avatar-upload-dialog.component";
+import {ImagePreviewDialogComponent} from "../image-preview-dialog/image-preview-dialog.component";
 
 interface GroupMember {
   userId: string;
@@ -62,6 +64,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     this.currentUser = { id: localStorage.getItem('userId') };
   }
 
+
   ngOnInit() {
     this.loadRecipientInfo();
   }
@@ -101,6 +104,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
           () => {
             console.log('Nickname changed successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
+            this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi thay đổi biệt danh
           },
           (error) => {
             console.error('Failed to change nickname', error);
@@ -114,8 +118,8 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '300px',
       data: {
-        title: 'Xóa kết bạn',
-        message: 'Bạn có chắc chắn muốn xóa bạn bè này không?'
+        title: 'Unfriending',
+        message: 'Are you sure you want to delete this friend?'
       }
     });
 
@@ -125,6 +129,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
           () => {
             console.log('Friend removed successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
+            this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi xóa bạn
           },
           (error) => {
             console.error('Failed to remove friend', error);
@@ -138,8 +143,8 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '300px',
       data: {
-        title: 'Chặn người dùng',
-        message: 'Bạn có chắc chắn muốn chặn người dùng này không?'
+        title: 'Block users',
+        message: 'Are you sure you want to block this user?'
       }
     });
 
@@ -149,6 +154,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
           () => {
             console.log('User blocked successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
+            this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi chặn người dùng
           },
           (error) => {
             console.error('Failed to block user', error);
@@ -162,8 +168,8 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '300px',
       data: {
-        title: 'Xóa đoạn chat',
-        message: 'Bạn có chắc chắn muốn xóa đoạn chat này không?'
+        title: 'Delete a chat',
+        message: 'Are you sure you want to delete this chat?'
       }
     });
 
@@ -181,6 +187,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
           next: () => {
             console.log('Chat deleted successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
+            this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi xóa đoạn chat
           },
           error: (err) => {
             console.error('Failed to delete chat', err);
@@ -203,13 +210,12 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
             () => {
               console.log('Member added successfully');
               this.updateSidebar.emit(); // Cập nhật giao diện sau khi thêm thành viên
-              // Display success message
-              alert('Thành viên đã được thêm vào nhóm thành công.');
+              this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi thêm thành viên
+              alert('The member has been successfully added to the group.');
             },
             error => {
               console.error('Failed to add member:', error);
-              // Display error message
-              alert('Không thể thêm thành viên vào nhóm. Vui lòng thử lại.');
+              alert('Members can not be added to the group. Please try again.');
             }
           );
         });
@@ -217,14 +223,13 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     });
   }
 
-
   onRemoveGroupMember(memberId: string): void {
     if (this.recipientInfo && this.recipientInfo.isGroup) {  // Kiểm tra trực tiếp isGroup
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '300px',
         data: {
-          title: 'Xác nhận xóa thành viên',
-          message: 'Bạn có chắc chắn muốn xóa thành viên này khỏi nhóm không?'
+          title: 'Confirmation of member deletion',
+          message: 'Are you sure you want to remove this member from the group?'
         }
       });
 
@@ -234,6 +239,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
             .subscribe(response => {
               this.recipientInfo.members.$values = this.recipientInfo.members.$values.filter((m: GroupMember) => m.userId !== memberId);
               this.updateSidebar.emit(); // Cập nhật giao diện sau khi xóa thành viên
+              this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi xóa thành viên
             }, error => {
               console.error('Failed to remove member:', error);
             });
@@ -248,7 +254,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
         width: '300px',
         data: {
           title: 'Xác nhận thăng cấp',
-          message: 'Bạn có chắc chắn muốn thăng cấp thành viên này lên admin không?'
+          message: 'Confirmation of promotion'
         }
       });
 
@@ -260,6 +266,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
               if (member) {
                 member.isAdmin = true; // Cập nhật trạng thái admin của thành viên
                 this.updateSidebar.emit(); // Cập nhật giao diện sau khi thăng cấp
+                this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi thăng cấp thành viên
               }
             }, error => {
               console.error('Failed to promote member to admin:', error);
@@ -274,8 +281,8 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '300px',
         data: {
-          title: 'Xác nhận hạ cấp',
-          message: 'Bạn có chắc chắn muốn hạ cấp thành viên này khỏi vai trò admin không?'
+          title: 'Downgrade confirmation',
+          message: 'Are you sure you want to demote this member from the admin role?'
         }
       });
 
@@ -287,6 +294,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
               if (member) {
                 member.isAdmin = false; // Cập nhật trạng thái admin của thành viên
                 this.updateSidebar.emit(); // Cập nhật giao diện sau khi hạ cấp
+                this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi hạ cấp thành viên
               }
             }, error => {
               console.error('Failed to demote member from admin:', error);
@@ -310,6 +318,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
           () => {
             console.log('Group name changed successfully');
             this.updateSidebar.emit(); // Update sidebar or UI
+            this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi đổi tên nhóm
           },
           error => {
             console.error('Failed to change group name', error);
@@ -318,12 +327,13 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
       }
     });
   }
+
   onLeaveGroup(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '300px',
       data: {
-        title: 'Rời khỏi nhóm',
-        message: 'Bạn có chắc chắn muốn rời khỏi nhóm này không?'
+        title: 'Leave a group',
+        message: 'Are you sure you want to leave this group?'
       }
     });
 
@@ -333,13 +343,54 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
           () => {
             console.log('Successfully left the group');
             this.updateSidebar.emit(); // Cập nhật giao diện sau khi rời khỏi nhóm
-            // Bạn có thể thêm logic điều hướng người dùng đến một trang khác nếu cần
+            this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi rời khỏi nhóm
           },
           error => {
             console.error('Failed to leave the group:', error);
           }
         );
       }
+    });
+  }
+
+  onChangeGroupAvatar(): void {
+    const dialogRef = this.dialog.open(AvatarUploadDialogComponent, {
+      width: '400px',
+      data: {}
+    });
+
+    dialogRef.afterClosed().subscribe((file: File) => {
+      if (file && this.recipientInfo && this.recipientInfo.isGroup) {
+        this.uploadGroupAvatar(file);
+      }
+    });
+  }
+
+  uploadGroupAvatar(file: File): void {
+    if (this.recipientInfo && this.recipientInfo.isGroup) {
+      const request = {
+        GroupId: this.recipientInfo.id,  // Make sure to use the correct property name
+        AvatarFile: file
+      };
+
+      this.groupService.updateGroupAvatar(request).subscribe(
+        response => {
+          console.log('Avatar changed successfully');
+          if (response.newAvatarUrl) {
+            (this.recipientInfo as GroupInfo).avatar = response.newAvatarUrl;  // Update the avatar URL
+            this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi đổi avatar
+          }
+        },
+        error => {
+          console.error('Failed to change avatar', error);
+        }
+      );
+    }
+  }
+  openImagePreview(avatarUrl: string): void {
+    this.dialog.open(ImagePreviewDialogComponent, {
+      data: this.getAvatarUrl(avatarUrl),
+      panelClass: 'custom-dialog-container'
     });
   }
 

@@ -1,44 +1,47 @@
-<h2 mat-dialog-title>Update Profile</h2>
+<h2 mat-dialog-title style="text-align: center; font-size: 24px;">Update Profile</h2>
 <mat-dialog-content>
-  <form [formGroup]="updateUserForm">
-    <mat-form-field>
+  <form [formGroup]="updateUserForm" style="display: flex; flex-direction: column; gap: 16px;">
+
+    <mat-form-field appearance="outline" style="width: 100%;">
       <mat-label>First Name</mat-label>
       <input matInput formControlName="FirstName">
     </mat-form-field>
 
-    <mat-form-field>
+    <mat-form-field appearance="outline" style="width: 100%;">
       <mat-label>Last Name</mat-label>
       <input matInput formControlName="LastName">
     </mat-form-field>
 
-    <mat-form-field>
+    <mat-form-field appearance="outline" style="width: 100%;">
       <mat-label>Birthday</mat-label>
       <input matInput [matDatepicker]="picker" formControlName="Birthday">
       <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
       <mat-datepicker #picker></mat-datepicker>
     </mat-form-field>
 
-    <mat-form-field>
+    <mat-form-field appearance="outline" style="width: 100%;">
       <mat-label>Email</mat-label>
       <input matInput formControlName="Email">
     </mat-form-field>
 
-    <mat-form-field>
+    <mat-form-field appearance="outline" style="width: 100%;">
       <mat-label>Tag Name</mat-label>
       <input matInput formControlName="TagName">
     </mat-form-field>
 
-    <!-- Corrected Avatar Upload Section -->
-    <div class="file-upload-wrapper">
-      <label for="file-upload" class="file-upload">
-        <i class="fas fa-upload file-upload-icon"></i> <!-- Use a font awesome icon -->
-        <span class="file-upload-text">Choose File</span>
+    <!-- Avatar Upload Section with Preview -->
+    <div style="text-align: center;">
+      <div *ngIf="avatarPreview" style="margin-bottom: 10px;">
+        <img [src]="avatarPreview" alt="Avatar Preview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+      </div>
+      <label for="file-upload" style="cursor: pointer; display: inline-flex; align-items: center; color: #007bff; font-weight: bold;">
+        <i class="fas fa-upload" style="margin-right: 8px;"></i> Choose File
       </label>
-      <input id="file-upload" type="file" (change)="onFileChange($event)" class="file-upload-input">
+      <input id="file-upload" type="file" (change)="onFileChange($event)" style="display: none;">
     </div>
   </form>
 </mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button (click)="onUpdate()" [disabled]="!updateUserForm.valid">Update</button>
+<mat-dialog-actions style="justify-content: space-between;">
+  <button mat-button (click)="onCancel()" style="color: #f44336;">Cancel</button>
+  <button mat-button (click)="onUpdate()" [disabled]="!updateUserForm.valid" style="color: #007bff;">Update</button>
 </mat-dialog-actions>

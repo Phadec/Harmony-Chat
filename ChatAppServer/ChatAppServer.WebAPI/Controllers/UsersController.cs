@@ -123,132 +123,69 @@ namespace ChatAppServer.WebAPI.Controllers
         }
 
 
-        [HttpPut("{userId}/update-user")]
-        public async Task<IActionResult> UpdateUser(Guid userId, [FromForm] UpdateUserDto request, CancellationToken cancellationToken)
+        [HttpPost("update-avatar")]
+        public async Task<IActionResult> UpdateGroupAvatar([FromForm] UpdateAvatarGroupDto request, CancellationToken cancellationToken)
         {
             try
             {
                 var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+                if (authenticatedUserId == null)
                 {
-                    return Forbid("You are not authorized to update this user.");
+                    return Forbid("You are not authorized to update this group avatar.");
                 }
 
-                var user = await _context.Users.FindAsync(new object[] { userId }, cancellationToken);
-                if (user == null)
+                var group = await _context.Groups.FindAsync(new object[] { request.GroupId }, cancellationToken);
+                if (group == null)
                 {
-                    return NotFound("User not found");
+                    return NotFound(new { Message = "Group not found" });
                 }
 
-                bool emailChanged = false;
-                bool tagNameChanged = false;
-
-                // Update FirstName if provided
-                if (!string.IsNullOrEmpty(request.FirstName))
+                var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == Guid.Parse(authenticatedUserId) && gm.IsAdmin, cancellationToken);
+                if (!isAdmin)
                 {
-                    user.FirstName = request.FirstName;
+                    return Forbid("You are not authorized to update this group avatar.");
                 }
 
-                // Update LastName if provided
-                if (!string.IsNullOrEmpty(request.LastName))
-                {
-                    user.LastName = request.LastName;
-                }
-
-                // Update Birthday if provided
-                if (request.Birthday != null)
-                {
-                    user.Birthday = request.Birthday.Value;
-                }
-
-                // Update Email if provided
-                if (!string.IsNullOrEmpty(request.Email) && !request.Email.Equals(user.Email, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!IsValidEmail(request.Email))
-                    {
-                        return BadRequest(new { Message = "Invalid email format." });
-                    }
-                    emailChanged = true;
-                    user.Email = request.Email;
-                }
-
-                // Update Avatar if a new file is provided
                 if (request.AvatarFile != null)
                 {
-                    if (request.AvatarFile.Length > 5 * 1024 * 1024) // Giới hạn 5MB
-                    {
-                        return BadRequest(new { Message = "Avatar file size exceeds the limit of 5MB." });
-                    }
+                    // Save the current avatar path before updating
+                    var oldAvatarPath = group.Avatar;
 
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-                    var fileExtension = Path.GetExtension(request.AvatarFile.FileName).ToLower();
+                    // Validate the file type and size if necessary
+                    var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatar/");
+                    group.Avatar = Path.Combine("avatars", savedFileName).Replace("\\", "/");
 
-                    if (!allowedExtensions.Contains(fileExtension))
+                    // Delete the old avatar file if it exists
+                    if (!string.IsNullOrEmpty(oldAvatarPath))
                     {
-                        return BadRequest(new { Message = "Invalid file format. Only JPG and PNG are allowed." });
-                    }
-
-                    // Check if the user has an existing avatar and delete it
-                    if (!string.IsNullOrEmpty(user.Avatar))
-                    {
-                        var oldAvatarPath = Path.Combine("wwwroot", user.Avatar);
-                        if (System.IO.File.Exists(oldAvatarPath))
+                        var fullOldAvatarPath = Path.Combine("wwwroot", oldAvatarPath.Replace("/", "\\"));
+                        if (System.IO.File.Exists(fullOldAvatarPath))
                         {
-                            System.IO.File.Delete(oldAvatarPath);
+                            System.IO.File.Delete(fullOldAvatarPath);
                         }
                     }
-
-                    // Save the new avatar
-                    var (savedFileName, originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatars/");
-                    user.Avatar = Path.Combine("avatars", savedFileName).Replace("\\", "/");
-                    user.OriginalAvatarFileName = originalFileName;
                 }
-
-                // Update TagName if provided
-                if (!string.IsNullOrEmpty(request.TagName) && !request.TagName.Equals(user.TagName, StringComparison.OrdinalIgnoreCase))
+                else
                 {
-                    tagNameChanged = true;
-                    var newTagName = request.TagName.StartsWith("@") ? request.TagName : "@" + request.TagName;
-
-                    if (newTagName.Count(c => c == '@') > 1)
-                    {
-                        return BadRequest(new { Message = "TagName can only contain one '@' at the beginning." });
-                    }
-
-                    if (await _context.Users.AnyAsync(u => u.TagName == newTagName, cancellationToken))
-                    {
-                        return BadRequest(new { Message = "TagName already exists. Please choose a different TagName." });
-                    }
-                    user.TagName = newTagName;
+                    return BadRequest(new { Message = "No avatar file provided" });
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation($"User {userId} information updated");
-
-                if (emailChanged)
-                {
-                    await _emailService.SendEmailConfirmationAsync(user.Email, user.FirstName, user.LastName);
-                }
+                _logger.LogInformation($"Group {request.GroupId} avatar updated");
 
                 return Ok(new
                 {
-                    Message = "User information updated successfully",
-                    user.Id,
-                    user.Username,
-                    user.FirstName,
-                    user.LastName,
-                    user.Birthday,
-                    user.Email,
-                    user.Avatar,
-                    user.OriginalAvatarFileName,
-                    user.TagName
+                    Message = "Group avatar updated successfully",
+                    group.Id,
+                    group.Name,
+                    group.Avatar
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"An error occurred while updating user {userId}");
-                return StatusCode(500, "An error occurred while updating the user. Please try again later.");
+                _logger.LogError(ex, "Error occurred while updating avatar for group {GroupId}", request.GroupId);
+                return StatusCode(500, new { Message = "An error occurred while processing your request." });
             }
         }
 

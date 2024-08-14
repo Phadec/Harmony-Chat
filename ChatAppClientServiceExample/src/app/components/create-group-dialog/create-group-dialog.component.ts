@@ -1,6 +1,7 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, Output, EventEmitter } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FriendsService } from '../../services/friends.service';
+import { GroupService } from '../../services/group.service';
 
 @Component({
   selector: 'app-create-group-dialog',
@@ -11,11 +12,16 @@ export class CreateGroupDialogComponent implements OnInit {
   groupName: string = ''; // Tên của nhóm mới
   selectedMembers: any[] = []; // Danh sách các thành viên được chọn
   friends: any[] = []; // Danh sách bạn bè
+  avatarFile: File | null = null; // Hình ảnh đại diện của nhóm
+  searchQuery: string = ''; // Biến mới để lưu chuỗi tìm kiếm
+  filteredFriends: any[] = []; // Biến mới để lưu danh sách bạn bè đã lọc
+  @Output() groupCreated = new EventEmitter<any>(); // Sự kiện để thông báo rằng nhóm đã được tạo
 
   constructor(
     public dialogRef: MatDialogRef<CreateGroupDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private friendsService: FriendsService
+    private friendsService: FriendsService,
+    private groupService: GroupService // Inject service để gửi yêu cầu tạo nhóm
   ) {}
 
   ngOnInit(): void {
@@ -23,11 +29,16 @@ export class CreateGroupDialogComponent implements OnInit {
   }
 
   loadFriends(): void {
-    const userId = localStorage.getItem('userId'); // Lấy userId từ localStorage
+    const userId = localStorage.getItem('userId');
     if (userId) {
       this.friendsService.getFriends(userId).subscribe(
-        (friends: any[]) => {
-          this.friends = friends; // Gán danh sách bạn bè vào biến friends
+        (response: any) => {
+          if (response && response.$values) {
+            this.friends = response.$values; // Lưu danh sách bạn bè
+            this.filteredFriends = this.friends; // Hiển thị danh sách bạn bè ban đầu
+          } else {
+            console.error('Invalid response format:', response);
+          }
         },
         error => {
           console.error('Failed to load friends:', error);
@@ -37,12 +48,46 @@ export class CreateGroupDialogComponent implements OnInit {
       console.error('User ID not found in local storage.');
     }
   }
+  avatarPreview: string | ArrayBuffer | null = null;
+  // Xử lý sự kiện khi chọn avatar
+  onAvatarSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.avatarFile = file;
+
+      // Đọc file và hiển thị bản xem trước
+      const reader = new FileReader();
+      reader.onload = e => this.avatarPreview = reader.result as string;
+      reader.readAsDataURL(file);
+    }
+  }
+  // Lọc bạn bè theo chuỗi tìm kiếm
+  filterFriends(): void {
+    if (this.searchQuery.trim()) {
+      this.filteredFriends = this.friends.filter(friend =>
+        friend.fullName.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    } else {
+      this.filteredFriends = this.friends; // Khôi phục danh sách bạn bè ban đầu nếu chuỗi tìm kiếm rỗng
+    }
+  }
 
   onConfirm(): void {
-    this.dialogRef.close({ name: this.groupName, members: this.selectedMembers });
+    const result = {
+      name: this.groupName,
+      members: this.selectedMembers,
+      avatarFile: this.avatarFile
+    };
+    this.groupCreated.emit(result); // Phát sự kiện khi nhóm được tạo
+    this.dialogRef.close(result);
   }
+
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  getAvatarUrl(avatar: string): string {
+    return `https://localhost:7267/${avatar}`;
   }
 }

@@ -46,8 +46,24 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/reset-user-password`, data);
   }
 
-  changePassword(data: FormData): Observable<any> {
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`);
-    return this.http.post(`${this.apiUrl}/change-user-password`, data, { headers });
+  changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Observable<any> {
+    const userId = localStorage.getItem('userId'); // Fetch userId from local storage
+
+    if (!userId) {
+      console.error('User ID not found in local storage.');
+      throw new Error('User ID is missing.');
+    }
+
+    const payload = {
+      userId: userId,
+      currentPassword: currentPassword,
+      newPassword: newPassword
+    };
+
+    return this.http.post(`${this.apiUrl}/change-user-password`, payload, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    });
   }
 }
