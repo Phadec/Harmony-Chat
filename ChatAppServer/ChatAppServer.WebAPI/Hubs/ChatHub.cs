@@ -8,14 +8,15 @@ public sealed class ChatHub : Hub
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<ChatHub> _logger;
-
+    private readonly IServiceProvider _serviceProvider; // Inject IServiceProvider
     // Dictionary để quản lý các ConnectionId theo UserId
     public static ConcurrentDictionary<Guid, List<string>> UserConnections = new();
 
-    public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger)
+    public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger, IServiceProvider serviceProvider)
     {
         _context = context;
         _logger = logger;
+        _serviceProvider = serviceProvider;
     }
 
     // Khi người dùng kết nối
@@ -226,23 +227,66 @@ public sealed class ChatHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        // Lấy UserId từ các claim của user hiện tại
         var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // Kiểm tra nếu UserId hợp lệ
         if (Guid.TryParse(userId, out var guidUserId))
         {
-            if (UserConnections.ContainsKey(guidUserId))
+            // Kiểm tra xem user có trong danh sách UserConnections không
+            if (UserConnections.TryGetValue(guidUserId, out var connectionList))
             {
-                UserConnections[guidUserId].Remove(Context.ConnectionId);
-                if (!UserConnections[guidUserId].Any())
+                // Xóa ConnectionId của người dùng khi ngắt kết nối
+                connectionList.Remove(Context.ConnectionId);
+
+                // Nếu người dùng không còn bất kỳ kết nối nào, xóa người dùng khỏi danh sách
+                if (!connectionList.Any())
                 {
                     UserConnections.TryRemove(guidUserId, out _);
                 }
-
                 _logger.LogInformation($"User {guidUserId} disconnected with ConnectionId {Context.ConnectionId}.");
-
             }
         }
+        else
+        {
+            _logger.LogWarning($"Failed to parse user ID for ConnectionId {Context.ConnectionId}.");
+        }
+
+        // Cập nhật danh sách người dùng kết nối
         await UpdateConnectedUsersList();
+
+        // Gọi phương thức cơ sở để xử lý mặc định của SignalR
         await base.OnDisconnectedAsync(exception);
+    }
+
+
+    public async Task NotifyGroupMembers(Guid groupId, string message)
+    {
+        // Create a scope to resolve the DbContext
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var _context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            // Fetch group members
+            var groupMembers = await _context.GroupMembers
+                .Where(gm => gm.GroupId == groupId)
+                .Select(gm => gm.UserId)
+                .ToListAsync();
+
+            // Notify each connected member
+            foreach (var memberId in groupMembers)
+            {
+                if (UserConnections.ContainsKey(memberId))
+                {
+                    var connections = UserConnections[memberId];
+                    foreach (var connectionId in connections)
+                    {
+                        await Clients.Client(connectionId).SendAsync("ReceiveGroupNotification", message);
+                    }
+                }
+            }
+        }
+
     }
 
 }

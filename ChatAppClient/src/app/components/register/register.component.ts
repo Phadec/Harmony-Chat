@@ -16,13 +16,26 @@ export class RegisterComponent {
   password: string = '';
   retypePassword: string = '';
   selectedFile: File | null = null;
+  avatarPreview: string | ArrayBuffer | null = null;
   errorMessage: string | null = null;
 
   constructor(private authService: AuthService, private router: Router) {}
 
   onFileSelected(event: any): void {
     this.selectedFile = event.target.files[0];
+
+    // Preview the selected image
+    if (this.selectedFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) { // Thêm điều kiện kiểm tra
+          this.avatarPreview = e.target.result;
+        }
+      };
+      reader.readAsDataURL(this.selectedFile);
+    }
   }
+
 
   onRegister(): void {
     if (this.password !== this.retypePassword) {
@@ -52,5 +65,9 @@ export class RegisterComponent {
         this.errorMessage = error.error.Message || 'Registration failed';
       }
     });
+  }
+
+  onCancel(): void {
+    this.router.navigate(['/login']);
   }
 }

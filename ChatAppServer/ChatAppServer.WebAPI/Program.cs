@@ -1,5 +1,4 @@
-﻿using ChatAppServer.WebAPI.Hubs;
-using ChatAppServer.WebAPI.Models;
+﻿using ChatAppServer.WebAPI.Models;
 using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;

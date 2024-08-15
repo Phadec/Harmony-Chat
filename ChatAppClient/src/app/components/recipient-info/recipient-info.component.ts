@@ -9,6 +9,7 @@ import { RenameGroupDialogComponent } from "../rename-group-dialog/rename-group-
 import { AddMemberDialogComponent } from "../add-member-dialog/add-member-dialog.component";
 import { AvatarUploadDialogComponent } from "../avatar-upload-dialog/avatar-upload-dialog.component";
 import {ImagePreviewDialogComponent} from "../image-preview-dialog/image-preview-dialog.component";
+import {SignalRService} from "../../services/signalr.service";
 
 interface GroupMember {
   userId: string;
@@ -59,21 +60,28 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private groupService: GroupService,
+    private signalRService: SignalRService
   ) {
-    this.currentUser = { id: sessionStorage.getItem('userId') };
+    this.currentUser = { id: localStorage.getItem('userId') };
   }
 
 
   ngOnInit() {
     this.loadRecipientInfo();
+    this.signalRService.groupNotificationReceived$.subscribe(notification => {
+      if (notification && notification.groupId === this.recipientId) {
+        this.loadRecipientInfo(); // Tải lại thông tin nhóm khi nhận thông báo mới
+      }
+    });
   }
+
 
   ngOnChanges() {
     this.loadRecipientInfo();
   }
 
   loadRecipientInfo(): void {
-    const userId = sessionStorage.getItem('userId');
+    const userId = localStorage.getItem('userId');
     if (userId && this.recipientId) {
       this.friendsService.getFriendInfo(userId, this.recipientId).subscribe(
         (data) => {
@@ -95,7 +103,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result !== undefined) {
-        const userId = sessionStorage.getItem('userId')!;
+        const userId = localStorage.getItem('userId')!;
         const friendId = this.recipientInfo.id;
         const nickname = result;
 
@@ -124,7 +132,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result === true) {
-        this.friendsService.removeFriend(sessionStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
+        this.friendsService.removeFriend(localStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
           () => {
             console.log('Friend removed successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
@@ -149,7 +157,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result === true) {
-        this.friendsService.blockUser(sessionStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
+        this.friendsService.blockUser(localStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
           () => {
             console.log('User blocked successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
@@ -175,7 +183,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     dialogRef.afterClosed().subscribe(result => {
       if (result === true) {
         const recipientId = this.recipientInfo?.id;
-        const userId = sessionStorage.getItem('userId');
+        const userId = localStorage.getItem('userId');
 
         if (!recipientId || !userId) {
           console.error('Recipient ID or User ID is missing.');

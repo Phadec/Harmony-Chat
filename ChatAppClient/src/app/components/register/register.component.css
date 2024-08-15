@@ -1,5 +1,5 @@
-/* Giao diện chính của form đăng ký */
-.register-container {
+/* Container chính cho form */
+.form-container {
   max-width: 400px;
   margin: 0 auto;
   padding: 30px;
@@ -11,13 +11,13 @@
 }
 
 /* Hiệu ứng hover cho form */
-.register-container:hover {
+.form-container:hover {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
   transform: translateY(-5px);
 }
 
 /* Tiêu đề */
-.register-container h2 {
+.form-container h2 {
   text-align: center;
   margin-bottom: 25px;
   font-size: 1.75rem;
@@ -27,12 +27,12 @@
 }
 
 /* Các khối của form */
-.register-container form div {
+.form-container form div {
   margin-bottom: 20px;
 }
 
 /* Nhãn của các trường nhập liệu */
-.register-container label {
+.form-container label {
   display: block;
   margin-bottom: 5px;
   font-weight: 600;
@@ -41,7 +41,7 @@
 }
 
 /* Các trường nhập liệu */
-.register-container input {
+.form-container input {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
@@ -54,50 +54,52 @@
 }
 
 /* Hiệu ứng khi ô nhập liệu được chọn */
-.register-container input:focus {
+.form-container input:focus {
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
   outline: none;
 }
 
-/* Nút đăng ký */
-.register-container .register-btn,
-.register-container .cancel-btn {
+/* Nút chung */
+.form-container .submit-btn,
+.form-container .cancel-btn,
+.form-container .avatar-upload-label {
   width: 100%;
-  padding: 12px;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+  padding: 14px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   transition: background-color 0.3s ease, transform 0.3s ease;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+  border: none;
 }
 
-/* Nút đăng ký */
-.register-container .register-btn {
+/* Nút đăng ký và chọn avatar có cùng kiểu */
+.form-container .submit-btn,
+.form-container .avatar-upload-label {
   background-color: #007bff;
+  color: white;
 }
 
-.register-container .register-btn:hover {
+.form-container .submit-btn:hover,
+.form-container .avatar-upload-label:hover {
   background-color: #0056b3;
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 /* Nút hủy */
-.register-container .cancel-btn {
+.form-container .cancel-btn {
   background-color: #f0f0f0;
   color: #007bff;
   border: 1px solid #007bff;
-  text-align: center;
-  text-decoration: none;
 }
 
-.register-container .cancel-btn:hover {
+.form-container .cancel-btn:hover {
   background-color: #e6e6e6;
   color: #0056b3;
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 /* Thông báo lỗi */
@@ -110,7 +112,7 @@
 }
 
 /* Container cho avatar */
-.avatar-container {
+.avatar-upload-container {
   position: relative;
   display: flex;
   align-items: center;
@@ -119,12 +121,12 @@
 }
 
 /* Nút chọn ảnh đại diện với biểu tượng */
-.avatar-label {
+.avatar-upload-label {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   background-color: #007bff;
   color: #fff;
   border-radius: 6px;
@@ -136,18 +138,18 @@
 }
 
 /* Khoảng cách giữa biểu tượng và văn bản */
-.avatar-label i {
+.avatar-upload-label i {
   margin-right: 8px;
 }
 
 /* Hiệu ứng khi di chuột qua nút chọn ảnh đại diện */
-.avatar-label:hover {
+.avatar-upload-label:hover {
   background-color: #0056b3;
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 /* Ẩn ô chọn tệp gốc */
-.avatar-input {
+.avatar-upload-input {
   position: absolute;
   top: 0;
   left: 0;
@@ -155,4 +157,18 @@
   height: 100%;
   opacity: 0;
   cursor: pointer;
+}
+
+/* Bản xem trước của avatar */
+.avatar-preview {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.avatar-preview img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }

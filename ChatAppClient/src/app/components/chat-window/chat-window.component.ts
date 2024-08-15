@@ -5,7 +5,12 @@ import { RecipientInfo } from '../../models/recipient-info.model';
 import { MatDialog } from '@angular/material/dialog';
 import { AttachmentPreviewDialogComponent } from '../attachment-preview-dialog/attachment-preview-dialog.component';
 import {EmojiPickerComponent} from "../emoji-picker/emoji-picker.component";
-
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+dayjs.extend(utc);
+dayjs.extend(timezone);
+const vietnamTimezone = 'Asia/Ho_Chi_Minh';
 @Component({
   selector: 'app-chat-window',
   templateUrl: './chat-window.component.html',
@@ -16,7 +21,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   @ViewChild('chatMessages', {static: false}) private chatMessagesContainer!: ElementRef;
   messages: any[] = [];
   newMessage: string = '';
-  currentUserId = sessionStorage.getItem('userId');
+  currentUserId = localStorage.getItem('userId');
   recipientInfo: RecipientInfo | null = null; // Thông tin người nhận (bạn bè hoặc nhóm)
   attachmentFile: File | null = null; // Biến lưu trữ tệp đính kèm
   emojiPickerVisible: boolean = false;
@@ -36,7 +41,11 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       this.loadMessages();
       this.loadRecipientInfo();
     }
-
+    this.signalRService.groupNotificationReceived$.subscribe(notification => {
+      if (notification) {
+        this.loadRecipientInfo(); // Tải lại mối quan hệ khi có thay đổi từ nhóm
+      }
+    });
     this.signalRService.messageReceived$.subscribe((message: any) => {
       this.handleReceivedMessage(message);
     });
@@ -64,6 +73,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       this.chatService.getChats(this.recipientId).subscribe(
         (response: any) => {
           this.messages = response.$values || [];
+          this.processMessages(); // Xử lý thời gian và ngày của tin nhắn
           this.cdr.detectChanges(); // Force UI update
           this.scrollToBottom(); // Scroll to bottom after loading messages
 
@@ -86,6 +96,31 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         }
       );
     }
+  }
+  processMessages(): void {
+    let lastMessageDate: dayjs.Dayjs | null = null;
+
+    this.messages.forEach((message, index) => {
+      // Sử dụng utc() để đảm bảo thời gian được chuẩn hóa trước khi chuyển đổi sang múi giờ Việt Nam
+      const messageDate = dayjs.utc(message.date).tz(vietnamTimezone);
+
+      // Hiển thị ngày/giờ nếu là ngày mới
+      if (!lastMessageDate || !messageDate.isSame(lastMessageDate, 'day')) {
+        message.displayDate = messageDate.format('DD/MM/YYYY HH:mm');
+      }
+      // Hiển thị giờ nếu cách nhau hơn 15 phút
+      else if (lastMessageDate && messageDate.diff(lastMessageDate, 'minute') > 15) {
+        message.displayDate = messageDate.format('HH:mm');
+      }
+      // Không hiển thị nếu cách nhau không quá 15 phút
+      else {
+        message.displayDate = '';
+      }
+
+      lastMessageDate = messageDate;
+    });
+
+    this.cdr.detectChanges(); // Cập nhật lại UI
   }
 
   loadRecipientInfo(): void {
@@ -111,6 +146,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       const isDuplicate = this.messages.some(msg => msg.id === message.id);
       if (!isDuplicate) {
         this.messages = [...this.messages, message];
+        this.processMessages(); // Re-process messages after new message
         this.cdr.detectChanges(); // Force UI update
         this.scrollToBottom(); // Scroll to bottom after receiving a message
         this.markMessageAsRead(message.id); // Mark message as read
@@ -162,7 +198,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         (response) => {
           this.newMessage = ''; // Clear input after sending
           this.attachmentFile = null; // Reset attachment file
-
           this.handleReceivedMessage(response); // Add the new message to UI
           console.log(`Message sent by user ${this.currentUserId} to recipient ${this.recipientId}:`, response);
 
@@ -206,7 +241,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       return 'other';
     }
   }
-
 
   getAttachmentUrl(attachmentUrl: string): string {
     return `https://localhost:7267/${attachmentUrl}`;

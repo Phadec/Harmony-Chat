@@ -1,60 +1,66 @@
 <div class="chat-content">
-  <!-- Header displaying recipient information -->
+  <!-- Header hiển thị thông tin người nhận -->
   <app-chat-header *ngIf="recipientInfo" [recipientInfo]="recipientInfo"></app-chat-header>
 
   <div class="chat-window" *ngIf="recipientId; else selectChatMessage">
     <div class="chat-messages" #chatMessages>
-      <!-- Loop to display messages -->
+      <!-- Vòng lặp hiển thị tin nhắn -->
       <div *ngFor="let message of messages; let i = index"
            class="message-wrapper"
            [ngClass]="{'sent': message.userId === currentUserId, 'received': message.userId !== currentUserId}">
-        <!-- Sender's name in a group chat -->
+
+        <!-- Hiển thị ngày/giờ nếu có -->
+        <div *ngIf="message.displayDate" class="message-time">
+          <p>{{ message.displayDate }}</p>
+        </div>
+
+        <!-- Tên người gửi trong nhóm chat -->
         <p *ngIf="message.groupId" class="sender-name">{{ message.senderFullName }}</p>
 
-        <!-- Display message content if available -->
+        <!-- Hiển thị nội dung tin nhắn -->
         <div *ngIf="message.message" class="message-content">
           {{ message.message }}
         </div>
 
-        <!-- Display attachments if available -->
+        <!-- Hiển thị đính kèm nếu có -->
         <div *ngIf="message.attachmentUrl" class="attachment">
           <ng-container [ngSwitch]="getAttachmentType(message.attachmentUrl)">
-            <!-- Image attachment -->
+            <!-- Đính kèm hình ảnh -->
             <img *ngSwitchCase="'image'" [src]="getAttachmentUrl(message.attachmentUrl)" alt="Image attachment"
                  (click)="openAttachmentPreview(message.attachmentUrl, 'image')" style="cursor: pointer;" />
 
-            <!-- Video attachment -->
+            <!-- Đính kèm video -->
             <video *ngSwitchCase="'video'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
                    (click)="openAttachmentPreview(message.attachmentUrl, 'video')" style="cursor: pointer;"></video>
 
-            <!-- Audio attachment -->
+            <!-- Đính kèm âm thanh -->
             <audio *ngSwitchCase="'audio'" controls [src]="getAttachmentUrl(message.attachmentUrl)" style="width: 100%;"></audio>
 
-            <!-- PDF attachment -->
+            <!-- Đính kèm PDF -->
             <a *ngSwitchCase="'pdf'" [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
               <i class="fas fa-file-pdf"></i> {{ message.attachmentOriginalName }}
             </a>
 
-            <!-- DOCX attachment -->
+            <!-- Đính kèm DOCX -->
             <a *ngSwitchCase="'docx'" [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
               <i class="fas fa-file-word"></i> {{ message.attachmentOriginalName }}
             </a>
 
-            <!-- Other attachments -->
+            <!-- Các loại đính kèm khác -->
             <a *ngSwitchDefault [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
               {{ message.attachmentOriginalName }}
             </a>
           </ng-container>
         </div>
 
-        <!-- Display 'Read' status if this is the last read message -->
+        <!-- Hiển thị trạng thái "Đã đọc" nếu đây là tin nhắn đã đọc cuối cùng -->
         <div *ngIf="message.isRead && message.userId === currentUserId && i === messages.length - 1" class="message-status">
           Seen
         </div>
       </div>
     </div>
 
-    <!-- Message input area -->
+    <!-- Vùng nhập tin nhắn -->
     <div class="message-input" *ngIf="recipientId">
       <div class="emoji-picker">
         <i class="fas fa-smile" (click)="onEmojiClick()" title="Insert emoji"></i>
@@ -74,7 +80,7 @@
     </div>
   </div>
 
-  <!-- Template for the select chat message -->
+  <!-- Template để hiển thị khi chưa chọn người nhận -->
   <ng-template #selectChatMessage>
     <div class="select-chat-message">
       <p>Please select a conversation or user to view the chat messages.</p>

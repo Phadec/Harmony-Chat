@@ -32,7 +32,7 @@ export class UpdateUserDialogComponent implements OnInit {
   }
 
   loadUserData(): void {
-    const userId = sessionStorage.getItem('userId');
+    const userId = localStorage.getItem('userId');
     if (userId) {
       this.userService.getUserInfo(userId).subscribe(user => {
         this.updateUserForm.patchValue({
@@ -75,7 +75,7 @@ export class UpdateUserDialogComponent implements OnInit {
         }
       });
 
-      const userId = sessionStorage.getItem('userId');
+      const userId = localStorage.getItem('userId');
       this.userService.updateUser(userId!, formData).subscribe(
         () => {
           console.log('Profile updated successfully');

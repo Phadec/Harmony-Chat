@@ -106,12 +106,12 @@ export class EmojiPickerComponent {
       if (this.recentEmojis.length > 10) {  // Keep only the last 10 used emojis
         this.recentEmojis.pop();
       }
-      sessionStorage.setItem('recentEmojis', JSON.stringify(this.recentEmojis));
+      localStorage.setItem('recentEmojis', JSON.stringify(this.recentEmojis));
     }
   }
 
   loadRecentEmojis(): void {
-    const savedRecentEmojis = sessionStorage.getItem('recentEmojis');
+    const savedRecentEmojis = localStorage.getItem('recentEmojis');
     if (savedRecentEmojis) {
       this.recentEmojis = JSON.parse(savedRecentEmojis);
     }

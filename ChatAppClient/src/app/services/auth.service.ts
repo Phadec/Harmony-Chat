@@ -47,7 +47,7 @@ export class AuthService {
   }
 
   changePassword(currentPassword: string, newPassword: string, confirmPassword: string): Observable<any> {
-    const userId = sessionStorage.getItem('userId'); // Fetch userId from local storage
+    const userId = localStorage.getItem('userId'); // Fetch userId from local storage
 
     if (!userId) {
       console.error('User ID not found in local storage.');

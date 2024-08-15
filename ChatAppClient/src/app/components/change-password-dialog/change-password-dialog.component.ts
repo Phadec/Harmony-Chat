@@ -38,7 +38,7 @@ export class ChangePasswordDialogComponent {
       return;
     }
 
-    const currentId = sessionStorage.getItem('userId'); // Retrieve the current user ID from local storage
+    const currentId = localStorage.getItem('userId'); // Retrieve the current user ID from local storage
 
     if (!currentId) {
       this.errorMessage = 'User ID not found in local storage.';

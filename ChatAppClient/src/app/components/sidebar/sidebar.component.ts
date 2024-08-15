@@ -60,26 +60,31 @@ export class SidebarComponent implements OnInit {
     this.loadGroups();
     this.subscribeToSignalREvents();
     this.loadCurrentUserAvatar();
+
   }
 
   subscribeToSignalREvents(): void {
+    // Lắng nghe sự kiện nhận tin nhắn riêng tư
     this.signalRService.messageReceived$.subscribe(() => {
       this.loadRelationships();
     });
 
+    // Lắng nghe sự kiện tin nhắn đã được đọc
     this.signalRService.messageRead$.subscribe((chatId) => {
       console.log(`Message ${chatId} has been read.`);
       this.loadRelationships();
     });
 
+    // Lắng nghe sự kiện gửi yêu cầu kết bạn
     this.signalRService.friendRequestSent$.subscribe((friendRequest) => {
       console.log('Friend request sent:', friendRequest);
       this.loadSentFriendRequests(); // Tải lại danh sách yêu cầu kết bạn đã gửi
     });
 
+    // Lắng nghe sự kiện cập nhật người dùng đang kết nối
     this.signalRService.connectedUsers$.subscribe((users) => {
       console.log('Connected users updated:', users);
-      // Cập nhật giao diện người dùng khi danh sách kết nối thay đổi
+      // Cập nhật giao diện người dùng khi danh sách kết nối thay đổi nếu cần thiết
     });
 
     // Lắng nghe các sự kiện liên quan đến bạn bè và người dùng
@@ -96,22 +101,26 @@ export class SidebarComponent implements OnInit {
     this.signalRService.hubConnection.on('FriendRemoved', (userId) => {
       console.log(`Friend removed: ${userId}`);
       this.loadFriends(); // Tải lại danh sách bạn bè khi bạn bè bị xóa
+      this.loadRelationships(); // Tải lại danh sách mối quan hệ sau khi bạn bè bị xóa
     });
 
     this.signalRService.hubConnection.on('UserBlocked', (userId) => {
       console.log(`User blocked: ${userId}`);
       this.loadBlockedUsers(); // Tải lại danh sách người dùng bị chặn
+      this.loadFriends(); // Tải lại danh sách bạn bè nếu cần thiết
     });
 
     this.signalRService.hubConnection.on('UserUnblocked', (userId) => {
       console.log(`User unblocked: ${userId}`);
       this.loadBlockedUsers(); // Tải lại danh sách người dùng bị bỏ chặn
+      this.loadFriends(); // Tải lại danh sách bạn bè nếu cần thiết
     });
 
     this.signalRService.hubConnection.on('FriendRequestAccepted', (userId) => {
       console.log(`Friend request accepted by ${userId}`);
       this.loadFriendRequests(); // Tải lại danh sách yêu cầu kết bạn khi một yêu cầu được chấp nhận
       this.loadFriends(); // Tải lại danh sách bạn bè sau khi yêu cầu kết bạn được chấp nhận
+      this.loadRelationships(); // Tải lại danh sách mối quan hệ
     });
 
     this.signalRService.hubConnection.on('FriendRequestRejected', (userId) => {
@@ -120,17 +129,21 @@ export class SidebarComponent implements OnInit {
     });
 
     this.signalRService.hubConnection.on('UpdateRelationships', () => {
-      this.loadRelationships();
+      this.loadRelationships(); // Tải lại danh sách mối quan hệ
     });
 
-    this.signalRService.messageReceived$.subscribe(() => {
-      this.loadRelationships();
+    // Lắng nghe thông báo nhóm
+    this.signalRService.groupNotificationReceived$.subscribe(notification => {
+      if (notification) {
+        this.loadGroups(); // Tải lại danh sách nhóm khi nhận thông báo mới
+        this.loadRelationships(); // Tải lại mối quan hệ khi có thay đổi từ nhóm
+      }
     });
   }
 
   selectTab(tab: string): void {
     this.selectedTab = tab;
-    sessionStorage.setItem('selectedTab', tab);
+    localStorage.setItem('selectedTab', tab);
 
     // Reset search query and filtered users when switching tabs
     this.searchQuery = '';
@@ -160,7 +173,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadFriends(): void {
-    const userId = sessionStorage.getItem('userId');
+    const userId = localStorage.getItem('userId');
 
     if (!userId) {
       console.error('User ID not found in localStorage.');
@@ -191,7 +204,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadFriendRequests(): void {
-    const userId = sessionStorage.getItem('userId');
+    const userId = localStorage.getItem('userId');
 
     if (!userId) {
       console.error('User ID not found in localStorage.');
@@ -220,7 +233,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadGroups(): void {
-    const userId = sessionStorage.getItem('userId');
+    const userId = localStorage.getItem('userId');
 
     if (!userId) {
       console.error('User ID not found in localStorage.');
@@ -246,7 +259,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadSentFriendRequests(): void {
-    const userId = sessionStorage.getItem('userId')!;
+    const userId = localStorage.getItem('userId')!;
     this.friendsService.getSentFriendRequests(userId).subscribe(
       (response) => {
         this.sentFriendRequests = response.$values; // Gán đúng $values cho mảng sentFriendRequests
@@ -258,7 +271,7 @@ export class SidebarComponent implements OnInit {
   }
 
   loadBlockedUsers(): void {
-    const userId = sessionStorage.getItem('userId')!;
+    const userId = localStorage.getItem('userId')!;
     this.friendsService.getBlockedUsers(userId).subscribe(
       (response) => {
         this.blockedUsers = response.$values; // Gán đúng $values cho mảng blockedUsers
@@ -306,7 +319,7 @@ export class SidebarComponent implements OnInit {
   }
 
   onAddFriend(userId: string): void {
-    const currentUserId = sessionStorage.getItem('userId');
+    const currentUserId = localStorage.getItem('userId');
     if (!currentUserId) {
       console.error('User ID not found in localStorage.');
       return;
@@ -328,7 +341,7 @@ export class SidebarComponent implements OnInit {
 
   onCancelFriendRequest(requestId: string, context: 'search' | 'friendRequests'): void {
     if (requestId) {
-      const currentUserId = sessionStorage.getItem('userId')!;
+      const currentUserId = localStorage.getItem('userId')!;
       this.friendsService.cancelFriendRequest(currentUserId, requestId).subscribe(
         () => {
           console.log('Friend request cancelled successfully');
@@ -388,7 +401,7 @@ export class SidebarComponent implements OnInit {
   }
 
   onAcceptRequest(requestId: string, context: 'search' | 'friendRequests'): void {
-    const userId = sessionStorage.getItem('userId')!;
+    const userId = localStorage.getItem('userId')!;
     this.friendsService.acceptFriendRequest(userId, requestId).subscribe(
       () => {
         console.log('Friend request accepted successfully');
@@ -409,7 +422,7 @@ export class SidebarComponent implements OnInit {
   }
 
   onRejectRequest(requestId: string, context: 'search' | 'friendRequests'): void {
-    const userId = sessionStorage.getItem('userId')!;
+    const userId = localStorage.getItem('userId')!;
     this.friendsService.rejectFriendRequest(userId, requestId).subscribe(
       () => {
         console.log('Friend request rejected successfully');
@@ -430,7 +443,7 @@ export class SidebarComponent implements OnInit {
   }
 
   onRemoveFriend(friendId: string, context: 'search' | 'friendRequests'): void {
-    const userId = sessionStorage.getItem('userId')!;
+    const userId = localStorage.getItem('userId')!;
     this.friendsService.removeFriend(userId, friendId).subscribe({
       next: () => {
         this.loadFriends(); // Tải lại danh sách bạn bè sau khi xóa thành công
@@ -443,10 +456,10 @@ export class SidebarComponent implements OnInit {
   }
 
   signOut(): void {
-    const userId = sessionStorage.getItem('userId')!;
+    const userId = localStorage.getItem('userId')!;
     this.authService.logout(userId).subscribe({
       next: () => {
-        sessionStorage.removeItem('userId');
+        localStorage.removeItem('userId');
         this.router.navigate(['/login']);
       },
       error: (err) => {
@@ -490,7 +503,7 @@ export class SidebarComponent implements OnInit {
     dialogRef.componentInstance.groupCreated.subscribe((result: any) => {
       if (result) {
         const formData = new FormData();
-        const currentUserId = sessionStorage.getItem('userId');
+        const currentUserId = localStorage.getItem('userId');
 
         formData.append('name', result.name);
 
@@ -537,19 +550,19 @@ export class SidebarComponent implements OnInit {
   }
   // Lấy thông tin người dùng hiện tại và gán vào userAvatar
   loadCurrentUserAvatar(): void {
-    const currentUserId = sessionStorage.getItem('userId');
+    const currentUserId = localStorage.getItem('userId');
     if (currentUserId) {
       this.userService.getUserInfo(currentUserId).subscribe(
         (userInfo) => {
           this.userAvatar = userInfo.avatar || ''; // Giả sử avatar nằm trong thuộc tính avatar
-          sessionStorage.setItem('userAvatar', this.userAvatar);
+          localStorage.setItem('userAvatar', this.userAvatar);
         },
         (error) => {
           console.error('Failed to load user info', error);
         }
       );
     } else {
-      console.error('No currentUserId found in sessionStorage');
+      console.error('No currentUserId found in localStorage');
     }
   }
 

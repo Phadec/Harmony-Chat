@@ -1,15 +1,15 @@
 <h2 mat-dialog-title style="text-align: center; font-size: 1.5em; margin-bottom: 20px;">Create New Group</h2>
-<mat-dialog-content style="display: flex; flex-direction: column; gap: 20px;">
+<mat-dialog-content style="display: flex; flex-direction: column; gap: 20px; padding: 0 20px; overflow-x: hidden;">
 
   <!-- Form field for group name -->
-  <mat-form-field appearance="outline" class="styled-input" style="width: 100%;">
-    <mat-label>Group Name</mat-label>
+  <mat-form-field appearance="outline" style="width: 100%; height: auto; min-height: 56px; line-height: 1.5; padding: 0 10px;">
+    <mat-label style="font-size: 16px; line-height: 1.5; margin-top: 0;">Group Name</mat-label>
     <input matInput [(ngModel)]="groupName" placeholder="Enter a group name">
     <mat-icon matSuffix>group</mat-icon>
   </mat-form-field>
 
   <!-- Container for avatar selection and member selection -->
-  <div style="display: flex; justify-content: space-between; gap: 20px;">
+  <div style="display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
 
     <!-- Avatar selection -->
     <div style="flex: 1; text-align: center;">
@@ -23,20 +23,19 @@
     </div>
 
     <!-- Member selection -->
-    <div style="flex: 2;">
+    <div style="flex: 2; min-width: 200px;">
       <!-- Search bar for members -->
-      <mat-form-field appearance="fill" class="styled-input" style="width: 100%; margin-bottom: 10px;">
-        <mat-label>Search for friends</mat-label>
+      <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 10px;">
+        <mat-label style="font-size: 16px;">Search for friends</mat-label>
         <input matInput [(ngModel)]="searchQuery" placeholder="Enter name to search" (input)="filterFriends()">
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
       <!-- Friends list -->
-      <mat-selection-list [(ngModel)]="selectedMembers" class="friend-list" style="max-height: 200px; overflow-y: auto;">
+      <mat-selection-list [(ngModel)]="selectedMembers" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
         <mat-list-option *ngFor="let friend of filteredFriends" [value]="friend.id" style="padding: 10px; border-radius: 8px; transition: background-color 0.3s;">
           <div style="display: flex; align-items: center;">
-            <img [src]="getAvatarUrl(friend.avatar)" alt="{{ friend.fullName }}"
-                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+            <img [src]="getAvatarUrl(friend.avatar)" alt="{{ friend.fullName }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
             <div style="display: flex; flex-direction: column;">
               <span style="color: black; font-weight: bold;">{{ friend.fullName }}</span>
               <span style="font-size: 0.85em; color: gray;">{{ friend.tagname }}</span>
@@ -50,8 +49,7 @@
 
 </mat-dialog-content>
 
-<mat-dialog-actions style="justify-content: space-between; padding: 10px;">
+<mat-dialog-actions style="justify-content: space-between; padding: 10px; width: 100%;">
   <button mat-button (click)="onCancel()">Cancel</button>
-  <!-- Create group button is enabled only if at least 2 members are selected, a group name, and an avatar is provided -->
   <button mat-button (click)="onConfirm()" [disabled]="!groupName || selectedMembers.length < 2 || !avatarFile">Confirm</button>
 </mat-dialog-actions>

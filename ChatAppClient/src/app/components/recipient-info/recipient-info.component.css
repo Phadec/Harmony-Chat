@@ -1,7 +1,7 @@
 /* Container for recipient information */
 .recipient-info-container {
-  width: 280px; /* Adjusted to be less wide */
-  height: 100vh; /* Set height to full viewport height */
+  width: 280px;
+  height: 100vh;
   padding: 20px;
   background-color: #fff;
   border-radius: 10px;
@@ -9,42 +9,39 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow-y: auto; /* Add vertical scroll when content overflows */
+  overflow-y: auto;
 }
 
+/* Avatar styles */
 .recipient-avatar {
   width: 90px;
   height: 90px;
   border-radius: 50%;
   margin-bottom: 15px;
-  object-fit: cover; /* Ensures the image maintains its aspect ratio */
+  object-fit: cover;
 }
 
+/* Name and tags */
 .recipient-name {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: bold;
   margin-bottom: 5px;
   text-align: center;
 }
 
 .tag-name {
-  font-size: 13px;
+  font-size: 14px;
   color: #777;
   margin-bottom: 20px;
   text-align: center;
 }
 
+/* Group members */
 .group-members {
   width: 100%;
   margin-top: 20px;
-  overflow-y: auto; /* Ensure scrolling within group members section */
+  overflow-y: auto;
   overflow-x: hidden;
-}
-
-.group-members h4 {
-  font-size: 1.2em;
-  margin-bottom: 10px;
-  color: #555;
 }
 
 .group-members ul {
@@ -102,6 +99,7 @@
   color: #dc3545;
 }
 
+/* Admin controls */
 .admin-controls {
   display: flex;
   justify-content: flex-end;
@@ -124,6 +122,7 @@
   color: #000;
 }
 
+/* Action buttons */
 .action-buttons {
   display: flex;
   flex-direction: column;
@@ -133,26 +132,36 @@
 
 .action-button {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  font-size: 14px;
+  padding: 12px; /* Tăng kích thước padding */
+  margin-bottom: 15px; /* Tăng khoảng cách giữa các nút */
+  font-size: 16px; /* Tăng kích thước chữ */
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px; /* Tăng độ bo viền */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.3s, transform 0.2s; /* Thêm hiệu ứng transition */
 }
 
 .action-button i {
-  margin-right: 8px;
+  margin-right: 10px; /* Tăng khoảng cách giữa icon và chữ */
+  font-size: 18px; /* Tăng kích thước icon */
 }
 
 .action-button:hover {
   background-color: #0056b3;
+  transform: translateY(-2px); /* Hiệu ứng di chuyển lên khi hover */
+  box-shadow: 0 4px 10px rgba(0, 91, 187, 0.2); /* Thêm bóng đổ khi hover */
 }
+
+.action-button:active {
+  transform: translateY(0); /* Hiệu ứng nhấn nút */
+  box-shadow: none;
+}
+
 /* Custom Scrollbar for Webkit Browsers (Chrome, Safari) */
 .recipient-info-container::-webkit-scrollbar {
   width: 8px;

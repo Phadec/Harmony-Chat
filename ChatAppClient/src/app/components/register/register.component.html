@@ -1,5 +1,5 @@
-<div class="register-container">
-  <h2>Register</h2>
+<div class="form-container">
+  <h2>Sign Up</h2>
   <form (submit)="onRegister()">
     <div>
       <label for="username">Username:</label>
@@ -29,12 +29,18 @@
       <label for="retypePassword">Retype Password:</label>
       <input type="password" id="retypePassword" [(ngModel)]="retypePassword" name="retypePassword" required placeholder="Retype your password">
     </div>
-    <div class="avatar-container">
-      <label for="file" class="avatar-label"><i class="fas fa-upload"></i> Choose Avatar</label>
-      <input type="file" id="file" class="avatar-input" (change)="onFileSelected($event)">
+
+    <div *ngIf="avatarPreview" class="avatar-preview">
+      <img [src]="avatarPreview" alt="Avatar Preview">
     </div>
-    <button type="submit" class="register-btn">Register</button>
-    <a href="/login" class="cancel-btn">Cancel</a> <!-- Nút Cancel dưới nút Register -->
+
+    <div class="avatar-upload-container">
+      <label for="avatar" class="avatar-upload-label"><i class="fas fa-upload"></i> Choose Avatar</label>
+      <input type="file" id="avatar" class="avatar-upload-input" (change)="onFileSelected($event)">
+    </div>
+
+    <button type="submit" class="submit-btn">Register</button>
+    <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
   </form>
 
   <div *ngIf="errorMessage" class="error-message">

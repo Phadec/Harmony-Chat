@@ -3,6 +3,7 @@ using ChatAppServer.WebAPI.Models;
 using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -15,11 +16,12 @@ namespace ChatAppServer.WebAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<GroupsController> _logger;
-
-        public GroupsController(ApplicationDbContext context, ILogger<GroupsController> logger)
+        private readonly IHubContext<ChatHub> _hubContext;
+        public GroupsController(ApplicationDbContext context, ILogger<GroupsController> logger, IHubContext<ChatHub> hubContext)
         {
             _context = context;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         [HttpPost("create-group-chat")]
@@ -97,6 +99,8 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 await _context.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation($"Group {group.Name} created with ID {group.Id}");
+                var notificationMessage = $"Group {group.Name} has been created.";
+                await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", group.Id, notificationMessage);
 
                 return CreatedAtAction(nameof(GetGroupMembers), new { groupId = group.Id }, new
                 {
@@ -159,6 +163,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"User {user.Username} added to group {group.Name}");
+                var notificationMessage = $"User {user.Username} has been added to the group {group.Name}.";
+                await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", group.Id, notificationMessage);
+
 
                 return Ok(new
                 {
@@ -212,6 +219,10 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"Group {group.Name} deleted by user {authenticatedUserId}");
+
+                var notificationMessage = $"Group {group.Name} has been deleted.";
+                await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", group.Id, notificationMessage);
+
 
                 return NoContent();
             }
@@ -281,12 +292,20 @@ namespace ChatAppServer.WebAPI.Controllers
 
             var authenticatedUserIdGuid = Guid.Parse(authenticatedUserId);
 
+            // Load GroupMember with User data included
             var groupMember = await _context.GroupMembers
+                .Include(gm => gm.User)  // Ensure User information is loaded
                 .FirstOrDefaultAsync(gm => gm.GroupId == request.GroupId && gm.UserId == request.UserId, cancellationToken);
 
             if (groupMember == null)
             {
                 return NotFound(new { Message = "Group member not found" });
+            }
+
+            if (groupMember.User == null)
+            {
+                _logger.LogError("User information is missing for group member.");
+                return StatusCode(500, "User information is missing.");
             }
 
             var isAdmin = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId && gm.UserId == authenticatedUserIdGuid && gm.IsAdmin, cancellationToken);
@@ -301,17 +320,24 @@ namespace ChatAppServer.WebAPI.Controllers
                 _context.GroupMembers.Remove(groupMember);
                 await _context.SaveChangesAsync(cancellationToken);
 
+                // Fetch the group outside the if block so it can be used throughout the method
+                var group = await _context.Groups.FirstOrDefaultAsync(g => g.Id == request.GroupId, cancellationToken);
+                if (group == null)
+                {
+                    return NotFound(new { Message = "Group not found" });
+                }
+
                 var anyMembersLeft = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == request.GroupId, cancellationToken);
                 if (!anyMembersLeft)
                 {
-                    var group = await _context.Groups.FirstOrDefaultAsync(g => g.Id == request.GroupId, cancellationToken);
-                    if (group != null)
-                    {
-                        _context.Groups.Remove(group);
-                        await _context.SaveChangesAsync(cancellationToken);
-                        _logger.LogInformation($"Group {request.GroupId} deleted as no members were left.");
-                        return Ok(new { Message = "Member removed and group deleted as no members were left." });
-                    }
+                    _context.Groups.Remove(group);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation($"Group {request.GroupId} deleted as no members were left.");
+
+                    var notificationMessage = $"User {groupMember.User.Username} has been removed from the group {group.Name}.";
+                    await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", request.GroupId, notificationMessage);
+
+                    return Ok(new { Message = "Member removed and group deleted as no members were left." });
                 }
                 else
                 {
@@ -329,6 +355,9 @@ namespace ChatAppServer.WebAPI.Controllers
                     }
 
                     _logger.LogInformation($"User {request.UserId} removed from group {request.GroupId}");
+                    var notificationMessage = $"User {groupMember.User.Username} has been removed from the group {group.Name}.";
+                    await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", request.GroupId, notificationMessage);
+
                     return Ok(new { Message = "Member removed from the group" });
                 }
             }
@@ -337,9 +366,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 _logger.LogError($"Error in RemoveMember: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
-
-            return Ok(new { Message = "Member removed from the group" });
         }
+
+
 
         [HttpGet("user-groups-with-details/{userId}")]
         public async Task<IActionResult> GetUserGroupsWithDetails(Guid userId, CancellationToken cancellationToken)
@@ -415,6 +444,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"Group {request.GroupId} renamed to {request.NewName}");
+                var notificationMessage = $"Group has been renamed to {group.Name}.";
+                await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", request.GroupId, notificationMessage);
 
                 return Ok(new { Message = "Group name updated successfully", group.Id, group.Name });
             }
@@ -461,6 +492,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"User {request.UserId} admin status updated to true in group {request.GroupId}");
+                var notificationMessage = $"User {groupMember.User.Username} has been promoted to admin in group {group.Name}.";
+                await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", request.GroupId, notificationMessage);
+
 
                 return Ok(new { Message = "Admin status updated successfully" });
             }
@@ -540,6 +574,8 @@ namespace ChatAppServer.WebAPI.Controllers
                         }
                     }
                 }
+                var notificationMessage = $"User {groupMember.User.Username} has been demoted from admin in group {group.Name}.";
+                await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", request.GroupId, notificationMessage);
 
                 return Ok(new { Message = "Admin rights revoked successfully" });
             }
@@ -601,6 +637,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"Group {request.GroupId} avatar updated");
+                var notificationMessage = $"Group {group.Name} avatar has been updated.";
+                await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", request.GroupId, notificationMessage);
+
 
                 return Ok(new
                 {

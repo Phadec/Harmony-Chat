@@ -29,7 +29,7 @@ export class CreateGroupDialogComponent implements OnInit {
   }
 
   loadFriends(): void {
-    const userId = sessionStorage.getItem('userId');
+    const userId = localStorage.getItem('userId');
     if (userId) {
       this.friendsService.getFriends(userId).subscribe(
         (response: any) => {
