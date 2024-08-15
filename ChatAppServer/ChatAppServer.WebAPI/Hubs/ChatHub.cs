@@ -43,53 +43,69 @@ public sealed class ChatHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (Guid.TryParse(userId, out var guidUserId))
+        try
         {
-            _logger.LogInformation($"Processing connection for user {guidUserId} with ConnectionId {Context.ConnectionId}.");
-
-            if (!UserConnections.ContainsKey(guidUserId))
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.TryParse(userId, out var guidUserId))
             {
-                UserConnections[guidUserId] = new List<string>();
-                _logger.LogInformation($"New connection list created for user {guidUserId}.");
+                _logger.LogInformation($"Processing connection for user {guidUserId} with ConnectionId {Context.ConnectionId}.");
+
+                if (!UserConnections.ContainsKey(guidUserId))
+                {
+                    UserConnections[guidUserId] = new List<string>();
+                    _logger.LogInformation($"New connection list created for user {guidUserId}.");
+                }
+                UserConnections[guidUserId].Add(Context.ConnectionId);
+                _logger.LogInformation($"ConnectionId {Context.ConnectionId} added for user {guidUserId}. Total connections: {UserConnections[guidUserId].Count}.");
+
+                // Thêm người dùng vào các group mà họ là thành viên
+                var userGroups = await _context.GroupMembers
+                    .Where(gm => gm.UserId == guidUserId)
+                    .Select(gm => gm.GroupId)
+                    .ToListAsync();
+
+                foreach (var groupId in userGroups)
+                {
+                    try
+                    {
+                        await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
+                        _logger.LogInformation($"User {guidUserId} added to group {groupId}.");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Failed to add user {guidUserId} to group {groupId}. Error: {ex.Message}");
+                        // Optionally, you can take further actions here, like notifying the user or performing a retry.
+                    }
+                }
             }
-            UserConnections[guidUserId].Add(Context.ConnectionId);
-            _logger.LogInformation($"ConnectionId {Context.ConnectionId} added for user {guidUserId}. Total connections: {UserConnections[guidUserId].Count}.");
-
-            // Thêm người dùng vào các group mà họ là thành viên
-            var userGroups = await _context.GroupMembers
-                .Where(gm => gm.UserId == guidUserId)
-                .Select(gm => gm.GroupId)
-                .ToListAsync();
-
-            foreach (var groupId in userGroups)
+            else
             {
-                try
-                {
-                    await Groups.AddToGroupAsync(Context.ConnectionId, groupId.ToString());
-                    _logger.LogInformation($"User {guidUserId} added to group {groupId}.");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"Failed to add user {guidUserId} to group {groupId}. Error: {ex.Message}");
-                    // Optionally, you can take further actions here, like notifying the user or performing a retry.
-                }
+                _logger.LogWarning($"Failed to parse user ID for ConnectionId {Context.ConnectionId}. Claims: {Context.User?.Claims}");
             }
-
+            await UpdateConnectedUsersList();
         }
-        else
+        catch (Exception ex)
         {
-            _logger.LogWarning($"Failed to parse user ID for ConnectionId {Context.ConnectionId}.");
+            _logger.LogError($"An error occurred during connection setup. ConnectionId: {Context.ConnectionId}. Error: {ex.Message}");
         }
-        await UpdateConnectedUsersList();
+
         await base.OnConnectedAsync();
     }
 
+
     private async Task UpdateConnectedUsersList()
     {
-        var connectedUsers = UserConnections.Keys.ToList();
-        await Clients.All.SendAsync("UpdateConnectedUsers", connectedUsers);
+        try
+        {
+            var connectedUsers = UserConnections.Keys.ToList();
+            await Clients.All.SendAsync("UpdateConnectedUsers", connectedUsers);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to update connected users list. Error: {ex.Message}");
+        }
     }
+
     public async Task<string> GetUserFullNameAsync(Guid userId)
     {
         var user = await _context.Users
@@ -227,35 +243,35 @@ public sealed class ChatHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        // Lấy UserId từ các claim của user hiện tại
-        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        // Kiểm tra nếu UserId hợp lệ
-        if (Guid.TryParse(userId, out var guidUserId))
+        try
         {
-            // Kiểm tra xem user có trong danh sách UserConnections không
-            if (UserConnections.TryGetValue(guidUserId, out var connectionList))
+            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (Guid.TryParse(userId, out var guidUserId))
             {
-                // Xóa ConnectionId của người dùng khi ngắt kết nối
-                connectionList.Remove(Context.ConnectionId);
-
-                // Nếu người dùng không còn bất kỳ kết nối nào, xóa người dùng khỏi danh sách
-                if (!connectionList.Any())
+                if (UserConnections.TryGetValue(guidUserId, out var connectionList))
                 {
-                    UserConnections.TryRemove(guidUserId, out _);
+                    connectionList.Remove(Context.ConnectionId);
+
+                    if (!connectionList.Any())
+                    {
+                        UserConnections.TryRemove(guidUserId, out _);
+                    }
+                    _logger.LogInformation($"User {guidUserId} disconnected with ConnectionId {Context.ConnectionId}.");
                 }
-                _logger.LogInformation($"User {guidUserId} disconnected with ConnectionId {Context.ConnectionId}.");
             }
+            else
+            {
+                _logger.LogWarning($"Failed to parse user ID for ConnectionId {Context.ConnectionId}.");
+            }
+
+            await UpdateConnectedUsersList();
         }
-        else
+        catch (Exception ex)
         {
-            _logger.LogWarning($"Failed to parse user ID for ConnectionId {Context.ConnectionId}.");
+            _logger.LogError($"An error occurred during disconnection. ConnectionId: {Context.ConnectionId}. Error: {ex.Message}");
         }
 
-        // Cập nhật danh sách người dùng kết nối
-        await UpdateConnectedUsersList();
-
-        // Gọi phương thức cơ sở để xử lý mặc định của SignalR
         await base.OnDisconnectedAsync(exception);
     }
 

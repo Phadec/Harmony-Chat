@@ -15,14 +15,17 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:4200") // Ensure this is the correct Angular app URL
+        builder.WithOrigins("http://localhost:4200") // Your Angular application
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
     });
 });
 
+// Dependency Injection for Email Service
 builder.Services.AddTransient<IEmailService, EmailService>();
+
+// Register DbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
 
@@ -48,8 +51,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
 
+        // Configure JWT authentication to work with SignalR
         options.Events = new JwtBearerEvents
         {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                // If the request is for the SignalR hub
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chat-hub"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            },
             OnAuthenticationFailed = context =>
             {
                 context.NoResult();
@@ -91,17 +107,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Add controllers with JSON options
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
 });
 
+// Configure Swagger for API documentation
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "ChatApp API", Version = "v1" });
 
-    // Configure Swagger to use the JWT bearer token authentication
+    // Configure Swagger to use JWT bearer token authentication
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -127,21 +145,24 @@ builder.Services.AddSwaggerGen(c =>
     }});
 });
 
+// Add SignalR for real-time communication
 builder.Services.AddSignalR();
+
+// Configure logging
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
-
+// Build the app
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChatApp API v1");
-        c.RoutePrefix = "swagger"; // Ensure c.RoutePrefix is "swagger" to access /swagger/index.html
+        c.RoutePrefix = "swagger"; // Set the correct route for Swagger UI
     });
 }
 
@@ -149,13 +170,18 @@ app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
+// Enable CORS
 app.UseCors();
 
-app.UseAuthentication(); // Add authentication middleware
+// Use authentication and authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
+// Map controllers to routes
 app.MapControllers();
 
+// Map the SignalR hub
 app.MapHub<ChatHub>("/chat-hub");
 
+// Run the application
 app.Run();
