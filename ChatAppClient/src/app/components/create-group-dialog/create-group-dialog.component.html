@@ -32,7 +32,7 @@
       </mat-form-field>
 
       <!-- Friends list -->
-      <mat-selection-list [(ngModel)]="selectedMembers" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+      <mat-selection-list *ngIf="filteredFriends.length > 0" [(ngModel)]="selectedMembers" style="max-height: 200px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
         <mat-list-option *ngFor="let friend of filteredFriends" [value]="friend.id" style="padding: 10px; border-radius: 8px; transition: background-color 0.3s;">
           <div style="display: flex; align-items: center;">
             <img [src]="getAvatarUrl(friend.avatar)" alt="{{ friend.fullName }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
@@ -43,6 +43,11 @@
           </div>
         </mat-list-option>
       </mat-selection-list>
+
+      <!-- No friends available message -->
+      <div *ngIf="filteredFriends.length === 0" style="text-align: center; color: gray; font-size: 14px; margin-top: 10px;">
+        No friends available to add.
+      </div>
     </div>
 
   </div>

@@ -12,9 +12,7 @@ export class ChatHeaderComponent implements OnInit {
 
   constructor(public dialog: MatDialog) {}
 
-  ngOnInit(): void {
-    
-  }
+  ngOnInit(): void {}
 
   openImagePreview(): void {
     this.dialog.open(ImagePreviewDialogComponent, {

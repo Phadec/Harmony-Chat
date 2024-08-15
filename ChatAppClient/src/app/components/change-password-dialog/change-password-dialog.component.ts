@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AuthService } from '../../services/auth.service'; // Adjust the path as necessary
 import { MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http'; // Import HttpErrorResponse
 
 @Component({
   selector: 'app-change-password-dialog',
@@ -56,9 +57,15 @@ export class ChangePasswordDialogComponent {
         console.log('Password changed successfully:', response);
         this.dialogRef.close(true); // Close the dialog on success
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error changing password:', error);
-        this.errorMessage = 'Failed to change password. Please try again.'; // Display an error message
+
+        // Check if the server sent a custom error message
+        if (error.error && error.error.message) {
+          this.errorMessage = error.error.message; // Server custom error message
+        } else {
+          this.errorMessage = 'Failed to change password. Please try again.';
+        }
       }
     });
   }

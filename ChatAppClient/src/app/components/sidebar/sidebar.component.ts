@@ -60,10 +60,16 @@ export class SidebarComponent implements OnInit {
     this.loadGroups();
     this.subscribeToSignalREvents();
     this.loadCurrentUserAvatar();
-
+    this.signalRService.messageSent.subscribe(() => {
+      this.loadRelationships(); // Cập nhật danh sách quan hệ khi có tin nhắn mới
+    });
   }
-
   subscribeToSignalREvents(): void {
+    this.signalRService.friendRequestReceived$.subscribe((friendRequest) => {
+      console.log('New friend request received:', friendRequest);
+      this.loadFriendRequests(); // Reload friend requests when a new one is received
+
+    });
     // Lắng nghe sự kiện nhận tin nhắn riêng tư
     this.signalRService.messageReceived$.subscribe(() => {
       this.loadRelationships();
@@ -108,12 +114,14 @@ export class SidebarComponent implements OnInit {
       console.log(`User blocked: ${userId}`);
       this.loadBlockedUsers(); // Tải lại danh sách người dùng bị chặn
       this.loadFriends(); // Tải lại danh sách bạn bè nếu cần thiết
+      this.loadRelationships(); // Tải lại danh sách mối quan hệ sau khi người dùng bị chặn
     });
 
     this.signalRService.hubConnection.on('UserUnblocked', (userId) => {
       console.log(`User unblocked: ${userId}`);
       this.loadBlockedUsers(); // Tải lại danh sách người dùng bị bỏ chặn
       this.loadFriends(); // Tải lại danh sách bạn bè nếu cần thiết
+      this.loadRelationships(); // Tải lại danh sách mối quan hệ sau khi người dùng được bỏ chặn
     });
 
     this.signalRService.hubConnection.on('FriendRequestAccepted', (userId) => {
@@ -128,11 +136,14 @@ export class SidebarComponent implements OnInit {
       this.loadFriendRequests(); // Tải lại danh sách yêu cầu kết bạn khi một yêu cầu bị từ chối
     });
 
-    this.signalRService.hubConnection.on('UpdateRelationships', () => {
-      this.loadRelationships(); // Tải lại danh sách mối quan hệ
+    this.signalRService.friendEventNotification$.subscribe((data) => {
+      console.log('Friend event notification received in sidebar:', data);
+      this.loadFriends(); // Reload friends list
+      this.loadRelationships(); // Reload relationships if needed
+      this.loadFriendRequests();
     });
 
-    // Lắng nghe thông báo nhóm
+    // Lắng nghe sự kiện nhóm
     this.signalRService.groupNotificationReceived$.subscribe(notification => {
       if (notification) {
         this.loadGroups(); // Tải lại danh sách nhóm khi nhận thông báo mới
@@ -140,7 +151,10 @@ export class SidebarComponent implements OnInit {
       }
     });
   }
-
+  onMessageSent(): void {
+    // Khi có tin nhắn mới được gửi, tải lại danh sách mối quan hệ
+    this.loadRelationships();
+  }
   selectTab(tab: string): void {
     this.selectedTab = tab;
     localStorage.setItem('selectedTab', tab);
@@ -283,6 +297,10 @@ export class SidebarComponent implements OnInit {
   }
 
   filterRelationships(): void {
+    if (this.searchQuery.trim() !== '') {
+      this.selectedTab = 'recent'; // Chuyển tab sang recent khi bắt đầu tìm kiếm
+    }
+
     if (this.searchQuery.startsWith('@')) {
       this.searchTerm = this.searchQuery;  // Cập nhật searchTerm với giá trị searchQuery
       this.searchUsers();
@@ -292,7 +310,6 @@ export class SidebarComponent implements OnInit {
       );
     }
   }
-
   searchUsers(): void {
     if (this.searchTerm.trim() !== '') {
       this.userService.searchUserByTagName(this.searchTerm).subscribe(
@@ -328,17 +345,21 @@ export class SidebarComponent implements OnInit {
     this.friendsService.addFriend(currentUserId, userId).subscribe(
       (response) => {
         console.log('Friend request sent successfully', response);
-        this.searchUsers();  // Tải lại kết quả tìm kiếm để cập nhật tình trạng lời mời kết bạn
 
-        this.loadFriends();  // Tải lại danh sách bạn bè sau khi gửi lời mời kết bạn
-        this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
+        // Reload all necessary sections of the sidebar
+        this.loadFriends();             // Load friends again after sending a friend request
+        this.loadFriendRequests();      // Load friend requests after sending a friend request
+        this.loadSentFriendRequests();  // Load sent friend requests after sending a friend request
+        this.loadRelationships();       // Reload relationships
+
+        // Optionally, if you're in the search context, you can reload the search results as well
+        this.searchUsers();
       },
       error => {
         console.error('Error sending friend request:', error);
       }
     );
   }
-
   onCancelFriendRequest(requestId: string, context: 'search' | 'friendRequests'): void {
     if (requestId) {
       const currentUserId = localStorage.getItem('userId')!;

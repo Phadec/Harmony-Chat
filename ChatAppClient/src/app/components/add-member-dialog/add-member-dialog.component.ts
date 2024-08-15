@@ -59,4 +59,7 @@ export class AddMemberDialogComponent implements OnInit {
   onCancel(): void {
     this.dialogRef.close();
   }
+  getAvatarUrl(avatar: string): string {
+    return `https://localhost:7267/${avatar}`;
+  }
 }

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { HttpErrorResponse } from '@angular/common/http';  // Import HttpErrorResponse
 
 @Component({
   selector: 'app-reset-password',
@@ -54,9 +55,16 @@ export class ResetPasswordComponent implements OnInit {
           this.router.navigate(['/login']);
         }, 3000); // Redirect to login page after 3 seconds
       },
-      error: error => {
+      error: (error: HttpErrorResponse) => {
         console.error('Password reset failed', error);
-        this.errorMessage = error.error.Message || 'Password reset failed.';
+
+        // Check if the server sent a custom error message
+        if (error.error && error.error.message) {
+          this.errorMessage = error.error.message; // This accesses the custom error message sent from the server
+        } else {
+          this.errorMessage = 'Password reset failed. Please try again later.';
+        }
+
         this.successMessage = null;
       }
     });

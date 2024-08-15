@@ -28,14 +28,13 @@ export class RegisterComponent {
     if (this.selectedFile) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        if (e.target?.result) { // Thêm điều kiện kiểm tra
+        if (e.target?.result) {
           this.avatarPreview = e.target.result;
         }
       };
       reader.readAsDataURL(this.selectedFile);
     }
   }
-
 
   onRegister(): void {
     if (this.password !== this.retypePassword) {
@@ -58,11 +57,12 @@ export class RegisterComponent {
     this.authService.register(formData).subscribe({
       next: response => {
         console.log('Registration successful', response);
-        this.router.navigate(['/login']); // Điều hướng tới trang login sau khi đăng ký thành công
+        this.router.navigate(['/login']); // Điều hướng đến trang đăng nhập sau khi đăng ký thành công
       },
       error: error => {
         console.error('Registration failed', error);
-        this.errorMessage = error.error.Message || 'Registration failed';
+        // Gán thông báo lỗi từ máy chủ vào biến errorMessage
+        this.errorMessage = error.error.message || 'Registration failed';
       }
     });
   }

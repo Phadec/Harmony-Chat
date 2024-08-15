@@ -22,6 +22,15 @@ namespace ChatAppServer.WebAPI.Controllers
             _logger = logger;
             _hubContext = hubContext;
         }
+        private async Task NotifyFriendEvent(Guid userId, string eventType, object eventData)
+        {
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("FriendEventNotification", new
+            {
+                EventType = eventType,
+                Data = eventData
+            });
+        }
+
 
         [HttpGet("{userId}/get-sent-friend-requests")]
         public async Task<IActionResult> GetSentFriendRequests(Guid userId, CancellationToken cancellationToken)
@@ -94,7 +103,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 {
                     friendship.Nickname = string.Empty; // Hoặc null, tùy theo cách bạn quản lý dữ liệu
                     _logger.LogInformation($"Nickname for friend {request.FriendId} removed by user {userId}");
-
                 }
                 else
                 {
@@ -104,8 +112,10 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 _context.Friendships.Update(friendship);
                 await _context.SaveChangesAsync(cancellationToken);
-                // Gọi sự kiện NotifyNicknameChanged trong ChatHub để phát sự kiện tới người dùng
 
+                // Gọi sự kiện NotifyNicknameChanged trong ChatHub để phát sự kiện tới cả hai người dùng
+                await NotifyFriendEvent(userId, "NicknameChanged", new { FriendId = request.FriendId, Nickname = request.Nickname });
+                await NotifyFriendEvent(request.FriendId, "NicknameChanged", new { FriendId = userId, Nickname = request.Nickname });
 
                 return Ok(new { Message = string.IsNullOrEmpty(request.Nickname) ? "Nickname removed successfully." : "Nickname changed successfully." });
             }
@@ -218,6 +228,7 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 await _context.FriendRequests.AddAsync(friendRequest, cancellationToken);
                 await _context.SaveChangesAsync(cancellationToken);
+                await NotifyFriendEvent(friendId, "FriendRequestReceived", new { FriendRequestId = friendRequest.Id });
                 _logger.LogInformation($"Sending FriendRequestReceived to user {friendId}");
 
                 var result = new
@@ -230,6 +241,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 };
 
                 _logger.LogInformation($"Friend request from {userId} to {friendId} created.");
+
 
                 return Ok(result);
             }
@@ -282,6 +294,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 _context.Users.Update(friend);
                 await _context.SaveChangesAsync(cancellationToken);
 
+                await NotifyFriendEvent(userId, "FriendRemoved", new { FriendId = friendId });
+                await NotifyFriendEvent(friendId, "FriendRemoved", new { FriendId = userId });
                 _logger.LogInformation($"Friendship between {userId} and {friendId} removed.");
                 return Ok();
             }
@@ -432,6 +446,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 _context.Users.Update(sender);
                 await _context.SaveChangesAsync(cancellationToken);
 
+                await NotifyFriendEvent(userId, "FriendRequestAccepted", new { FriendId = sender.Id });
+                await NotifyFriendEvent(sender.Id, "FriendRequestAccepted", new { FriendId = userId });
                 _logger.LogInformation($"Friend request {requestId} accepted by {userId}.");
 
                 return Ok();
@@ -468,6 +484,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 _context.FriendRequests.Remove(friendRequest);
                 await _context.SaveChangesAsync(cancellationToken);
 
+                // Notify both the sender and receiver of the friend request rejection
+                await NotifyFriendEvent(userId, "FriendRequestRejected", new { FriendRequestId = requestId });
+                await NotifyFriendEvent(friendRequest.SenderId, "FriendRequestRejected", new { FriendRequestId = requestId });
 
                 _logger.LogInformation($"Friend request {requestId} rejected by {userId}.");
 
@@ -483,14 +502,18 @@ namespace ChatAppServer.WebAPI.Controllers
         [HttpDelete("{userId}/cancel-friend-request/{requestId}")]
         public async Task<IActionResult> CancelFriendRequest(Guid userId, Guid requestId, CancellationToken cancellationToken)
         {
+            _logger.LogInformation($"CancelFriendRequest started for user {userId} and request {requestId}");
+
             var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
             {
+                _logger.LogWarning("Unauthorized attempt to cancel friend request.");
                 return Forbid("You are not authorized to cancel this friend request.");
             }
 
             if (userId == Guid.Empty || requestId == Guid.Empty)
             {
+                _logger.LogWarning("Invalid userId or requestId.");
                 return BadRequest("Invalid userId or requestId");
             }
 
@@ -501,13 +524,20 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 if (friendRequest == null)
                 {
+                    _logger.LogWarning($"Friend request {requestId} not found for user {userId}.");
                     return NotFound("Friend request not found or does not belong to the user.");
                 }
+
+                _logger.LogInformation($"Friend request {requestId} found for user {userId}, proceeding with cancellation.");
 
                 _context.FriendRequests.Remove(friendRequest);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation($"Friend request {requestId} canceled by {userId}.");
+                _logger.LogInformation($"Friend request {requestId} successfully deleted for user {userId}.");
+
+                _logger.LogInformation($"Notifying user {friendRequest.ReceiverId} of cancellation for friend request {requestId}");
+                await NotifyFriendEvent(friendRequest.ReceiverId, "FriendRequestCanceled", new { FriendRequestId = requestId });
+
                 return Ok(new { Message = "Friend request canceled successfully." });
             }
             catch (Exception ex)
@@ -516,6 +546,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
+
         [HttpGet("{userId}/relationship-info/{entityId}")]
         public async Task<IActionResult> GetRelationshipInfo(Guid userId, Guid entityId, CancellationToken cancellationToken)
         {
@@ -657,6 +689,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"User {userId} blocked user {blockedUserId}");
+                await NotifyFriendEvent(userId, "UserBlocked", new { BlockedUserId = blockedUserId });
+                _logger.LogInformation($"User {userId} blocked user {blockedUserId}");
                 return Ok(new { Message = "User blocked successfully" });
             }
             catch (Exception ex)
@@ -693,6 +727,8 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 _context.UserBlocks.Remove(userBlock);
                 await _context.SaveChangesAsync(cancellationToken);
+
+                await NotifyFriendEvent(userId, "UserUnblocked", new { UnblockedUserId = blockedUserId });
 
                 _logger.LogInformation($"User {userId} unblocked user {blockedUserId}");
 

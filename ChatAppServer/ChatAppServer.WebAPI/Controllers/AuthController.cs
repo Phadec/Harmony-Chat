@@ -165,10 +165,11 @@ namespace ChatAppServer.WebAPI.Controllers
         // Helper method to validate names
         private bool IsValidName(string name)
         {
-            // Regular expression to allow only letters and spaces
-            var regex = new Regex(@"^[a-zA-Z\s]+$");
+            // Regular expression to allow letters from any language and spaces
+            var regex = new Regex(@"^[\p{L}\s]+$", RegexOptions.Compiled);
             return regex.IsMatch(name);
         }
+
 
         // Helper method to validate passwords
         private bool IsValidPassword(string password)

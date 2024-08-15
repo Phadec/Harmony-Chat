@@ -31,7 +31,9 @@ export class LoginComponent {
       },
       error: (error) => {
         console.error("Login failed", error);
-        this.errorMessage = "Login failed. Please check your credentials and try again.";
+
+        // Kiểm tra xem thông báo lỗi từ máy chủ có hay không
+        this.errorMessage = error.error.message || "Login failed. Please check your credentials and try again.";
       }
     });
   }

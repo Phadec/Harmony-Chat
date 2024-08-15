@@ -41,7 +41,6 @@ import {AddMemberDialogComponent} from "./components/add-member-dialog/add-membe
 import {RenameGroupDialogComponent} from "./components/rename-group-dialog/rename-group-dialog.component";
 import {PickerComponent} from "@ctrl/ngx-emoji-mart";
 import { EmojiPickerComponent } from './components/emoji-picker/emoji-picker.component';
-
 @NgModule({
   declarations: [
     AppComponent,
@@ -67,7 +66,7 @@ import { EmojiPickerComponent } from './components/emoji-picker/emoji-picker.com
     AttachmentPreviewDialogComponent,
     AddMemberDialogComponent,
     RenameGroupDialogComponent,
-    EmojiPickerComponent
+    EmojiPickerComponent,
   ],
   imports: [
     BrowserModule,

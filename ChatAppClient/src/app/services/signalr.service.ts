@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { BehaviorSubject, Observable } from 'rxjs';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,12 +12,29 @@ export class SignalRService implements OnDestroy {
   private connectedUsers = new BehaviorSubject<any[]>([]);
   private friendRequestSent = new BehaviorSubject<any>(null);
   private groupNotificationReceived = new BehaviorSubject<any>(null);
+  public messageSent = new Subject<void>();
+  // Friend-related observables
+  private friendAdded = new BehaviorSubject<any>(null);
+  private friendRemoved = new BehaviorSubject<any>(null);
+  private friendRequestReceived = new BehaviorSubject<any>(null);
+  private nicknameChanged = new BehaviorSubject<any>(null);
+  private userBlocked = new BehaviorSubject<any>(null);
+  private userUnblocked = new BehaviorSubject<any>(null);
+  private friendEventNotification = new Subject<any>();
 
   public messageReceived$: Observable<any> = this.messageReceived.asObservable();
   public messageRead$: Observable<string | null> = this.messageRead.asObservable();
   public connectedUsers$: Observable<any[]> = this.connectedUsers.asObservable();
   public friendRequestSent$: Observable<any> = this.friendRequestSent.asObservable();
   public groupNotificationReceived$: Observable<any> = this.groupNotificationReceived.asObservable();
+  public friendEventNotification$: Observable<any> = this.friendEventNotification.asObservable();
+  // Friend-related observables
+  public friendAdded$: Observable<any> = this.friendAdded.asObservable();
+  public friendRemoved$: Observable<any> = this.friendRemoved.asObservable();
+  public friendRequestReceived$: Observable<any> = this.friendRequestReceived.asObservable();
+  public nicknameChanged$: Observable<any> = this.nicknameChanged.asObservable();
+  public userBlocked$: Observable<any> = this.userBlocked.asObservable();
+  public userUnblocked$: Observable<any> = this.userUnblocked.asObservable();
 
   constructor() {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -25,7 +42,7 @@ export class SignalRService implements OnDestroy {
         accessTokenFactory: () => this.getAccessToken()
       })
       .configureLogging(signalR.LogLevel.Information)
-      .withAutomaticReconnect([0, 2000, 10000, 30000]) // Tự động thử lại với thời gian giãn cách: ngay lập tức, 2 giây, 10 giây, 30 giây
+      .withAutomaticReconnect([0, 2000, 10000, 30000])
       .build();
 
     this.startConnection();
@@ -36,9 +53,8 @@ export class SignalRService implements OnDestroy {
   private getAccessToken(): string {
     const token = localStorage.getItem('token');
     if (token && this.isTokenExpired(token)) {
-      // Làm mới token hoặc yêu cầu đăng nhập lại
       this.refreshToken();
-      return ''; // Trả về token tạm thời trống, cần kiểm soát sau khi làm mới
+      return '';
     }
     return token || '';
   }
@@ -50,16 +66,7 @@ export class SignalRService implements OnDestroy {
   }
 
   private refreshToken(): void {
-    // Hàm làm mới token, thực hiện theo logic của bạn.
-    // Sau khi làm mới thành công, lưu token mới vào localStorage
-    // và khởi động lại kết nối SignalR.
     console.log('Refreshing token...');
-    // Ví dụ gọi API làm mới token
-    // fetch('your-refresh-token-api-endpoint').then(response => {
-    //   const newToken = response.token;
-    //   localStorage.setItem('token', newToken);
-    //   this.startConnection(); // Kết nối lại sau khi làm mới token thành công
-    // });
   }
 
   public startConnection(): void {
@@ -68,7 +75,7 @@ export class SignalRService implements OnDestroy {
         .start()
         .then(() => {
           console.log('SignalR Connection started');
-          this.registerServerEvents(); // Đảm bảo gọi hàm này sau khi kết nối thành công
+          this.registerServerEvents();
         })
         .catch(err => {
           console.error('Error while starting SignalR connection:', err);
@@ -83,6 +90,11 @@ export class SignalRService implements OnDestroy {
   }
 
   public registerServerEvents(): void {
+    this.hubConnection.on('FriendRequestReceived', (friendRequest) => {
+      console.log('Friend request received:', friendRequest);
+      this.friendRequestReceived.next(friendRequest); // Emit event
+    });
+
     this.hubConnection.on('ReceivePrivateMessage', (message) => {
       console.log('Private message received:', message);
       this.messageReceived.next(message);
@@ -110,12 +122,37 @@ export class SignalRService implements OnDestroy {
 
     this.hubConnection.on('NicknameChanged', (userId, nickname) => {
       console.log(`Nickname changed for user ${userId}. New nickname: ${nickname}`);
-      // Xử lý cập nhật nickname trong giao diện
+      this.nicknameChanged.next({ userId, nickname });
     });
 
-    this.hubConnection.on('NotifyFriendRequestReceived', (userId: string, requestId: string) => {
-      console.log(`New friend request received from ${userId}. Request ID: ${requestId}`);
-      // Xử lý cập nhật giao diện ở đây
+    this.hubConnection.on('NotifyFriendRequestReceived', (friendRequest) => {
+      console.log('Friend request received:', friendRequest);
+      this.friendRequestReceived.next(friendRequest);
+    });
+
+    this.hubConnection.on('NotifyFriendAdded', (friend) => {
+      console.log('Friend added:', friend);
+      this.friendAdded.next(friend);
+    });
+
+    this.hubConnection.on('NotifyFriendRemoved', (friend) => {
+      console.log('Friend removed:', friend);
+      this.friendRemoved.next(friend);
+    });
+
+    this.hubConnection.on('UserBlocked', (blockedUserId) => {
+      console.log('User blocked:', blockedUserId);
+      this.userBlocked.next(blockedUserId);
+    });
+
+    this.hubConnection.on('FriendEventNotification', (data) => {
+      console.log('Friend event notification received:', data);
+      // Emit an event for the sidebar and recipient info components
+      this.friendEventNotification.next(data);
+    });
+    this.hubConnection.on('UserUnblocked', (unblockedUserId) => {
+      console.log('User unblocked:', unblockedUserId);
+      this.userUnblocked.next(unblockedUserId);
     });
 
     this.hubConnection.on('NotifyGroupMembers', (groupId: string, message: string) => {
@@ -123,7 +160,6 @@ export class SignalRService implements OnDestroy {
       this.groupNotificationReceived.next({ groupId, message });
     });
 
-    // Xử lý các sự kiện kết nối lại và mất kết nối
     this.hubConnection.onreconnecting(error => {
       console.warn('Connection lost due to error. Reconnecting...', error);
     });
@@ -168,9 +204,12 @@ export class SignalRService implements OnDestroy {
         .catch(err => console.log('Error while stopping SignalR connection: ' + err));
     }
   }
+  public notifyMessageSent(): void {
+    this.messageSent.next(); // Phát sự kiện khi có tin nhắn mới
+  }
 
   ngOnDestroy(): void {
     window.removeEventListener('beforeunload', this.stopConnection.bind(this));
-    this.stopConnection(); // Ensure the connection is stopped when service is destroyed
+    this.stopConnection();
   }
 }

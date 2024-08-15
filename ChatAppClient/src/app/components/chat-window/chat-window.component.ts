@@ -1,4 +1,15 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ElementRef,
+  ViewChild,
+  ChangeDetectorRef,
+  EventEmitter,
+  Output
+} from '@angular/core';
 import { SignalRService } from '../../services/signalr.service';
 import { ChatService } from '../../services/chat.service';
 import { RecipientInfo } from '../../models/recipient-info.model';
@@ -18,6 +29,7 @@ const vietnamTimezone = 'Asia/Ho_Chi_Minh';
 })
 export class ChatWindowComponent implements OnInit, OnChanges {
   @Input() recipientId: string | null = null;
+  @Output() messageSent = new EventEmitter<void>();
   @ViewChild('chatMessages', {static: false}) private chatMessagesContainer!: ElementRef;
   messages: any[] = [];
   newMessage: string = '';
@@ -58,6 +70,10 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
     this.signalRService.connectedUsers$.subscribe((connectedUsers: any[]) => {
       console.log('Connected users:', connectedUsers);
+    });
+    this.signalRService.friendEventNotification$.subscribe((data) => {
+      console.log('Friend event notification received in sidebar:', data);
+        this.loadRecipientInfo();
     });
   }
 
@@ -203,7 +219,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
           // Notify about the new message
           this.signalRService.sendNewMessageNotification(response);
-
+          this.signalRService.notifyMessageSent();
           this.scrollToBottom(); // Scroll to bottom after sending a message
         },
         (error) => {

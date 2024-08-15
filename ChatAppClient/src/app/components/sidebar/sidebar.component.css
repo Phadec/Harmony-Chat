@@ -328,7 +328,8 @@ button:hover {
   border-radius: 8px; /* Slightly rounded corners */
   cursor: pointer;
   margin-bottom: 15px;
-  width: 100%;
+  width: 300px;
+  max-width: 100%;
   justify-content: center;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */

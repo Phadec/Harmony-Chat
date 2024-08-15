@@ -50,7 +50,7 @@ type RecipientInfo = GroupInfo | IndividualInfo;
 export class RecipientInfoComponent implements OnInit, OnChanges {
   @Input() recipientId: string | null = null;
   @Output() updateSidebar = new EventEmitter<void>(); // EventEmitter để phát sự kiện
-
+  @Output() resetRecipient = new EventEmitter<void>();
   recipientInfo: any;
   currentUser: any;
 
@@ -68,10 +68,16 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.loadRecipientInfo();
+
+    this.subscribeToFriendEvents();
     this.signalRService.groupNotificationReceived$.subscribe(notification => {
       if (notification && notification.groupId === this.recipientId) {
         this.loadRecipientInfo(); // Tải lại thông tin nhóm khi nhận thông báo mới
       }
+    });
+    this.signalRService.friendEventNotification$.subscribe((data) => {
+      console.log('Friend event notification received in recipient info:', data);
+      this.loadRecipientInfo(); // Reload recipient info when a friend event occurs
     });
   }
 
@@ -79,6 +85,8 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
   ngOnChanges() {
     this.loadRecipientInfo();
   }
+
+
 
   loadRecipientInfo(): void {
     const userId = localStorage.getItem('userId');
@@ -95,6 +103,57 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     }
   }
 
+  subscribeToFriendEvents(): void {
+    // Lắng nghe sự kiện đổi biệt danh
+    this.signalRService.hubConnection.on('NicknameChanged', (userId, nickname) => {
+      if (this.recipientInfo && this.recipientInfo.id === userId) {
+        console.log(`Nickname changed for user ${userId}. New nickname: ${nickname}`);
+        this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi thay đổi biệt danh
+      }
+    });
+
+    // Lắng nghe sự kiện bạn bè bị xóa
+    this.signalRService.hubConnection.on('FriendRemoved', (userId) => {
+      if (this.recipientInfo && this.recipientInfo.id === userId) {
+        console.log(`Friend removed: ${userId}`);
+        this.updateSidebar.emit(); // Cập nhật giao diện sidebar
+        this.recipientInfo = null; // Reset recipient info nếu người dùng hiện tại bị xóa
+      }
+    });
+
+    // Lắng nghe sự kiện người dùng bị chặn
+    this.signalRService.hubConnection.on('UserBlocked', (userId) => {
+      if (this.recipientInfo && this.recipientInfo.id === userId) {
+        console.log(`User blocked: ${userId}`);
+        this.updateSidebar.emit(); // Cập nhật giao diện sidebar
+        this.recipientInfo = null; // Reset recipient info nếu người dùng bị chặn
+      }
+    });
+
+    // Lắng nghe sự kiện người dùng được bỏ chặn
+    this.signalRService.hubConnection.on('UserUnblocked', (userId) => {
+      if (this.recipientInfo && this.recipientInfo.id === userId) {
+        console.log(`User unblocked: ${userId}`);
+        this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi bỏ chặn
+      }
+    });
+
+    // Lắng nghe sự kiện yêu cầu kết bạn được chấp nhận
+    this.signalRService.hubConnection.on('FriendRequestAccepted', (userId) => {
+      if (this.recipientInfo && this.recipientInfo.id === userId) {
+        console.log(`Friend request accepted by ${userId}`);
+        this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi yêu cầu kết bạn được chấp nhận
+      }
+    });
+
+    // Lắng nghe sự kiện yêu cầu kết bạn bị từ chối
+    this.signalRService.hubConnection.on('FriendRequestRejected', (userId) => {
+      if (this.recipientInfo && this.recipientInfo.id === userId) {
+        console.log(`Friend request rejected by ${userId}`);
+        this.recipientInfo = null; // Reset recipient info nếu yêu cầu kết bạn bị từ chối
+      }
+    });
+  }
   onChangeNickname(): void {
     const dialogRef = this.dialog.open(ChangeNicknameDialogComponent, {
       width: '300px',
@@ -111,7 +170,10 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
           () => {
             console.log('Nickname changed successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
-            this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi thay đổi biệt danh
+
+            // Reload recipient info and force change detection
+            this.loadRecipientInfo();
+            this.cdr.detectChanges(); // Manually trigger change detection
           },
           (error) => {
             console.error('Failed to change nickname', error);
@@ -135,8 +197,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
         this.friendsService.removeFriend(localStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
           () => {
             console.log('Friend removed successfully');
-            this.updateSidebar.emit(); // Cập nhật giao diện sidebar
-            this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi xóa bạn
+            window.location.reload();
           },
           (error) => {
             console.error('Failed to remove friend', error);
@@ -260,7 +321,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
       const dialogRef = this.dialog.open(ConfirmDialogComponent, {
         width: '300px',
         data: {
-          title: 'Xác nhận thăng cấp',
+          title: 'Confirm promotion',
           message: 'Confirmation of promotion'
         }
       });
@@ -349,8 +410,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
         this.groupService.removeGroupMember({ GroupId: this.recipientInfo.id, UserId: this.currentUser.id }).subscribe(
           () => {
             console.log('Successfully left the group');
-            this.updateSidebar.emit(); // Cập nhật giao diện sau khi rời khỏi nhóm
-            this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi rời khỏi nhóm
+            window.location.reload();
           },
           error => {
             console.error('Failed to leave the group:', error);
