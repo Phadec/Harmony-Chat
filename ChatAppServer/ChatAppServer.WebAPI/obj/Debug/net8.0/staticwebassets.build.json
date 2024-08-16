@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "LttzRzbtLnvKVGe2g7fd8DqRwsYC4TTPYQdnAu8iB1A=",
+  "Hash": "JQxMWvbkxv7RjOW+H6Pvemtlsd0Yqe2vGjQVIDXshrM=",
   "Source": "ChatAppServer.WebAPI",
   "BasePath": "_content/ChatAppServer.WebAPI",
   "Mode": "Default",
@@ -16,6 +16,25 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\db9d0840-5776-4f58-9f12-f451a88cdda0.jpg",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatars/db9d0840-5776-4f58-9f12-f451a88cdda0.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\db9d0840-5776-4f58-9f12-f451a88cdda0.jpg"
+    },
     {
       "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\example.jpg",
       "SourceId": "ChatAppServer.WebAPI",

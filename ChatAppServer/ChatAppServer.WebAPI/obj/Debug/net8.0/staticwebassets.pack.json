@@ -1,6 +1,10 @@
 {
   "Files": [
     {
+      "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\db9d0840-5776-4f58-9f12-f451a88cdda0.jpg",
+      "PackagePath": "staticwebassets\\avatars\\db9d0840-5776-4f58-9f12-f451a88cdda0.jpg"
+    },
+    {
       "Id": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\example.jpg",
       "PackagePath": "staticwebassets\\avatars\\example.jpg"
     },

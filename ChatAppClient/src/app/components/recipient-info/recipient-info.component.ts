@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, ChangeDetectorRef, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, ChangeDetectorRef, Output, EventEmitter } from '@angular/core';
 import { FriendsService } from "../../services/friends.service";
 import { ChatService } from "../../services/chat.service";
 import { MatDialog } from "@angular/material/dialog";
@@ -8,23 +8,51 @@ import { GroupService } from "../../services/group.service";
 import { RenameGroupDialogComponent } from "../rename-group-dialog/rename-group-dialog.component";
 import { AddMemberDialogComponent } from "../add-member-dialog/add-member-dialog.component";
 import { AvatarUploadDialogComponent } from "../avatar-upload-dialog/avatar-upload-dialog.component";
-import { ImagePreviewDialogComponent } from "../image-preview-dialog/image-preview-dialog.component";
-import { SignalRService } from "../../services/signalr.service";
-import { Subscription } from 'rxjs';
+import {ImagePreviewDialogComponent} from "../image-preview-dialog/image-preview-dialog.component";
+import {SignalRService} from "../../services/signalr.service";
+import {EventService} from "../../services/event.service";
+
+interface GroupMember {
+  userId: string;
+  fullName: string;
+  avatar: string;
+  tagName: string;
+  status: string;
+}
+
+interface GroupInfo {
+  $id: string;
+  isGroup: true;
+  isAdmin: boolean;
+  id: string;
+  name: string;
+  avatar: string;
+  members: { $id: string; $values: GroupMember[] };
+}
+
+interface IndividualInfo {
+  $id: string;
+  isGroup: false;
+  id: string;
+  name: string;
+  nickname: string;
+  avatar: string;
+  tagName: string;
+  status: string;
+}
+
 
 @Component({
   selector: 'app-recipient-info',
   templateUrl: './recipient-info.component.html',
   styleUrls: ['./recipient-info.component.css']
 })
-export class RecipientInfoComponent implements OnInit, OnChanges, OnDestroy {
+export class RecipientInfoComponent implements OnInit, OnChanges {
   @Input() recipientId: string | null = null;
-  @Output() updateSidebar = new EventEmitter<void>();
+  @Output() updateSidebar = new EventEmitter<void>(); // EventEmitter để phát sự kiện
   @Output() resetRecipient = new EventEmitter<void>();
-
   recipientInfo: any;
   currentUser: any;
-  private subscriptions: Subscription = new Subscription();
 
   constructor(
     private friendsService: FriendsService,
@@ -32,69 +60,77 @@ export class RecipientInfoComponent implements OnInit, OnChanges, OnDestroy {
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private groupService: GroupService,
-    private signalRService: SignalRService
+    private signalRService: SignalRService,
+  private eventService: EventService
   ) {
     this.currentUser = { id: localStorage.getItem('userId') };
   }
 
-  ngOnInit(): void {
+
+  ngOnInit() {
     this.loadRecipientInfo();
-    this.registerSignalRListeners();
+
+    this.signalRService.groupNotificationReceived$.subscribe(notification => {
+      if (notification && notification.groupId === this.recipientId) {
+        this.loadRecipientInfo(); // Tải lại thông tin nhóm khi nhận thông báo mới
+      }
+    });
+    this.signalRService.friendEventNotification$.subscribe((data) => {
+      console.log('Friend event notification received in recipient info:', data);
+      this.loadRecipientInfo(); // Reload recipient info when a friend event occurs
+    });
+    this.signalRService.friendEventNotification$.subscribe((data) => {
+      if (data.EventType === 'FriendRemoved') {
+        // Xử lý sự kiện "FriendRemoved", ví dụ cập nhật danh sách bạn bè
+        console.log('Friend removed:', data.Data.FriendId);
+      }
+    });
+    this.signalRService.friendEventNotification$.subscribe((data) => {
+      console.log('Friend event notification received in recipient info:', data);
+
+      // Xử lý sự kiện "FriendRemoved"
+      if (data.EventType === 'FriendRemoved' && data.Data.FriendId === this.recipientId) {
+        console.log('Friend removed, clearing recipientInfo:', data.Data.FriendId);
+        this.recipientInfo = null; // Đặt recipientInfo về null
+        this.cdr.detectChanges(); // Cập nhật giao diện
+        this.resetRecipient.emit(); // Phát sự kiện để thông báo rằng recipient đã bị reset
+      }
+    });
   }
 
-  ngOnChanges(): void {
+
+  ngOnChanges() {
     this.loadRecipientInfo();
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe(); // Hủy tất cả các subscriptions khi component bị hủy
-  }
-
-  registerSignalRListeners(): void {
-    this.subscriptions.add(
-      this.signalRService.groupNotificationReceived$.subscribe(notification => {
-        if (notification && notification.groupId === this.recipientId) {
-          this.loadRecipientInfo();
-        }
-      })
-    );
-
-    this.subscriptions.add(
-      this.signalRService.friendEventNotification$.subscribe(data => {
-        console.log('Friend event notification received in recipient info:', data);
-        this.loadRecipientInfo();
-      })
-    );
-  }
 
   resetRecipientData(): void {
-    this.recipientId = null;
-    this.recipientInfo = null;
-    this.cdr.detectChanges();
-    this.resetRecipient.emit();
+    this.recipientId = null; // Reset recipientId về null
+    this.recipientInfo = null; // Reset recipientInfo về null
+    this.cdr.detectChanges(); // Đảm bảo giao diện được cập nhật
+    this.resetRecipient.emit(); // Phát sự kiện để thông báo rằng recipient đã bị reset
     console.log("Recipient data has been reset");
   }
 
   loadRecipientInfo(): void {
-    const userId = this.currentUser.id;
+    const userId = localStorage.getItem('userId');
     if (userId && this.recipientId) {
       this.friendsService.getFriendInfo(userId, this.recipientId).subscribe(
-        data => {
+        (data) => {
           this.recipientInfo = data;
-          this.cdr.detectChanges();
+          this.cdr.detectChanges(); // Cập nhật giao diện sau khi tải xong thông tin
           console.log('Recipient info loaded:', data);
         },
-        error => this.handleError(error)
+        (error) => {
+          console.error('Error fetching recipient information:', error);
+          // Nếu xảy ra lỗi 404, đặt recipientInfo về null
+          if (error.status === 404) {
+            this.resetRecipientData(); // Reset giao diện
+          }
+        }
       );
     } else {
       console.log('No recipientId found, skipping loadRecipientInfo');
-    }
-  }
-
-  handleError(error: any): void {
-    console.error('An error occurred:', error);
-    if (error.status === 404) {
-      this.resetRecipientData();
     }
   }
 
@@ -106,57 +142,105 @@ export class RecipientInfoComponent implements OnInit, OnChanges, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result !== undefined) {
-        this.friendsService.changeNickname(this.currentUser.id, this.recipientInfo.id, result).subscribe(
+        const userId = localStorage.getItem('userId')!;
+        const friendId = this.recipientInfo.id;
+        const nickname = result;
+
+        this.friendsService.changeNickname(userId, friendId, nickname).subscribe(
           () => {
             console.log('Nickname changed successfully');
+            this.recipientInfo.nickname = nickname;
             this.updateSidebar.emit();
-            this.loadRecipientInfo();
+            this.cdr.detectChanges();
+
+            // Phát sự kiện nicknameChanged qua EventService
+            this.eventService.emitNicknameChanged(nickname);
           },
-          error => this.handleError(error)
+          (error) => {
+            console.error('Failed to change nickname', error);
+          }
         );
       }
-    });
-  }
+    });}
 
   onRemoveFriend(): void {
-    this.confirmDialog('Unfriending', 'Are you sure you want to delete this friend?').subscribe(result => {
-      if (result) {
-        this.friendsService.removeFriend(this.currentUser.id, this.recipientInfo.id).subscribe(
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: {
+        title: 'Unfriending',
+        message: 'Are you sure you want to delete this friend?'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        this.friendsService.removeFriend(localStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
           () => {
             console.log('Friend removed successfully');
-        window.location.reload();
+            this.loadRecipientInfo()
           },
-          error => this.handleError(error)
+          (error) => {
+            console.error('Failed to remove friend', error);
+          }
         );
       }
     });
   }
 
   onBlockUser(): void {
-    this.confirmDialog('Block users', 'Are you sure you want to block this user?').subscribe(result => {
-      if (result) {
-        this.friendsService.blockUser(this.currentUser.id, this.recipientInfo.id).subscribe(
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: {
+        title: 'Block users',
+        message: 'Are you sure you want to block this user?'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        this.friendsService.blockUser(localStorage.getItem('userId')!, this.recipientInfo.id).subscribe(
           () => {
             console.log('User blocked successfully');
-            window.location.reload();
+            this.updateSidebar.emit(); // Cập nhật giao diện sidebar
+            this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi chặn người dùng
           },
-          error => this.handleError(error)
+          (error) => {
+            console.error('Failed to block user', error);
+          }
         );
       }
     });
   }
 
   onDeleteChat(): void {
-    this.confirmDialog('Delete a chat', 'Are you sure you want to delete this chat?').subscribe(result => {
-      if (result) {
-        this.chatService.deleteChat(this.currentUser.id, this.recipientInfo.id).subscribe(
-          () => {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: {
+        title: 'Delete a chat',
+        message: 'Are you sure you want to delete this chat?'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        const recipientId = this.recipientInfo?.id;
+        const userId = localStorage.getItem('userId');
+
+        if (!recipientId || !userId) {
+          console.error('Recipient ID or User ID is missing.');
+          return;
+        }
+
+        this.chatService.deleteChat(userId, recipientId).subscribe({
+          next: () => {
             console.log('Chat deleted successfully');
-            this.resetRecipientData();
-            this.updateSidebar.emit();
+            this.updateSidebar.emit(); // Cập nhật giao diện sidebar
+            this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi xóa đoạn chat
           },
-          error => this.handleError(error)
-        );
+          error: (err) => {
+            console.error('Failed to delete chat', err);
+          }
+        });
       }
     });
   }
@@ -173,10 +257,14 @@ export class RecipientInfoComponent implements OnInit, OnChanges, OnDestroy {
           this.groupService.addGroupChatMember({ GroupId: this.recipientId!, UserId: friendId }).subscribe(
             () => {
               console.log('Member added successfully');
-              this.updateSidebar.emit();
-              this.loadRecipientInfo();
+              this.updateSidebar.emit(); // Cập nhật giao diện sau khi thêm thành viên
+              this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi thêm thành viên
+              alert('The member has been successfully added to the group.');
             },
-            error => this.handleError(error)
+            error => {
+              console.error('Failed to add member:', error);
+              alert('Members can not be added to the group. Please try again.');
+            }
           );
         });
       }
@@ -184,50 +272,84 @@ export class RecipientInfoComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onRemoveGroupMember(memberId: string): void {
-    this.confirmDialog('Confirmation of member deletion', 'Are you sure you want to remove this member from the group?').subscribe(result => {
-      if (result) {
-        this.groupService.removeGroupMember({ GroupId: this.recipientInfo.id, UserId: memberId }).subscribe(
-          () => {
-            this.recipientInfo.members.$values = this.recipientInfo.members.$values.filter((m: any) => m.userId !== memberId);
-            this.updateSidebar.emit();
-            this.loadRecipientInfo();
-          },
-          error => this.handleError(error)
-        );
-      }
-    });
+    if (this.recipientInfo && this.recipientInfo.isGroup) {  // Kiểm tra trực tiếp isGroup
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '300px',
+        data: {
+          title: 'Confirmation of member deletion',
+          message: 'Are you sure you want to remove this member from the group?'
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.groupService.removeGroupMember({ GroupId: this.recipientInfo.id, UserId: memberId })
+            .subscribe(response => {
+              this.recipientInfo.members.$values = this.recipientInfo.members.$values.filter((m: GroupMember) => m.userId !== memberId);
+              this.updateSidebar.emit(); // Cập nhật giao diện sau khi xóa thành viên
+              this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi xóa thành viên
+            }, error => {
+              console.error('Failed to remove member:', error);
+            });
+        }
+      });
+    }
   }
 
   onPromoteToAdmin(memberId: string): void {
-    this.confirmDialog('Confirm promotion', 'Are you sure you want to promote this member to admin?').subscribe(result => {
-      if (result) {
-        this.groupService.updateGroupAdmin({ GroupId: this.recipientInfo.id, UserId: memberId }).subscribe(
-          () => {
-            const member = this.recipientInfo.members.$values.find((m: any) => m.userId === memberId);
-            if (member) member.isAdmin = true;
-            this.updateSidebar.emit();
-            this.loadRecipientInfo();
-          },
-          error => this.handleError(error)
-        );
-      }
-    });
+    if (this.recipientInfo && this.recipientInfo.isGroup) {  // Kiểm tra trực tiếp isGroup
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '300px',
+        data: {
+          title: 'Confirm promotion',
+          message: 'Confirmation of promotion'
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.groupService.updateGroupAdmin({ GroupId: this.recipientInfo.id, UserId: memberId })
+            .subscribe(response => {
+              const member = this.recipientInfo.members.$values.find((m: GroupMember) => m.userId === memberId);
+              if (member) {
+                member.isAdmin = true; // Cập nhật trạng thái admin của thành viên
+                this.updateSidebar.emit(); // Cập nhật giao diện sau khi thăng cấp
+                this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi thăng cấp thành viên
+              }
+            }, error => {
+              console.error('Failed to promote member to admin:', error);
+            });
+        }
+      });
+    }
   }
 
   onDemoteFromAdmin(memberId: string): void {
-    this.confirmDialog('Downgrade confirmation', 'Are you sure you want to demote this member from the admin role?').subscribe(result => {
-      if (result) {
-        this.groupService.revokeGroupAdmin({ GroupId: this.recipientInfo.id, UserId: memberId }).subscribe(
-          () => {
-            const member = this.recipientInfo.members.$values.find((m: any) => m.userId === memberId);
-            if (member) member.isAdmin = false;
-            this.updateSidebar.emit();
-            this.loadRecipientInfo();
-          },
-          error => this.handleError(error)
-        );
-      }
-    });
+    if (this.recipientInfo && this.recipientInfo.isGroup) {  // Kiểm tra trực tiếp isGroup
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '300px',
+        data: {
+          title: 'Downgrade confirmation',
+          message: 'Are you sure you want to demote this member from the admin role?'
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.groupService.revokeGroupAdmin({ GroupId: this.recipientInfo.id, UserId: memberId })
+            .subscribe(response => {
+              const member = this.recipientInfo.members.$values.find((m: GroupMember) => m.userId === memberId);
+              if (member) {
+                member.isAdmin = false; // Cập nhật trạng thái admin của thành viên
+                this.updateSidebar.emit(); // Cập nhật giao diện sau khi hạ cấp
+                this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi hạ cấp thành viên
+              }
+            }, error => {
+              console.error('Failed to demote member from admin:', error);
+            });
+        }
+      });
+    }
   }
 
   onRenameGroup(): void {
@@ -237,62 +359,88 @@ export class RecipientInfoComponent implements OnInit, OnChanges, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe(result => {
+      console.log('Recipient ID:', this.recipientInfo.id);
+      console.log('New Group Name:', result);
       if (result) {
         this.groupService.renameGroup(this.recipientInfo.id, result).subscribe(
           () => {
             console.log('Group name changed successfully');
-            this.updateSidebar.emit();
-            this.loadRecipientInfo();
+            this.updateSidebar.emit(); // Update sidebar or UI
+            this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi đổi tên nhóm
           },
-          error => this.handleError(error)
+          error => {
+            console.error('Failed to change group name', error);
+          }
         );
       }
     });
   }
 
   onLeaveGroup(): void {
-    this.confirmDialog('Leave a group', 'Are you sure you want to leave this group?').subscribe(result => {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: {
+        title: 'Leave a group',
+        message: 'Are you sure you want to leave this group?'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.groupService.removeGroupMember({ GroupId: this.recipientInfo.id, UserId: this.currentUser.id }).subscribe(
+        this.groupService.removeGroupMember({ GroupId: this.recipientInfo.id, UserId: this.currentUser.id}).subscribe(
           () => {
             console.log('Successfully left the group');
-           window.location.reload();
+         window.location.reload();
+            // Phát sự kiện thành viên rời khỏi nhóm
+            this.eventService.emitMemberRemoved(); // Không truyền tham số
           },
-          error => this.handleError(error)
+          error => {
+            console.error('Failed to leave the group:', error);
+          }
         );
       }
     });
   }
 
+
+
   onChangeGroupAvatar(): void {
-    const currentAvatarUrl = this.getAvatarUrl(this.recipientInfo?.avatar) || '';
+    const currentAvatarUrl = this.getAvatarUrl(this.recipientInfo?.avatar) || ''; // Lấy URL của avatar hiện tại
 
     const dialogRef = this.dialog.open(AvatarUploadDialogComponent, {
       width: '400px',
-      data: { currentAvatar: currentAvatarUrl }
+      data: { currentAvatar: currentAvatarUrl } // Truyền avatar hiện tại vào hộp thoại
     });
 
     dialogRef.afterClosed().subscribe((file: File) => {
-      if (file && this.recipientInfo?.isGroup) {
+      if (file && this.recipientInfo && this.recipientInfo.isGroup) {
         this.uploadGroupAvatar(file);
       }
     });
   }
 
-  uploadGroupAvatar(file: File): void {
-    const request = { GroupId: this.recipientInfo.id, AvatarFile: file };
-    this.groupService.updateGroupAvatar(request).subscribe(
-      response => {
-        console.log('Avatar changed successfully');
-        if (response.newAvatarUrl) {
-          this.recipientInfo.avatar = response.newAvatarUrl;
-          this.loadRecipientInfo();
-        }
-      },
-      error => this.handleError(error)
-    );
-  }
 
+  uploadGroupAvatar(file: File): void {
+    if (this.recipientInfo && this.recipientInfo.isGroup) {
+      const request = {
+        GroupId: this.recipientInfo.id,  // Make sure to use the correct property name
+        AvatarFile: file
+      };
+
+      this.groupService.updateGroupAvatar(request).subscribe(
+        response => {
+          console.log('Avatar changed successfully');
+          if (response.newAvatarUrl) {
+            (this.recipientInfo as GroupInfo).avatar = response.newAvatarUrl;  // Update the avatar URL
+            this.loadRecipientInfo(); // Tải lại thông tin nhóm sau khi đổi avatar
+          }
+        },
+        error => {
+          console.error('Failed to change avatar', error);
+        }
+      );
+    }
+  }
   openImagePreview(avatarUrl: string): void {
     this.dialog.open(ImagePreviewDialogComponent, {
       data: this.getAvatarUrl(avatarUrl),
@@ -300,15 +448,8 @@ export class RecipientInfoComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+
   getAvatarUrl(avatar: string): string {
     return `https://localhost:7267/${avatar}`;
-  }
-
-  confirmDialog(title: string, message: string) {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '300px',
-      data: { title, message }
-    });
-    return dialogRef.afterClosed();
   }
 }

@@ -631,7 +631,6 @@ namespace ChatAppServer.WebAPI.Controllers
         }
 
 
-
         [HttpPost("{userId}/block/{blockedUserId}")]
         public async Task<IActionResult> BlockUser(Guid userId, Guid blockedUserId, CancellationToken cancellationToken)
         {
@@ -689,8 +688,15 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation($"User {userId} blocked user {blockedUserId}");
+
+                // Gửi thông báo đến người dùng đã chặn
                 await NotifyFriendEvent(userId, "UserBlocked", new { BlockedUserId = blockedUserId });
-                _logger.LogInformation($"User {userId} blocked user {blockedUserId}");
+
+                // Gửi thông báo đến người dùng bị chặn
+                _logger.LogInformation($"Sending UserBlockedByOther notification to {blockedUserId} with friendId: {userId}");
+                await NotifyFriendEvent(blockedUserId, "UserBlockedByOther", new { BlockedByUserId = userId });
+
+
                 return Ok(new { Message = "User blocked successfully" });
             }
             catch (Exception ex)
@@ -699,6 +705,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
 
 
         [HttpPost("{userId}/unblock/{blockedUserId}")]

@@ -14,6 +14,7 @@ export class SignalRService implements OnDestroy {
   private connectedUsers = new BehaviorSubject<any[]>([]);
   private friendRequestSent = new BehaviorSubject<any>(null);
   private groupNotificationReceived = new BehaviorSubject<any>(null);
+  private nicknameChangedSource = new BehaviorSubject<string | null>(null);
   public messageSent = new Subject<void>();
   // Friend-related observables
   private friendAdded = new BehaviorSubject<any>(null);
@@ -221,6 +222,9 @@ export class SignalRService implements OnDestroy {
   }
   public notifyMessageSent(): void {
     this.messageSent.next(); // Phát sự kiện khi có tin nhắn mới
+  }
+  changeNickname(newNickname: string): void {
+    this.nicknameChangedSource.next(newNickname);
   }
 
   ngOnDestroy(): void {
