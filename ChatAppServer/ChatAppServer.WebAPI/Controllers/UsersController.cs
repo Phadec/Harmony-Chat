@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Mail;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
@@ -319,13 +320,23 @@ namespace ChatAppServer.WebAPI.Controllers
                 // Update FirstName if provided
                 if (!string.IsNullOrEmpty(request.FirstName))
                 {
-                    user.FirstName = request.FirstName;
+                    var normalizedFirstName = NormalizeName(request.FirstName);
+                    if (!IsValidName(normalizedFirstName))
+                    {
+                        return BadRequest(new { Message = "Invalid FirstName format. Only letters and spaces are allowed." });
+                    }
+                    user.FirstName = normalizedFirstName;
                 }
 
                 // Update LastName if provided
                 if (!string.IsNullOrEmpty(request.LastName))
                 {
-                    user.LastName = request.LastName;
+                    var normalizedLastName = NormalizeName(request.LastName);
+                    if (!IsValidName(normalizedLastName))
+                    {
+                        return BadRequest(new { Message = "Invalid LastName format. Only letters and spaces are allowed." });
+                    }
+                    user.LastName = normalizedLastName;
                 }
 
                 // Update Birthday if provided
@@ -424,6 +435,22 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while updating the user. Please try again later.");
             }
         }
+
+        // Helper method to normalize names (remove extra spaces)
+        private string NormalizeName(string name)
+        {
+            // Replace multiple spaces with a single space
+            return Regex.Replace(name, @"\s+", " ");
+        }
+
+        // Helper method to validate names
+        private bool IsValidName(string name)
+        {
+            // Regular expression to allow letters from any language and spaces
+            var regex = new Regex(@"^[\p{L}\s]+$", RegexOptions.Compiled);
+            return regex.IsMatch(name);
+        }
+
 
 
         [HttpGet("{userId}/get-user-info")]

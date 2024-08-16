@@ -5,5 +5,6 @@ export interface RecipientInfo {
   avatar: string;
   tagName?: string;
   status: string;
-  type: 'Private' | 'Group';  // Xác định loại recipient
+  type: 'Private' | 'Group';  // Xác định loại recipient (cá nhân hoặc nhóm)
+  isGroup: boolean;           // Xác định xem đây có phải là nhóm hay không
 }

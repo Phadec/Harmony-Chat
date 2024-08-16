@@ -1,12 +1,14 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import {BehaviorSubject, Observable, Subject} from 'rxjs';
+import {BehaviorSubject, filter, Observable, Subject, Subscription} from 'rxjs';
+import {NavigationEnd, Router} from "@angular/router";
 
 @Injectable({
   providedIn: 'root'
 })
 export class SignalRService implements OnDestroy {
   public hubConnection: signalR.HubConnection;
+  private urlSubscription: Subscription;
   private messageReceived = new BehaviorSubject<any>(null);
   private messageRead = new BehaviorSubject<string | null>(null);
   private connectedUsers = new BehaviorSubject<any[]>([]);
@@ -36,7 +38,7 @@ export class SignalRService implements OnDestroy {
   public userBlocked$: Observable<any> = this.userBlocked.asObservable();
   public userUnblocked$: Observable<any> = this.userUnblocked.asObservable();
 
-  constructor() {
+  constructor(private router: Router) {
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl('https://localhost:7267/chat-hub', {
         accessTokenFactory: () => this.getAccessToken()
@@ -45,8 +47,21 @@ export class SignalRService implements OnDestroy {
       .withAutomaticReconnect([0, 2000, 10000, 30000])
       .build();
 
-    this.startConnection();
-    this.registerServerEvents();
+    this.urlSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        if (event.url === '/chats') {
+          this.startConnection();
+        } else {
+          this.stopConnection();
+        }
+      });
+
+    // Optionally start connection if the current URL is '/chats' when the service is initialized
+    if (this.router.url === '/chats') {
+      this.startConnection();
+    }
+
     window.addEventListener('beforeunload', this.stopConnection.bind(this));
   }
 
