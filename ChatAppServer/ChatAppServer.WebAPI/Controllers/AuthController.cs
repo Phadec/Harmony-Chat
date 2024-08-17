@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mail;
 using System.Security.Claims;
@@ -236,13 +237,18 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
-
         private string GenerateUniqueTagName(string firstName, string lastName)
         {
-            string baseTagName = $"@{firstName}{lastName}".ToLower();
+            // Loại bỏ dấu tiếng Việt
+            firstName = RemoveDiacritics(firstName);
+            lastName = RemoveDiacritics(lastName);
+
+            // Loại bỏ khoảng trắng và chuyển thành chữ thường toàn bộ
+            string baseTagName = $"@{firstName.Replace(" ", "").ToLower()}{lastName.Replace(" ", "").ToLower()}";
             string tagName = baseTagName;
             int counter = 100;
 
+            // Tạo tag name duy nhất
             while (_context.Users.Any(u => u.TagName == tagName))
             {
                 tagName = $"{baseTagName}{counter}".ToLower();
@@ -250,6 +256,23 @@ namespace ChatAppServer.WebAPI.Controllers
             }
 
             return tagName;
+        }
+
+        // Phương thức loại bỏ dấu tiếng Việt
+        private string RemoveDiacritics(string text)
+        {
+            string normalizedString = text.Normalize(NormalizationForm.FormD);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            foreach (char c in normalizedString)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
         private string GenerateEmailVerificationToken(string email)

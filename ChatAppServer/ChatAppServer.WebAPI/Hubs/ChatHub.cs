@@ -304,5 +304,55 @@ public sealed class ChatHub : Hub
         }
 
     }
+    // Phương thức xử lý khi người dùng gửi một offer (kết nối WebRTC)
+    public async Task SendOffer(string offer, Guid targetUserId)
+    {
+        if (UserConnections.ContainsKey(targetUserId))
+        {
+            var connections = UserConnections[targetUserId];
+            foreach (var connectionId in connections)
+            {
+                await Clients.Client(connectionId).SendAsync("ReceiveOffer", offer, Context.ConnectionId);
+            }
+        }
+    }
+
+    // Phương thức xử lý khi người dùng gửi một answer (trả lời kết nối WebRTC)
+    public async Task SendAnswer(string answer, string connectionId)
+    {
+        await Clients.Client(connectionId).SendAsync("ReceiveAnswer", answer);
+    }
+
+    // Phương thức xử lý khi người dùng gửi ICE candidate (thông tin kết nối mạng)
+    public async Task SendIceCandidate(string candidate, string connectionId)
+    {
+        await Clients.Client(connectionId).SendAsync("ReceiveIceCandidate", candidate);
+    }
+
+    // Phương thức để bắt đầu cuộc gọi
+    public async Task StartCall(Guid targetUserId)
+    {
+        if (UserConnections.ContainsKey(targetUserId))
+        {
+            var connections = UserConnections[targetUserId];
+            foreach (var connectionId in connections)
+            {
+                await Clients.Client(connectionId).SendAsync("IncomingCall", Context.ConnectionId);
+            }
+        }
+    }
+
+    // Phương thức để kết thúc cuộc gọi
+    public async Task EndCall(Guid targetUserId)
+    {
+        if (UserConnections.ContainsKey(targetUserId))
+        {
+            var connections = UserConnections[targetUserId];
+            foreach (var connectionId in connections)
+            {
+                await Clients.Client(connectionId).SendAsync("CallEnded");
+            }
+        }
+    }
 
 }

@@ -4,8 +4,10 @@ using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using System.Net.Mail;
 using System.Security.Claims;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ChatAppServer.WebAPI.Controllers
@@ -49,6 +51,18 @@ namespace ChatAppServer.WebAPI.Controllers
                 if (!tagName.StartsWith("@"))
                 {
                     tagName = "@" + tagName;
+                }
+
+                // Get the authenticated user's TagName
+                var authenticatedUser = await _context.Users
+                    .Where(u => u.Id == Guid.Parse(authenticatedUserId))
+                    .Select(u => u.TagName)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (authenticatedUser != null && tagName.ToLower() == authenticatedUser.ToLower())
+                {
+                    _logger.LogWarning($"User tried to search for themselves with tagName {tagName}");
+                    return NotFound(new { message = "User not found" });
                 }
 
                 // Find the user by TagName
@@ -122,6 +136,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { message = "An error occurred while processing your request." });
             }
         }
+
 
 
         [HttpPost("update-avatar")]
@@ -392,18 +407,20 @@ namespace ChatAppServer.WebAPI.Controllers
                 if (!string.IsNullOrEmpty(request.TagName) && !request.TagName.Equals(user.TagName, StringComparison.OrdinalIgnoreCase))
                 {
                     tagNameChanged = true;
-                    var newTagName = request.TagName.StartsWith("@") ? request.TagName : "@" + request.TagName;
 
-                    if (newTagName.Count(c => c == '@') > 1)
+                    // Normalize and validate TagName
+                    var normalizedTagName = NormalizeTagName(request.TagName);
+                    if (!IsValidTagName(normalizedTagName))
                     {
-                        return BadRequest(new { Message = "TagName can only contain one '@' at the beginning." });
+                        return BadRequest(new { Message = "Invalid TagName format. Only letters, numbers, and one '@' at the beginning are allowed." });
                     }
 
-                    if (await _context.Users.AnyAsync(u => u.TagName == newTagName, cancellationToken))
+                    // Check if TagName already exists
+                    if (await _context.Users.AnyAsync(u => u.TagName == normalizedTagName, cancellationToken))
                     {
                         return BadRequest(new { Message = "TagName already exists. Please choose a different TagName." });
                     }
-                    user.TagName = newTagName;
+                    user.TagName = normalizedTagName;
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);
@@ -440,7 +457,22 @@ namespace ChatAppServer.WebAPI.Controllers
         private string NormalizeName(string name)
         {
             // Replace multiple spaces with a single space
-            return Regex.Replace(name, @"\s+", " ");
+            return Regex.Replace(name, @"\s+", " ").Trim();
+        }
+
+        // Helper method to normalize TagName (remove extra spaces and convert to lowercase)
+        private string NormalizeTagName(string tagName)
+        {
+            // Replace multiple spaces with a single space and remove diacritics
+            tagName = Regex.Replace(RemoveDiacritics(tagName), @"\s+", "").ToLower();
+
+            // Ensure the TagName starts with '@'
+            if (!tagName.StartsWith("@"))
+            {
+                tagName = "@" + tagName;
+            }
+
+            return tagName;
         }
 
         // Helper method to validate names
@@ -449,6 +481,32 @@ namespace ChatAppServer.WebAPI.Controllers
             // Regular expression to allow letters from any language and spaces
             var regex = new Regex(@"^[\p{L}\s]+$", RegexOptions.Compiled);
             return regex.IsMatch(name);
+        }
+
+        // Helper method to validate TagName
+        private bool IsValidTagName(string tagName)
+        {
+            // Regular expression to allow letters, numbers, and exactly one '@' at the beginning
+            var regex = new Regex(@"^@[a-zA-Z0-9]+$", RegexOptions.Compiled);
+            return regex.IsMatch(tagName);
+        }
+
+        // Phương thức loại bỏ dấu tiếng Việt
+        private string RemoveDiacritics(string text)
+        {
+            string normalizedString = text.Normalize(NormalizationForm.FormD);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            foreach (char c in normalizedString)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            // Normalize lại chuỗi để đưa về dạng chuẩn
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
 

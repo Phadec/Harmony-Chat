@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +20,11 @@ export class EventService {
   // Quản lý sự kiện người dùng rời khỏi nhóm
   private memberRemovedSource = new BehaviorSubject<void>(undefined); // Khởi tạo với undefined
   public memberRemoved$ = this.memberRemovedSource.asObservable();
+
+  // Quản lý sự kiện xóa chat (Subject)
+  private chatDeletedSource = new Subject<void>();
+  public chatDeleted$ = this.chatDeletedSource.asObservable();
+
   // Hàm phát sự kiện nickname thay đổi
   emitNicknameChanged(newNickname: string): void {
     this.nicknameChangedSource.next(newNickname);
@@ -38,5 +43,10 @@ export class EventService {
   // Hàm phát sự kiện thành viên rời khỏi nhóm (không có tham số)
   emitMemberRemoved(): void {
     this.memberRemovedSource.next();
+  }
+
+  // Hàm phát sự kiện xóa chat (không có tham số)
+  emitDeleteChat(): void {
+    this.chatDeletedSource.next();
   }
 }

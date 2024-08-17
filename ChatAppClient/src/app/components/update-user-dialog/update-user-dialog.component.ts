@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { UserService } from '../../services/user.service'; // Assuming you have a UserService for user-related API calls
+import { MatSnackBar } from '@angular/material/snack-bar'; // Import MatSnackBar for notifications
 
 @Component({
   selector: 'app-update-user-dialog',
@@ -15,7 +16,8 @@ export class UpdateUserDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<UpdateUserDialogComponent>,
-    private userService: UserService
+    private userService: UserService,
+    private snackBar: MatSnackBar // Inject MatSnackBar for showing notifications
   ) {
     this.updateUserForm = this.fb.group({
       FirstName: ['', Validators.required],
@@ -79,10 +81,14 @@ export class UpdateUserDialogComponent implements OnInit {
       this.userService.updateUser(userId!, formData).subscribe(
         () => {
           console.log('Profile updated successfully');
+          this.snackBar.open('Profile updated successfully', 'Close', {
+            duration: 3000,
+          });
           this.dialogRef.close(true); // Close the dialog and return success
         },
         (error) => {
           console.error('Failed to update profile', error);
+          this.handleError(error); // Handle the error and show notification
         }
       );
     }
@@ -94,5 +100,19 @@ export class UpdateUserDialogComponent implements OnInit {
 
   getAvatarUrl(avatar: string): string {
     return `https://localhost:7267/${avatar}`;
+  }
+
+  private handleError(error: any): void {
+    let errorMessage = 'An unexpected error occurred. Please try again later.';
+
+    // Check if the error is a server response with a message
+    if (error.error && error.error.message) {
+      errorMessage = error.error.message;
+    }
+
+    // Display the error message using MatSnackBar
+    this.snackBar.open(errorMessage, 'Close', {
+      duration: 5000,
+    });
   }
 }

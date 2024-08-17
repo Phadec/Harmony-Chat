@@ -61,7 +61,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     private cdr: ChangeDetectorRef,
     private groupService: GroupService,
     private signalRService: SignalRService,
-  private eventService: EventService
+    private eventService: EventService
   ) {
     this.currentUser = { id: localStorage.getItem('userId') };
   }
@@ -236,6 +236,9 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
             console.log('Chat deleted successfully');
             this.updateSidebar.emit(); // Cập nhật giao diện sidebar
             this.loadRecipientInfo(); // Tải lại thông tin người nhận sau khi xóa đoạn chat
+
+            // Phát sự kiện xóa chat
+            this.eventService.emitDeleteChat();
           },
           error: (err) => {
             console.error('Failed to delete chat', err);
@@ -244,6 +247,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
       }
     });
   }
+
 
   onAddMember(): void {
     const dialogRef = this.dialog.open(AddMemberDialogComponent, {
@@ -390,7 +394,6 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
         this.groupService.removeGroupMember({ GroupId: this.recipientInfo.id, UserId: this.currentUser.id}).subscribe(
           () => {
             console.log('Successfully left the group');
-         window.location.reload();
             // Phát sự kiện thành viên rời khỏi nhóm
             this.eventService.emitMemberRemoved(); // Không truyền tham số
           },

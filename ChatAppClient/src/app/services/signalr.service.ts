@@ -9,6 +9,12 @@ import {NavigationEnd, Router} from "@angular/router";
 export class SignalRService implements OnDestroy {
   public hubConnection: signalR.HubConnection;
   private urlSubscription: Subscription;
+
+  // Các tín hiệu liên quan đến cuộc gọi video/thoại
+  private offerReceived = new BehaviorSubject<any>(null);
+  private answerReceived = new BehaviorSubject<any>(null);
+  private iceCandidateReceived = new BehaviorSubject<any>(null);
+
   private messageReceived = new BehaviorSubject<any>(null);
   private messageRead = new BehaviorSubject<string | null>(null);
   private connectedUsers = new BehaviorSubject<any[]>([]);
@@ -28,16 +34,15 @@ export class SignalRService implements OnDestroy {
   public messageReceived$: Observable<any> = this.messageReceived.asObservable();
   public messageRead$: Observable<string | null> = this.messageRead.asObservable();
   public connectedUsers$: Observable<any[]> = this.connectedUsers.asObservable();
-  public friendRequestSent$: Observable<any> = this.friendRequestSent.asObservable();
   public groupNotificationReceived$: Observable<any> = this.groupNotificationReceived.asObservable();
   public friendEventNotification$: Observable<any> = this.friendEventNotification.asObservable();
-  // Friend-related observables
-  public friendAdded$: Observable<any> = this.friendAdded.asObservable();
-  public friendRemoved$: Observable<any> = this.friendRemoved.asObservable();
-  public friendRequestReceived$: Observable<any> = this.friendRequestReceived.asObservable();
-  public nicknameChanged$: Observable<any> = this.nicknameChanged.asObservable();
-  public userBlocked$: Observable<any> = this.userBlocked.asObservable();
-  public userUnblocked$: Observable<any> = this.userUnblocked.asObservable();
+
+  // WebRTC-related observables
+  public offerReceived$: Observable<any> = this.offerReceived.asObservable();
+  public answerReceived$: Observable<any> = this.answerReceived.asObservable();
+  public iceCandidateReceived$: Observable<any> = this.iceCandidateReceived.asObservable();
+
+
 
   constructor(private router: Router) {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -184,6 +189,30 @@ export class SignalRService implements OnDestroy {
       console.log('Reconnected successfully. ConnectionId:', connectionId);
     });
 
+    // Tín hiệu WebRTC
+    this.hubConnection.on('ReceiveOffer', (offer, connectionId) => {
+      console.log('Offer received:', offer);
+      this.offerReceived.next({ offer, connectionId });
+    });
+
+    this.hubConnection.on('ReceiveAnswer', (answer) => {
+      console.log('Answer received:', answer);
+      this.answerReceived.next(answer);
+    });
+
+    this.hubConnection.on('ReceiveIceCandidate', (candidate) => {
+      console.log('ICE Candidate received:', candidate);
+      this.iceCandidateReceived.next(candidate);
+    });
+
+    this.hubConnection.onreconnecting(error => {
+      console.warn('Connection lost due to error. Reconnecting...', error);
+    });
+
+    this.hubConnection.onreconnected(connectionId => {
+      console.log('Reconnected successfully. ConnectionId:', connectionId);
+    });
+
     this.hubConnection.onclose(error => {
       if (error) {
         console.error('Connection closed due to error:', error);
@@ -192,6 +221,7 @@ export class SignalRService implements OnDestroy {
       }
     });
   }
+
 
   public notifyMessageRead(chatId: string): void {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
@@ -211,6 +241,21 @@ export class SignalRService implements OnDestroy {
     } else {
       console.warn('Hub connection is not established. Cannot send new message notification.');
     }
+  }
+  // Gửi tín hiệu WebRTC
+  public sendOffer(offer: string, targetUserId: string): void {
+    this.hubConnection.invoke('SendOffer', offer, targetUserId)
+      .catch(err => console.error('Error sending offer:', err));
+  }
+
+  public sendAnswer(answer: string, connectionId: string): void {
+    this.hubConnection.invoke('SendAnswer', answer, connectionId)
+      .catch(err => console.error('Error sending answer:', err));
+  }
+
+  public sendIceCandidate(candidate: string, connectionId: string): void {
+    this.hubConnection.invoke('SendIceCandidate', candidate, connectionId)
+      .catch(err => console.error('Error sending ICE candidate:', err));
   }
 
   public stopConnection(): void {

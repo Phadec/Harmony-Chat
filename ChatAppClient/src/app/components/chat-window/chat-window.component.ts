@@ -58,6 +58,13 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       this.loadMessages();
       this.loadRecipientInfo();
     }
+    // Lắng nghe sự kiện xóa chat từ EventService
+    this.eventService.chatDeleted$.subscribe(() => {
+      this.clearMessages(); // Chỉ làm rỗng danh sách tin nhắn
+      this.snackBar.open('Chat has been deleted.', 'Close', {
+        duration: 3000,
+      });
+    });
 
     // Lắng nghe sự kiện thay đổi nickname từ EventService
     this.eventService.nicknameChanged$.subscribe(newNickname => {
@@ -67,11 +74,12 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       }
     });
     this.eventService.memberRemoved$.subscribe(() => {
-      // Khi người dùng rời khỏi nhóm, gọi phương thức resetRecipientData()
-      this.resetRecipientData();
-      this.snackBar.open('You have left the group.', 'Close', {
-        duration: 3000,
-      });
+      setTimeout(() => {
+        this.resetRecipientData();
+        this.snackBar.open('You have left the group.', 'Close', {
+          duration: 3000,
+        });
+      }, 0);
     });
 
     // Đăng ký các sự kiện từ SignalR
@@ -110,6 +118,14 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       this.handleBlockedByOtherEvent(event);
       this.handleUserBlockedEvent(event);
     });
+  }
+  clearMessages(): void {
+    this.messages = [];  // Làm rỗng danh sách tin nhắn
+    console.log("messages cleared");
+
+    // Đảm bảo cập nhật giao diện
+    this.cdr.detectChanges(); // Buộc Angular cập nhật giao diện
+    console.log("UI updated after clearing messages");
   }
 
   handleFriendEvent(event: { eventType: string, data: { friendId: string } }): void {
@@ -169,19 +185,23 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
     // Đặt lại tất cả dữ liệu liên quan đến người nhận
     this.recipientId = null;
-    this.recipientInfo = null;
-    this.messages = [];  // Reset danh sách tin nhắn
-    this.newMessage = '';  // Xóa nội dung tin nhắn đang soạn thảo
-    this.attachmentFile = null;  // Xóa tệp đính kèm hiện tại
+    console.log("recipientId reset");
 
-    // Kiểm tra dữ liệu sau khi reset
-    console.log("After reset - recipientId:", this.recipientId);
-    console.log("After reset - recipientInfo:", this.recipientInfo);
-    console.log("After reset - messages:", this.messages);
+    this.recipientInfo = null;
+    console.log("recipientInfo reset");
+
+    this.messages = [];  // Reset danh sách tin nhắn
+    console.log("messages reset");
+
+    this.newMessage = '';  // Xóa nội dung tin nhắn đang soạn thảo
+    console.log("newMessage reset");
+
+    this.attachmentFile = null;  // Xóa tệp đính kèm hiện tại
+    console.log("attachmentFile reset");
 
     // Đảm bảo cập nhật giao diện
     this.cdr.detectChanges(); // Buộc Angular cập nhật giao diện
-    console.log("Recipient data has been reset and UI updated.");
+    console.log("UI updated after reset");
   }
 
   ngOnChanges(changes: SimpleChanges): void {
