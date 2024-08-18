@@ -12,4 +12,12 @@
       <div class="chat-tag">{{ recipientInfo.tagName }}</div>
     </div>
   </div>
+  <div class="chat-actions">
+    <button mat-icon-button (click)="startVoiceCall()">
+      <mat-icon>call</mat-icon>
+    </button>
+    <button mat-icon-button (click)="startVideoCall()">
+      <mat-icon>videocam</mat-icon>
+    </button>
+  </div>
 </div>

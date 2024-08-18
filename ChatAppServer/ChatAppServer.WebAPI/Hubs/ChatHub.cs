@@ -304,7 +304,6 @@ public sealed class ChatHub : Hub
         }
 
     }
-    // Phương thức xử lý khi người dùng gửi một offer (kết nối WebRTC)
     public async Task SendOffer(string offer, Guid targetUserId)
     {
         if (UserConnections.ContainsKey(targetUserId))
@@ -312,24 +311,31 @@ public sealed class ChatHub : Hub
             var connections = UserConnections[targetUserId];
             foreach (var connectionId in connections)
             {
+                _logger.LogInformation($"Sending offer to user {targetUserId} with connectionId {connectionId}.");
                 await Clients.Client(connectionId).SendAsync("ReceiveOffer", offer, Context.ConnectionId);
             }
         }
+        else
+        {
+            _logger.LogWarning($"No connections found for targetUserId {targetUserId}.");
+        }
     }
 
-    // Phương thức xử lý khi người dùng gửi một answer (trả lời kết nối WebRTC)
+
     public async Task SendAnswer(string answer, string connectionId)
     {
+        _logger.LogInformation($"Sending answer to connectionId {connectionId}.");
         await Clients.Client(connectionId).SendAsync("ReceiveAnswer", answer);
     }
 
-    // Phương thức xử lý khi người dùng gửi ICE candidate (thông tin kết nối mạng)
+
     public async Task SendIceCandidate(string candidate, string connectionId)
     {
+        _logger.LogInformation($"Sending ICE candidate to connectionId {connectionId}. Candidate: {candidate}");
         await Clients.Client(connectionId).SendAsync("ReceiveIceCandidate", candidate);
     }
 
-    // Phương thức để bắt đầu cuộc gọi
+
     public async Task StartCall(Guid targetUserId)
     {
         if (UserConnections.ContainsKey(targetUserId))
@@ -337,12 +343,17 @@ public sealed class ChatHub : Hub
             var connections = UserConnections[targetUserId];
             foreach (var connectionId in connections)
             {
+                _logger.LogInformation($"Starting call to user {targetUserId} with connectionId {connectionId}.");
                 await Clients.Client(connectionId).SendAsync("IncomingCall", Context.ConnectionId);
             }
         }
+        else
+        {
+            _logger.LogWarning($"No connections found for targetUserId {targetUserId}.");
+        }
     }
 
-    // Phương thức để kết thúc cuộc gọi
+
     public async Task EndCall(Guid targetUserId)
     {
         if (UserConnections.ContainsKey(targetUserId))
@@ -350,9 +361,15 @@ public sealed class ChatHub : Hub
             var connections = UserConnections[targetUserId];
             foreach (var connectionId in connections)
             {
+                _logger.LogInformation($"Ending call to user {targetUserId} with connectionId {connectionId}.");
                 await Clients.Client(connectionId).SendAsync("CallEnded");
             }
         }
+        else
+        {
+            _logger.LogWarning($"No connections found for targetUserId {targetUserId}.");
+        }
     }
+
 
 }

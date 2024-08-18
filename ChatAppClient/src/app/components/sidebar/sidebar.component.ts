@@ -503,6 +503,7 @@ export class SidebarComponent implements OnInit {
       if (result) {
         console.log('User profile updated successfully.');
         // Handle any post-update actions if necessary
+        this.loadCurrentUserAvatar();
         this.loadRelationships();  // Tải lại mối quan hệ sau khi có thay đổi
       }
     });

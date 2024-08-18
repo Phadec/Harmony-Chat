@@ -81,8 +81,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\AdminController.cs",
               "ViewState": "AQIAABAAAAAAAAAAAAAzwAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-17T09:52:39.232Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-17T09:52:39.232Z"
             },
             {
               "$type": "Document",
@@ -94,8 +93,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Properties\\launchSettings.json",
               "ViewState": "AQIAAAsAAAAAAAAAAMAkwBgAAAAcAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2024-08-17T03:04:43.313Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-17T03:04:43.313Z"
             },
             {
               "$type": "Document",
@@ -143,8 +141,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Program.cs",
               "ViewState": "AQIAAKYAAAAAAAAAAAAIwLoAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-15T15:43:54.191Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-15T15:43:54.191Z"
             },
             {
               "$type": "Document",
@@ -156,8 +153,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\AuthController.cs",
               "ViewState": "AQIAAAYBAAAAAAAAAAAuwBMBAAAJAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-15T13:05:22.794Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-15T13:05:22.794Z"
             },
             {
               "$type": "Document",
@@ -169,8 +165,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\ChatsController.cs",
               "ViewState": "AQIAAI4CAAAAAAAAAAAqwK4CAAABAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-15T13:05:20.456Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-15T13:05:20.456Z"
             },
             {
               "$type": "Document",
@@ -204,8 +199,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\UsersController.cs",
               "ViewState": "AQIAANcBAAAAAAAAAAAjwOQBAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-15T11:23:48.396Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-15T11:23:48.396Z"
             },
             {
               "$type": "Document",
@@ -217,8 +211,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Controllers\\FriendsController.cs",
               "ViewState": "AQIAALYBAAAAAAAAAAAWwMABAAALAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-15T11:10:38.326Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-15T11:10:38.326Z"
             },
             {
               "$type": "Document",
@@ -228,7 +221,7 @@
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Hubs\\ChatHub.cs",
               "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Hubs\\ChatHub.cs",
               "RelativeToolTip": "ChatAppServer.WebAPI\\Hubs\\ChatHub.cs",
-              "ViewState": "AQIAAFoBAAAAAAAAAAAAAGMBAAAFAAAA",
+              "ViewState": "AQIAAF8BAAAAAAAAAAAmwHQBAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-08-15T09:46:11.432Z",
               "EditorCaption": ""

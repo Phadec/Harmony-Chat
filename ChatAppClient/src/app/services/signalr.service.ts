@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import {BehaviorSubject, filter, Observable, Subject, Subscription} from 'rxjs';
-import {NavigationEnd, Router} from "@angular/router";
+import { BehaviorSubject, filter, Observable, Subject, Subscription } from 'rxjs';
+import { NavigationEnd, Router } from "@angular/router";
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +14,7 @@ export class SignalRService implements OnDestroy {
   private offerReceived = new BehaviorSubject<any>(null);
   private answerReceived = new BehaviorSubject<any>(null);
   private iceCandidateReceived = new BehaviorSubject<any>(null);
+  private callEnded = new Subject<void>();
 
   private messageReceived = new BehaviorSubject<any>(null);
   private messageRead = new BehaviorSubject<string | null>(null);
@@ -41,8 +42,9 @@ export class SignalRService implements OnDestroy {
   public offerReceived$: Observable<any> = this.offerReceived.asObservable();
   public answerReceived$: Observable<any> = this.answerReceived.asObservable();
   public iceCandidateReceived$: Observable<any> = this.iceCandidateReceived.asObservable();
-
-
+  private incomingCall = new Subject<{ callerId: string, callType: 'voice' | 'video' }>();
+  public incomingCall$ = this.incomingCall.asObservable();
+  public callEnded$: Observable<void> = this.callEnded.asObservable();
 
   constructor(private router: Router) {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -168,7 +170,6 @@ export class SignalRService implements OnDestroy {
 
     this.hubConnection.on('FriendEventNotification', (data) => {
       console.log('Friend event notification received:', data);
-      // Emit an event for the sidebar and recipient info components
       this.friendEventNotification.next(data);
     });
     this.hubConnection.on('UserUnblocked', (unblockedUserId) => {
@@ -220,8 +221,20 @@ export class SignalRService implements OnDestroy {
         console.log('Connection closed.');
       }
     });
-  }
+    this.hubConnection.on('IncomingCall', (callerId: string, callType: 'voice' | 'video') => {
+      console.log(`Incoming ${callType} call from ${callerId}`);
+      this.incomingCall.next({ callerId, callType });
+    });
+    this.hubConnection.on('CallEnded', () => {
+      console.log('Call ended signal received.');
+      this.callEnded.next();
+    });
 
+  }
+  sendReject(connectionId: string): void {
+    this.hubConnection.invoke('RejectCall', connectionId)
+      .catch(err => console.error('Error sending reject call:', err));
+  }
 
   public notifyMessageRead(chatId: string): void {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
@@ -242,20 +255,39 @@ export class SignalRService implements OnDestroy {
       console.warn('Hub connection is not established. Cannot send new message notification.');
     }
   }
+
   // Gửi tín hiệu WebRTC
   public sendOffer(offer: string, targetUserId: string): void {
-    this.hubConnection.invoke('SendOffer', offer, targetUserId)
-      .catch(err => console.error('Error sending offer:', err));
+    if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
+      console.log('Sending offer to server:', offer); // Thêm log để kiểm tra dữ liệu offer được gửi đi
+      this.hubConnection.invoke('SendOffer', offer, targetUserId)
+        .then(() => {
+          console.log('Offer successfully sent to server'); // Log khi gửi thành công
+        })
+        .catch(err => {
+          console.error('Error sending offer:', err); // Log nếu có lỗi xảy ra
+        });
+    } else {
+      console.warn('Hub connection is not established. Cannot send offer.');
+    }
   }
 
   public sendAnswer(answer: string, connectionId: string): void {
-    this.hubConnection.invoke('SendAnswer', answer, connectionId)
-      .catch(err => console.error('Error sending answer:', err));
+    if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
+      this.hubConnection.invoke('SendAnswer', answer, connectionId)
+        .catch(err => console.error('Error sending answer:', err));
+    } else {
+      console.warn('Hub connection is not established. Cannot send answer.');
+    }
   }
 
   public sendIceCandidate(candidate: string, connectionId: string): void {
-    this.hubConnection.invoke('SendIceCandidate', candidate, connectionId)
-      .catch(err => console.error('Error sending ICE candidate:', err));
+    if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
+      this.hubConnection.invoke('SendIceCandidate', candidate, connectionId)
+        .catch(err => console.error('Error sending ICE candidate:', err));
+    } else {
+      console.warn('Hub connection is not established. Cannot send ICE candidate.');
+    }
   }
 
   public stopConnection(): void {
@@ -265,11 +297,23 @@ export class SignalRService implements OnDestroy {
         .catch(err => console.log('Error while stopping SignalR connection: ' + err));
     }
   }
+
   public notifyMessageSent(): void {
     this.messageSent.next(); // Phát sự kiện khi có tin nhắn mới
   }
+
   changeNickname(newNickname: string): void {
     this.nicknameChangedSource.next(newNickname);
+  }
+
+  public notifyIncomingCall(callerId: string, callType: 'voice' | 'video'): void {
+    if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
+      this.hubConnection.invoke('NotifyIncomingCall', callerId, callType)
+        .then(() => console.log(`Incoming call notification sent from ${callerId}`))
+        .catch(err => console.error(`Error sending incoming call notification: ${err}`));
+    } else {
+      console.warn('Hub connection is not established. Cannot send incoming call notification.');
+    }
   }
 
   ngOnDestroy(): void {
