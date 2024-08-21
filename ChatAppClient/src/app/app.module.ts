@@ -41,6 +41,8 @@ import {AddMemberDialogComponent} from "./components/add-member-dialog/add-membe
 import {RenameGroupDialogComponent} from "./components/rename-group-dialog/rename-group-dialog.component";
 import {PickerComponent} from "@ctrl/ngx-emoji-mart";
 import { EmojiPickerComponent } from './components/emoji-picker/emoji-picker.component';
+import { CallPopupComponent } from './components/call-popup/call-popup.component';
+import { IncomingCallPopupComponent } from './components/incoming-call-popup/incoming-call-popup.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -67,6 +69,8 @@ import { EmojiPickerComponent } from './components/emoji-picker/emoji-picker.com
     AddMemberDialogComponent,
     RenameGroupDialogComponent,
     EmojiPickerComponent,
+    CallPopupComponent,
+    IncomingCallPopupComponent,
   ],
   imports: [
     BrowserModule,

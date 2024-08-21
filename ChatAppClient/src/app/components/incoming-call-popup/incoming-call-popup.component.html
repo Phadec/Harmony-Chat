@@ -1,0 +1,16 @@
+<div class="incoming-call-popup">
+  <div *ngIf="!callAccepted">
+    <h2>Có cuộc gọi từ {{ data.callerName }}</h2>
+    <button mat-raised-button color="primary" (click)="acceptCall()">Chấp nhận</button>
+    <button mat-raised-button color="warn" (click)="rejectCall()">Từ chối</button>
+  </div>
+
+  <div *ngIf="callAccepted">
+    <h2>Đang gọi với {{ data.callerName }}</h2>
+    <div *ngIf="data.isVideoCall" class="video-container">
+      <video #localVideo id="local-video" autoplay muted></video>
+      <video #remoteVideo id="remote-video" autoplay></video>
+    </div>
+    <button mat-raised-button color="warn" (click)="endCall()">Kết thúc cuộc gọi</button>
+  </div>
+</div>

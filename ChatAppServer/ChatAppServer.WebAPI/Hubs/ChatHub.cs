@@ -12,6 +12,9 @@ public sealed class ChatHub : Hub
     // Dictionary để quản lý các ConnectionId theo UserId
     public static ConcurrentDictionary<Guid, List<string>> UserConnections = new();
 
+    // Dictionary để lưu trữ PeerId theo UserId
+    public static ConcurrentDictionary<Guid, string> UserPeerIds = new();
+
     public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger, IServiceProvider serviceProvider)
     {
         _context = context;
@@ -304,72 +307,107 @@ public sealed class ChatHub : Hub
         }
 
     }
-    public async Task SendOffer(string offer, Guid targetUserId)
+    // Phương thức đăng ký PeerId cho người dùng
+    public async Task RegisterPeerId(Guid userId, string peerId)
     {
-        if (UserConnections.ContainsKey(targetUserId))
+        if (userId == Guid.Empty || string.IsNullOrEmpty(peerId))
         {
-            var connections = UserConnections[targetUserId];
-            foreach (var connectionId in connections)
+            _logger.LogWarning("Invalid userId or peerId.");
+            throw new HubException("Invalid userId or peerId.");
+        }
+
+        // Lưu PeerId của người dùng
+        UserPeerIds[userId] = peerId;
+        _logger.LogInformation($"User {userId} registered peerId {peerId}.");
+
+        // Optionally, notify other clients that this peerId has been updated
+        await Clients.All.SendAsync("PeerIdUpdated", userId, peerId);
+    }
+
+    // Phương thức để lấy PeerId của người dùng
+    public string GetPeerId(Guid userId)
+    {
+        if (UserPeerIds.TryGetValue(userId, out var peerId))
+        {
+            return peerId;
+        }
+
+        _logger.LogWarning($"No peerId found for user {userId}.");
+        throw new HubException("User not found.");
+    }
+
+    // Phương thức để lấy userId từ peerId
+    public Guid GetUserIdByPeerId(string peerId)
+    {
+        foreach (var entry in UserPeerIds)
+        {
+            if (entry.Value == peerId)
             {
-                _logger.LogInformation($"Sending offer to user {targetUserId} with connectionId {connectionId}.");
-                await Clients.Client(connectionId).SendAsync("ReceiveOffer", offer, Context.ConnectionId);
+                return entry.Key;
             }
         }
-        else
+        throw new HubException("User not found for this peerId.");
+    }
+
+    // Phương thức để lấy fullName của người dùng
+    public async Task<string> GetFullNameByUserId(Guid userId)
+    {
+        var user = await _context.Users
+            .Where(u => u.Id == userId)
+            .Select(u => $"{u.FirstName} {u.LastName}")
+            .FirstOrDefaultAsync();
+
+        return user ?? "Unknown User";
+    }
+
+    // Phương thức để xử lý khi người dùng nhận cuộc gọi
+    public async Task HandleIncomingCall(string peerId, bool isVideoCall)
+    {
+        try
         {
-            _logger.LogWarning($"No connections found for targetUserId {targetUserId}.");
+            // Lấy userId từ peerId
+            var userId = GetUserIdByPeerId(peerId);
+
+            // Lấy fullName từ userId
+            var fullName = await GetFullNameByUserId(userId);
+
+            // Gửi tên người gọi, peerId và isVideoCall đến client
+            await Clients.Client(Context.ConnectionId).SendAsync("ReceiveCall", new { callerName = fullName, peerId, isVideoCall });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error handling incoming call. PeerId: {peerId}, Error: {ex.Message}");
         }
     }
 
-
-    public async Task SendAnswer(string answer, string connectionId)
+    // Phương thức để xử lý khi người dùng kết thúc cuộc gọi
+    public async Task HandleEndingCall(string peerId, bool isVideoCall)
     {
-        _logger.LogInformation($"Sending answer to connectionId {connectionId}.");
-        await Clients.Client(connectionId).SendAsync("ReceiveAnswer", answer);
-    }
-
-
-    public async Task SendIceCandidate(string candidate, string connectionId)
-    {
-        _logger.LogInformation($"Sending ICE candidate to connectionId {connectionId}. Candidate: {candidate}");
-        await Clients.Client(connectionId).SendAsync("ReceiveIceCandidate", candidate);
-    }
-
-
-    public async Task StartCall(Guid targetUserId)
-    {
-        if (UserConnections.ContainsKey(targetUserId))
+        try
         {
-            var connections = UserConnections[targetUserId];
-            foreach (var connectionId in connections)
+            // Lấy userId từ peerId
+            var userId = GetUserIdByPeerId(peerId);
+
+            // Gửi thông báo kết thúc cuộc gọi đến tất cả các connectionId của userId
+            if (UserConnections.TryGetValue(userId, out var connectionIds))
             {
-                _logger.LogInformation($"Starting call to user {targetUserId} with connectionId {connectionId}.");
-                await Clients.Client(connectionId).SendAsync("IncomingCall", Context.ConnectionId);
+                foreach (var connectionId in connectionIds)
+                {
+                    await Clients.Client(connectionId).SendAsync("CallEnded", new { peerId, isVideoCall });
+                }
+            }
+            else
+            {
+                _logger.LogWarning($"No connections found for user {userId} when trying to handle ending call.");
             }
         }
-        else
+        catch (Exception ex)
         {
-            _logger.LogWarning($"No connections found for targetUserId {targetUserId}.");
+            _logger.LogError($"Error handling ending call. PeerId: {peerId}, Error: {ex.Message}");
         }
     }
 
 
-    public async Task EndCall(Guid targetUserId)
-    {
-        if (UserConnections.ContainsKey(targetUserId))
-        {
-            var connections = UserConnections[targetUserId];
-            foreach (var connectionId in connections)
-            {
-                _logger.LogInformation($"Ending call to user {targetUserId} with connectionId {connectionId}.");
-                await Clients.Client(connectionId).SendAsync("CallEnded");
-            }
-        }
-        else
-        {
-            _logger.LogWarning($"No connections found for targetUserId {targetUserId}.");
-        }
-    }
 
 
 }

@@ -4,7 +4,6 @@
     <div class="chat-details">
       <div class="chat-name">
         {{ recipientInfo.nickname || recipientInfo.fullName }}
-        <!-- Status Indicator -->
         <span class="status-indicator"
               [ngClass]="{'online': recipientInfo.status === 'online', 'offline': recipientInfo.status === 'offline'}">
         </span>
@@ -14,10 +13,12 @@
   </div>
   <div class="chat-actions">
     <button mat-icon-button (click)="startVoiceCall()">
-      <mat-icon>call</mat-icon>
+      <mat-icon>call</mat-icon> <!-- Cuộc gọi thoại -->
     </button>
     <button mat-icon-button (click)="startVideoCall()">
-      <mat-icon>videocam</mat-icon>
+      <mat-icon>videocam</mat-icon> <!-- Cuộc gọi video -->
     </button>
   </div>
 </div>
+
+<div id="video-container"></div> <!-- Container này sẽ hiển thị video -->

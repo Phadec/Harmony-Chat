@@ -1,0 +1,110 @@
+/* Container chung cho các popup */
+.call-popup-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 35px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 20px;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  margin: auto;
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+}
+
+h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 25px;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+}
+
+/* Nút chung với các trạng thái hover và focus */
+.call-popup-btn {
+  background-color: #3498db;
+  color: white;
+  padding: 12px 25px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0px 6px 15px rgba(52, 152, 219, 0.2);
+  margin-top: 15px;
+}
+
+.call-popup-btn:hover {
+  background-color: #2980b9;
+  transform: scale(1.05);
+}
+
+.call-popup-btn:focus {
+  outline: none;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.6);
+}
+
+/* Nút kết thúc cuộc gọi */
+.end-call-btn {
+  background-color: #e74c3c;
+  color: white;
+  padding: 12px 25px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0px 6px 15px rgba(231, 76, 60, 0.2);
+  margin-top: 15px;
+}
+
+.end-call-btn:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
+}
+
+.end-call-btn:focus {
+  outline: none;
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.6);
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 500px) {
+  .call-popup-container {
+    padding: 25px;
+    max-width: 90%;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  .call-popup-btn,
+  .end-call-btn {
+    width: 100%;
+    padding: 15px;
+  }
+}
+
+/* Container video */
+.video-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+/* Video styles */
+video {
+  width: 48%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
+  background-color: #000;
+}
