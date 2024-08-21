@@ -2,14 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {RecipientInfo} from "../models/recipient-info.model";
+import {AppConfigService} from "./app-config.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-  private apiUrl = 'https://192.168.1.102:7267/api/chats';
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private appConfig: AppConfigService) {
+    this.apiUrl = `${this.appConfig.getBaseUrl()}/api/chats`;
+  }
 
   getRelationships(): Observable<any> {
     const userId = localStorage.getItem('userId');

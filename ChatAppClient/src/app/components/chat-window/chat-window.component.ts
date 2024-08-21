@@ -21,6 +21,7 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import {EventService} from "../../services/event.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {AppConfigService} from "../../services/app-config.service";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 const vietnamTimezone = 'Asia/Ho_Chi_Minh';
@@ -39,13 +40,14 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   recipientInfo: RecipientInfo | null = null; // Thông tin người nhận (bạn bè hoặc nhóm)
   attachmentFile: File | null = null; // Biến lưu trữ tệp đính kèm
   emojiPickerVisible: boolean = false;
-
+  previewAttachmentUrl: string | ArrayBuffer | null = null;
   constructor(
     private chatService: ChatService,
     private signalRService: SignalRService,
     private cdr: ChangeDetectorRef,
     public dialog: MatDialog,
     private eventService: EventService,
+    private appConfig: AppConfigService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -85,7 +87,9 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     // Đăng ký các sự kiện từ SignalR
     this.registerSignalREvents();
   }
-
+  removeAttachment(): void {
+    this.attachmentFile = null; // Xóa tệp đính kèm đã chọn
+  }
   registerSignalREvents(): void {
     // Nhận thông báo từ nhóm
     this.signalRService.groupNotificationReceived$.subscribe(notification => {
@@ -328,9 +332,22 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      this.attachmentFile = input.files[0];
+      this.attachmentFile = input.files[0]; // Lưu trữ tệp đính kèm
+      this.generatePreviewUrl();
     }
   }
+  generatePreviewUrl(): void {
+    if (this.attachmentFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result !== undefined) { // Kiểm tra kết quả không phải là undefined
+          this.previewAttachmentUrl = e.target.result;
+        }
+      };
+      reader.readAsDataURL(this.attachmentFile);
+    }
+  }
+
 
   onSendMessage(): void {
     if ((this.newMessage.trim() || this.attachmentFile) && this.recipientId) {
@@ -392,9 +409,9 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   }
 
   getAttachmentUrl(attachmentUrl: string): string {
-    return `https://192.168.1.102:7267/${attachmentUrl}`;
+    const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService
+    return `${baseUrl}/${attachmentUrl}`;
   }
-
   openAttachmentPreview(attachmentUrl: string, type: string): void {
     this.dialog.open(AttachmentPreviewDialogComponent, {
       data: {url: this.getAttachmentUrl(attachmentUrl), type: type},

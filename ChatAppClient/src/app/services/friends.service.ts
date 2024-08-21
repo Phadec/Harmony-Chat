@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import {AppConfigService} from "./app-config.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class FriendsService {
-
-  private apiUrl = 'https://192.168.1.102:7267/api/Friends';
-
-  constructor(private http: HttpClient) { }
+  private apiUrl: string;
+  constructor(private http: HttpClient, private appConfig: AppConfigService) {
+    this.apiUrl = `${this.appConfig.getBaseUrl()}/api/Friends`;
+  }
 
   getSentFriendRequests(userId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/${userId}/get-sent-friend-requests`);

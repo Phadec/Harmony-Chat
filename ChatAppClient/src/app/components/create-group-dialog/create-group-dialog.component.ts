@@ -2,6 +2,7 @@ import { Component, Inject, OnInit, Output, EventEmitter } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FriendsService } from '../../services/friends.service';
 import { GroupService } from '../../services/group.service';
+import {AppConfigService} from "../../services/app-config.service";
 
 @Component({
   selector: 'app-create-group-dialog',
@@ -21,7 +22,7 @@ export class CreateGroupDialogComponent implements OnInit {
     public dialogRef: MatDialogRef<CreateGroupDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private friendsService: FriendsService,
-    private groupService: GroupService // Inject service để gửi yêu cầu tạo nhóm
+    private appConfig: AppConfigService,
   ) {}
 
   ngOnInit(): void {
@@ -88,6 +89,7 @@ export class CreateGroupDialogComponent implements OnInit {
   }
 
   getAvatarUrl(avatar: string): string {
-    return `https://192.168.1.102:7267/${avatar}`;
+    const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService
+    return `${baseUrl}/${avatar}`;
   }
 }

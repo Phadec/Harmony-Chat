@@ -2,14 +2,16 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
+import {AppConfigService} from "./app-config.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://192.168.1.102:7267/api/auth';
-
-  constructor(private http: HttpClient, private router: Router) {}
+  private apiUrl: string;
+  constructor(private http: HttpClient, private router: Router,private appConfig: AppConfigService) {
+    this.apiUrl = `${this.appConfig.getBaseUrl()}/api/auth`;
+  }
 
   // Hàm lấy token từ localStorage
   getToken(): string | null {

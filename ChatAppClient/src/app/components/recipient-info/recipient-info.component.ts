@@ -11,6 +11,7 @@ import { AvatarUploadDialogComponent } from "../avatar-upload-dialog/avatar-uplo
 import {ImagePreviewDialogComponent} from "../image-preview-dialog/image-preview-dialog.component";
 import {SignalRService} from "../../services/signalr.service";
 import {EventService} from "../../services/event.service";
+import {AppConfigService} from "../../services/app-config.service";
 
 interface GroupMember {
   userId: string;
@@ -60,6 +61,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private groupService: GroupService,
+    private appConfig: AppConfigService,
     private signalRService: SignalRService,
     private eventService: EventService
   ) {
@@ -453,6 +455,7 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
 
 
   getAvatarUrl(avatar: string): string {
-    return `https://192.168.1.102:7267/${avatar}`;
+    const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService
+    return `${baseUrl}/${avatar}`;
   }
 }

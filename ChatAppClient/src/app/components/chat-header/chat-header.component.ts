@@ -4,6 +4,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { Component, Input, OnInit } from "@angular/core";
 import { ImagePreviewDialogComponent } from "../image-preview-dialog/image-preview-dialog.component";
 import { CallPopupComponent } from "../call-popup/call-popup.component";
+import {AppConfigService} from "../../services/app-config.service";
 
 @Component({
   selector: 'app-chat-header',
@@ -15,7 +16,8 @@ export class ChatHeaderComponent implements OnInit {
 
   constructor(
     private peerService: PeerService,
-    private signalRService: SignalRService,  // Inject SignalRService
+    private signalRService: SignalRService,
+    private appConfig: AppConfigService,
     public dialog: MatDialog
   ) {}
 
@@ -40,8 +42,11 @@ export class ChatHeaderComponent implements OnInit {
 
         if (!this.dialog.openDialogs.length) {
           this.dialog.open(CallPopupComponent, {
-            width: '600px',   // Thiết lập chiều rộng
-            height: '80%',
+            width: '60%',
+            maxWidth: '800px',
+            height: 'auto',
+            maxHeight: '90vh',  // Giới hạn chiều cao để không vượt quá màn hình
+            panelClass: 'no-scroll-popup',
             data: {
               recipientName: this.recipientInfo.fullName,
               isVideoCall: false  // Truyền isVideoCall = false
@@ -70,8 +75,11 @@ export class ChatHeaderComponent implements OnInit {
 
         if (!this.dialog.openDialogs.length) {
           this.dialog.open(CallPopupComponent, {
-            width: '600px',   // Thiết lập chiều rộng
-            height: '80%',
+            width: '60%',
+            maxWidth: '800px',
+            height: 'auto',
+            maxHeight: '90vh',  // Giới hạn chiều cao để không vượt quá màn hình
+            panelClass: 'no-scroll-popup',
             data: {
               recipientName: this.recipientInfo.fullName,
               isVideoCall: true  // Truyền isVideoCall = true
@@ -104,14 +112,19 @@ export class ChatHeaderComponent implements OnInit {
 
   // Mở hộp thoại xem ảnh
   openImagePreview(): void {
+    const baseUrl = this.appConfig.getBaseUrl();
     if (!this.recipientInfo || !this.recipientInfo.avatar) {
       console.error('Recipient avatar information not found.');
       return;
     }
 
     this.dialog.open(ImagePreviewDialogComponent, {
-      data: 'https://192.168.1.92:7267/' + this.recipientInfo.avatar,
+      data: `${baseUrl}/${this.recipientInfo.avatar}`, // Sử dụng baseUrl và avatar
       panelClass: 'custom-dialog-container'
     });
+  }
+  getAvatarUrl(avatar: string): string {
+    const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService
+    return `${baseUrl}/${avatar}`;
   }
 }

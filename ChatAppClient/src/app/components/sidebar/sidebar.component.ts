@@ -16,6 +16,7 @@ import { CreateGroupDialogComponent } from "../create-group-dialog/create-group-
 import {ChangePasswordDialogComponent} from "../change-password-dialog/change-password-dialog.component";
 import {ImagePreviewDialogComponent} from "../image-preview-dialog/image-preview-dialog.component";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {AppConfigService} from "../../services/app-config.service";
 
 @Component({
   selector: 'app-sidebar',
@@ -48,6 +49,7 @@ export class SidebarComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private router: Router,
     public dialog: MatDialog,
+    private appConfig: AppConfigService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -510,7 +512,8 @@ export class SidebarComponent implements OnInit {
   }
 
   getAvatarUrl(avatar: string): string {
-    return `https://192.168.1.102:7267/${avatar}`;
+    const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService
+    return `${baseUrl}/${avatar}`;
   }
 
   onCreateGroup(): void {

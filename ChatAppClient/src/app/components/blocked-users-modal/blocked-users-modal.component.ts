@@ -3,6 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FriendsService } from '../../services/friends.service';
 import { Observable } from 'rxjs';
 import {BlockedUserDto} from "../../models/blocked-user.dto";
+import {AppConfigService} from "../../services/app-config.service";
 
 @Component({
   selector: 'app-blocked-users-modal',
@@ -15,6 +16,7 @@ export class BlockedUsersModalComponent implements OnInit {
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     private friendsService: FriendsService,
+    private appConfig: AppConfigService,
     public dialogRef: MatDialogRef<BlockedUsersModalComponent>
   ) {}
 
@@ -51,9 +53,9 @@ export class BlockedUsersModalComponent implements OnInit {
   }
 
   getAvatarUrl(avatar: string): string {
-    return `https://192.168.1.102:7267/${avatar}`; // Update with your actual avatar URL
+    const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService
+    return `${baseUrl}/${avatar}`;
   }
-
   onClose(): void {
     this.dialogRef.close();
   }

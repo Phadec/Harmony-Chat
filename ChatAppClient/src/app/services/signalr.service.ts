@@ -4,6 +4,7 @@ import { BehaviorSubject, filter, Observable, Subject, Subscription } from 'rxjs
 import { NavigationEnd, Router } from "@angular/router";
 import {IncomingCallPopupComponent} from "../components/incoming-call-popup/incoming-call-popup.component";
 import {MatDialog} from "@angular/material/dialog";
+import {AppConfigService} from "./app-config.service";
 
 @Injectable({
   providedIn: 'root'
@@ -27,9 +28,9 @@ export class SignalRService implements OnDestroy {
   public friendEventNotification$: Observable<any> = this.friendEventNotification.asObservable();
 
 
-  constructor(private router: Router, private dialog: MatDialog) {
+  constructor(private router: Router, private dialog: MatDialog, private appConfig: AppConfigService) {
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl('https://192.168.1.102:7267/chat-hub', {
+      .withUrl(`${this.appConfig.getBaseUrl()}/chat-hub`, {
         accessTokenFactory: () => this.getAccessToken()
       })
       .configureLogging(signalR.LogLevel.Information)
@@ -212,10 +213,16 @@ export class SignalRService implements OnDestroy {
     // Kiểm tra nếu popup đã mở
     if (this.dialog.openDialogs.length === 0) {
       this.dialog.open(IncomingCallPopupComponent, {
-        width: '600px',   // Thiết lập chiều rộng
-        height: '80%',
+        width: '60%',
+        maxWidth: '800px',
+        height: 'auto',
+        maxHeight: '90vh',  // Giới hạn chiều cao để không vượt quá màn hình
+        panelClass: 'no-scroll-popup',
         data: { callerName: data.callerName, peerId: data.peerId, isVideoCall: data.isVideoCall }
       });
+
+
+
     } else {
       console.warn('Popup already opened. Skipping duplicate call.');
     }

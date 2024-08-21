@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { UserService } from '../../services/user.service'; // Assuming you have a UserService for user-related API calls
-import { MatSnackBar } from '@angular/material/snack-bar'; // Import MatSnackBar for notifications
+import { MatSnackBar } from '@angular/material/snack-bar';
+import {AppConfigService} from "../../services/app-config.service"; // Import MatSnackBar for notifications
 
 @Component({
   selector: 'app-update-user-dialog',
@@ -17,7 +18,8 @@ export class UpdateUserDialogComponent implements OnInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<UpdateUserDialogComponent>,
     private userService: UserService,
-    private snackBar: MatSnackBar // Inject MatSnackBar for showing notifications
+    private snackBar: MatSnackBar, // Inject MatSnackBar for showing notifications
+    private appConfig: AppConfigService
   ) {
     this.updateUserForm = this.fb.group({
       FirstName: ['', Validators.required],
@@ -99,8 +101,10 @@ export class UpdateUserDialogComponent implements OnInit {
   }
 
   getAvatarUrl(avatar: string): string {
-    return `https://localhost:7267/${avatar}`;
+    const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService
+    return `${baseUrl}/${avatar}`;
   }
+
 
   private handleError(error: any): void {
     let errorMessage = 'An unexpected error occurred. Please try again later.';

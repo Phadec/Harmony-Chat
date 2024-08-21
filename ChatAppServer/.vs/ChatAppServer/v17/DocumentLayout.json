@@ -85,8 +85,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\appsettings.json",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAA8AAAAnAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2024-08-21T04:30:34.891Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-21T04:30:34.891Z"
             },
             {
               "$type": "Document",
@@ -110,8 +109,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Properties\\launchSettings.json",
               "ViewState": "AQIAABQAAAAAAAAAAAAgwBoAAAAZAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2024-08-17T03:04:43.313Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-17T03:04:43.313Z"
             },
             {
               "$type": "Document",
@@ -159,8 +157,7 @@
               "RelativeToolTip": "ChatAppServer.WebAPI\\Program.cs",
               "ViewState": "AQIAAK8AAAAAAAAAAAAWwLoAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-08-15T15:43:54.191Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-15T15:43:54.191Z"
             },
             {
               "$type": "Document",
@@ -240,7 +237,7 @@
               "RelativeDocumentMoniker": "ChatAppServer.WebAPI\\Hubs\\ChatHub.cs",
               "ToolTip": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\Hubs\\ChatHub.cs",
               "RelativeToolTip": "ChatAppServer.WebAPI\\Hubs\\ChatHub.cs",
-              "ViewState": "AQIAAEUBAAAAAAAAAAAMwE8BAAAIAAAA",
+              "ViewState": "AQIAAKIBAAAAAAAAAAAAAE8BAAAIAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-08-15T09:46:11.432Z",
               "EditorCaption": ""

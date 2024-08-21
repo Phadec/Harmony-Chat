@@ -1,15 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import {AppConfigService} from "./app-config.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class GroupService {
 
-  private apiUrl = 'https://192.168.1.102:7267/api/Groups';
-
-  constructor(private http: HttpClient) {}
+  private apiUrl: string;
+  constructor(private http: HttpClient,private appConfig: AppConfigService) {
+    this.apiUrl =` ${this.appConfig.getBaseUrl()}/api/Groups`;
+  }
 
   createGroupChat(request: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}/create-group-chat`, request);

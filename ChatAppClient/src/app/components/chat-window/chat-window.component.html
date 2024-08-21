@@ -27,29 +27,35 @@
           <ng-container [ngSwitch]="getAttachmentType(message.attachmentUrl)">
             <!-- Đính kèm hình ảnh -->
             <img *ngSwitchCase="'image'" [src]="getAttachmentUrl(message.attachmentUrl)" alt="Image attachment"
-                 (click)="openAttachmentPreview(message.attachmentUrl, 'image')" style="cursor: pointer;" />
+                 (click)="openAttachmentPreview(message.attachmentUrl, 'image')" class="attachment-preview-image" />
 
             <!-- Đính kèm video -->
             <video *ngSwitchCase="'video'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
-                   (click)="openAttachmentPreview(message.attachmentUrl, 'video')" style="cursor: pointer;"></video>
-
-            <!-- Đính kèm âm thanh -->
-            <audio *ngSwitchCase="'audio'" controls [src]="getAttachmentUrl(message.attachmentUrl)" style="width: 100%;"></audio>
+                   (click)="openAttachmentPreview(message.attachmentUrl, 'video')" class="attachment-preview-video"></video>
 
             <!-- Đính kèm PDF -->
-            <a *ngSwitchCase="'pdf'" [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
-              <i class="fas fa-file-pdf"></i> {{ message.attachmentOriginalName }}
-            </a>
+            <div *ngSwitchCase="'pdf'" class="attachment-file">
+              <i class="fas fa-file-pdf"></i>
+              <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+                {{ message.attachmentOriginalName }}
+              </a>
+            </div>
 
             <!-- Đính kèm DOCX -->
-            <a *ngSwitchCase="'docx'" [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
-              <i class="fas fa-file-word"></i> {{ message.attachmentOriginalName }}
-            </a>
+            <div *ngSwitchCase="'docx'" class="attachment-file">
+              <i class="fas fa-file-word"></i>
+              <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+                {{ message.attachmentOriginalName }}
+              </a>
+            </div>
 
             <!-- Các loại đính kèm khác -->
-            <a *ngSwitchDefault [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
-              {{ message.attachmentOriginalName }}
-            </a>
+            <div *ngSwitchDefault class="attachment-file">
+              <i class="fas fa-file-alt"></i>
+              <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+                {{ message.attachmentOriginalName }}
+              </a>
+            </div>
           </ng-container>
         </div>
 
@@ -58,6 +64,38 @@
           Seen
         </div>
       </div>
+    </div>
+
+    <!-- Khung hiển thị tệp đính kèm (phía trên khung nhập tin nhắn) -->
+    <div *ngIf="attachmentFile" class="attachment-preview">
+      <ng-container [ngSwitch]="getAttachmentType(attachmentFile.name)">
+        <!-- Hiển thị xem trước ảnh -->
+        <img *ngSwitchCase="'image'" [src]="previewAttachmentUrl" alt="Preview image" class="attachment-preview-image" />
+
+        <!-- Hiển thị xem trước video -->
+        <video *ngSwitchCase="'video'" controls [src]="previewAttachmentUrl" class="attachment-preview-video"></video>
+
+        <!-- Hiển thị file PDF -->
+        <div *ngSwitchCase="'pdf'" class="attachment-file-preview">
+          <i class="fas fa-file-pdf"></i>
+          <span>{{ attachmentFile.name }}</span>
+        </div>
+
+        <!-- Hiển thị file DOCX -->
+        <div *ngSwitchCase="'docx'" class="attachment-file-preview">
+          <i class="fas fa-file-word"></i>
+          <span>{{ attachmentFile.name }}</span>
+        </div>
+
+        <!-- Hiển thị các loại file khác -->
+        <div *ngSwitchDefault class="attachment-file-preview">
+          <i class="fas fa-file-alt"></i>
+          <span>{{ attachmentFile.name }}</span>
+        </div>
+      </ng-container>
+      <button (click)="removeAttachment()" class="remove-attachment-button">
+        <i class="fas fa-trash-alt"></i>
+      </button>
     </div>
 
     <!-- Vùng nhập tin nhắn -->

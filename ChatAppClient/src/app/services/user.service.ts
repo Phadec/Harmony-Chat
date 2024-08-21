@@ -2,15 +2,16 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {Observable, throwError} from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import {AppConfigService} from "./app-config.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-
-  private apiUrl = `https://192.168.1.102:7267/api/Users`; // Cập nhật với URL API của bạn
-
-  constructor(private http: HttpClient) { }
+  private apiUrl: string;
+  constructor(private http: HttpClient,private appConfig: AppConfigService) {
+    this.apiUrl = `${this.appConfig.getBaseUrl()}/api/Users`;
+  }
 
   searchUserByTagName(tagName: string): Observable<any> {
     const url = `${this.apiUrl}/search?tagName=${encodeURIComponent(tagName)}`;

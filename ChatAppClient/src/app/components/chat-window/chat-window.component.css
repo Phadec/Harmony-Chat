@@ -7,6 +7,7 @@ body, html {
   display: flex;
   overflow: hidden;
 }
+
 .chat-content {
   display: flex;
   flex-direction: column;
@@ -53,37 +54,25 @@ body, html {
   color: #868e96;
 }
 
+/* Chat Window */
 .chat-window {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-end; /* Đảm bảo nội dung được đẩy xuống cuối */
-  padding: 0; /* Loại bỏ mọi padding nếu có */
-  margin: 0;  /* Loại bỏ margin */
-  overflow: hidden; /* Đảm bảo không có cuộn không cần thiết */
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
   border-radius: 10px;
 }
 
-.select-chat-message {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  font-size: 1.2em;
-  color: #888;
-  text-align: center;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
+/* Khung hiển thị tin nhắn */
 .chat-messages {
   flex-grow: 1;
   padding: 20px;
   background-color: white;
   overflow-y: auto;
-  margin-bottom: 0; /* Loại bỏ mọi margin dưới */
+  margin-bottom: 0;
   scrollbar-width: thin;
   scrollbar-color: #888 #e1e1e1;
   scroll-behavior: smooth;
@@ -102,6 +91,7 @@ body, html {
   background-color: #555;
 }
 
+/* Tin nhắn */
 .message-wrapper {
   margin-bottom: 15px;
 }
@@ -140,7 +130,15 @@ body, html {
   text-align: left;
 }
 
-/* Attachment Styles */
+/* Thời gian tin nhắn */
+.message-time {
+  text-align: center;
+  margin: 10px 0;
+  font-size: 0.85em;
+  color: #888;
+}
+
+/* Tệp đính kèm */
 .attachment {
   margin-top: 10px;
 }
@@ -163,6 +161,93 @@ body, html {
   text-decoration: underline;
 }
 
+/* Khung hiển thị tệp đính kèm đã chọn */
+.attachment-preview {
+  position: fixed;
+  bottom: 65px; /* Căn chỉnh phía trên khung nhập tin nhắn */
+  left: 15px;
+  right: 15px;
+  background-color: #f9f9f9;
+  padding: 8px; /* Thu nhỏ padding */
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000; /* Đảm bảo phần này luôn ở trên các phần tử khác */
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Tách biệt nút "Remove" và phần xem trước */
+  max-width: calc(100% - 30px); /* Giữ vừa khít trong khung chat */
+}
+
+.attachment-preview p {
+  margin: 0;
+  font-size: 12px; /* Giảm kích thước font chữ */
+  color: #555;
+}
+
+/* Nút "Remove" trong phần xem trước tệp đính kèm */
+.remove-attachment-button {
+  background-color: transparent;
+  border: none;
+  color: #f00;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 16px; /* Giảm kích thước font của nút remove */
+}
+
+.remove-attachment-button i {
+  font-size: 16px;
+}
+
+.remove-attachment-button:hover {
+  text-decoration: underline;
+  color: #d00;
+}
+
+/* Tệp đính kèm preview (ảnh và video) */
+.attachment-preview-image,
+.attachment-preview-video {
+  max-width: 120px; /* Giảm kích thước tối đa của hình ảnh và video */
+  max-height: 80px; /* Giảm chiều cao tối đa */
+  border-radius: 5px;
+  cursor: pointer;
+  object-fit: cover;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-right: 10px; /* Khoảng cách giữa preview và nút remove */
+}
+
+/* Khung preview tài liệu (PDF, DOCX, các tệp khác) */
+.attachment-file-preview {
+  display: flex;
+  align-items: center;
+  background-color: #f9f9f9;
+  padding: 8px; /* Thu nhỏ padding */
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.attachment-file-preview i {
+  font-size: 20px; /* Giảm kích thước icon */
+  margin-right: 10px;
+  color: #007bff;
+}
+
+.attachment-file-preview span {
+  color: #007bff;
+  font-weight: bold;
+  word-break: break-all;
+  font-size: 12px; /* Giảm kích thước font chữ */
+}
+
+.attachment-file-preview:hover span {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Vùng nhập tin nhắn */
 .message-input {
   flex-shrink: 0;
   display: flex;
@@ -171,9 +256,8 @@ body, html {
   background-color: #f1f3f5;
   border-top: 1px solid #dee2e6;
   border-radius: 0 0 10px 10px;
-  margin: 0; /* Loại bỏ margin */
+  margin: 0;
 }
-
 
 .message-input input[type="text"] {
   flex-grow: 1;
@@ -210,7 +294,7 @@ body, html {
   cursor: not-allowed;
 }
 
-/* Icon button styles */
+/* Nút icon */
 .icon-button {
   background: none;
   border: none;
@@ -254,9 +338,18 @@ body, html {
   border-radius: 10px;
   background-color: white;
 }
-.message-time {
-  text-align: center;
-  margin: 10px 0;
-  font-size: 0.85em;
+
+/* Tin nhắn khi chưa chọn người nhận */
+.select-chat-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 1.2em;
   color: #888;
+  text-align: center;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
