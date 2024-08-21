@@ -8,7 +8,7 @@ import { catchError } from 'rxjs/operators';
 })
 export class UserService {
 
-  private apiUrl = `https://localhost:7267/api/Users`; // Cập nhật với URL API của bạn
+  private apiUrl = `https://192.168.1.102:7267/api/Users`; // Cập nhật với URL API của bạn
 
   constructor(private http: HttpClient) { }
 

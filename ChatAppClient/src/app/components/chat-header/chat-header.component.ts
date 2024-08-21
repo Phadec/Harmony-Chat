@@ -110,7 +110,7 @@ export class ChatHeaderComponent implements OnInit {
     }
 
     this.dialog.open(ImagePreviewDialogComponent, {
-      data: 'https://localhost:7267/' + this.recipientInfo.avatar,
+      data: 'https://192.168.1.92:7267/' + this.recipientInfo.avatar,
       panelClass: 'custom-dialog-container'
     });
   }

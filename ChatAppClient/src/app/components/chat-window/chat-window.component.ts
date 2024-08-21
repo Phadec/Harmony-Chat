@@ -392,7 +392,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   }
 
   getAttachmentUrl(attachmentUrl: string): string {
-    return `https://localhost:7267/${attachmentUrl}`;
+    return `https://192.168.1.102:7267/${attachmentUrl}`;
   }
 
   openAttachmentPreview(attachmentUrl: string, type: string): void {

@@ -1,4 +1,10 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Inject,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef
+} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PeerService } from '../../services/peer.service';
 import { SignalRService } from '../../services/signalr.service';
@@ -10,20 +16,28 @@ import { SignalRService } from '../../services/signalr.service';
 })
 export class CallPopupComponent implements OnInit, OnDestroy {
   localStream: MediaStream | null = null;
+  remoteStream: MediaStream | null = null;
+  callAccepted: boolean = false;
 
   constructor(
     public dialogRef: MatDialogRef<CallPopupComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { recipientName: string, isVideoCall: boolean }, // Thêm isVideoCall để xác định loại cuộc gọi
+    @Inject(MAT_DIALOG_DATA) public data: { recipientName: string, isVideoCall: boolean },
     private peerService: PeerService,
-    private signalRService: SignalRService
+    private signalRService: SignalRService,
+    private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.startLocalStream();
+    // Lắng nghe remote stream ngay lập tức
     this.listenForRemoteStream();
-    console.log('isVideoCall received in CallPopupComponent:', this.data.isVideoCall);
 
-    // Lắng nghe sự kiện CallEnded từ SignalR
+    this.signalRService.hubConnection.on('CallAccepted', () => {
+      console.log('CallAccepted signal received!');
+      this.callAccepted = true;
+      this.startLocalStream();
+    });
+
+    // Lắng nghe sự kiện kết thúc cuộc gọi
     this.signalRService.hubConnection.on('CallEnded', (data: { isVideoCall: boolean }) => {
       if (data.isVideoCall === this.data.isVideoCall) {
         this.endCall();
@@ -31,18 +45,17 @@ export class CallPopupComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Bắt đầu stream cục bộ (có thể là audio hoặc cả video + audio)
   async startLocalStream(): Promise<void> {
-    try {
-      // Nếu là cuộc gọi video thì yêu cầu cả camera và microphone, nếu không chỉ yêu cầu microphone
-      if (this.data.isVideoCall) {
-        this.localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      } else {
-        this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      }
+    if (!this.callAccepted) {
+      console.log('Waiting for CallAccepted before starting local stream...');
+      return;
+    }
 
-      // Chỉ phát video khi đó là cuộc gọi video
-      if (this.data.isVideoCall && this.localStream) {
+    try {
+      const constraints = this.data.isVideoCall ? { video: true, audio: true } : { audio: true };
+      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      if (this.localStream && this.data.isVideoCall) {
         this.playStream(this.localStream, 'local-video');
       }
     } catch (error) {
@@ -51,36 +64,56 @@ export class CallPopupComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Lắng nghe stream từ đối tác
   listenForRemoteStream(): void {
-    this.peerService.onStream((remoteStream) => {
-      if (this.data.isVideoCall) {  // Chỉ phát video khi đó là cuộc gọi video
+    if (!this.callAccepted) {
+      console.log('Waiting for CallAccepted before listening for remote stream...');
+      return;
+    }
+
+    this.peerService.onStream((remoteStream: MediaStream) => {
+      console.log('Remote stream received:', remoteStream);
+
+      this.remoteStream = remoteStream;
+
+      if (this.remoteStream.getVideoTracks().length > 0 && this.callAccepted) {
         this.playStream(remoteStream, 'remote-video');
       }
     });
   }
 
-  // Hiển thị stream lên UI
   playStream(stream: MediaStream, elementId: string): void {
     const videoElement = document.getElementById(elementId) as HTMLVideoElement;
+
     if (videoElement) {
+      console.log(`Assigning stream to video element with ID: ${elementId}`);
       videoElement.srcObject = stream;
-      videoElement.play().catch((error) => {
-        console.error(`Failed to play video on element ${elementId}:`, error);
-      });
+      console.log('Stream assigned:', videoElement.srcObject);
+
+      videoElement.onloadedmetadata = () => {
+        videoElement.play().then(() => {
+          console.log(`Video playback started on element: ${elementId}`);
+        }).catch((error) => {
+          console.error(`Failed to play video on element ${elementId}:`, error);
+        });
+      };
     } else {
-      console.error(`Video element with id ${elementId} not found.`);
+      console.error(`Video element with ID: ${elementId} not found.`);
     }
   }
 
-  // Kết thúc cuộc gọi
   endCall(): void {
+    console.log('Ending call...');
     this.peerService.endCall();
-    this.stopLocalStream();
+    this.cleanupStreams();
     this.dialogRef.close();
   }
 
-  // Dừng stream cục bộ
+  cleanupStreams(): void {
+    console.log('Cleaning up streams...');
+    this.stopLocalStream();
+    this.stopRemoteStream();
+  }
+
   stopLocalStream(): void {
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
@@ -88,9 +121,17 @@ export class CallPopupComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Cleanup khi component bị hủy
+  stopRemoteStream(): void {
+    if (this.remoteStream) {
+      this.remoteStream.getTracks().forEach(track => track.stop());
+      this.remoteStream = null;
+    }
+  }
+
   ngOnDestroy(): void {
+    console.log('Cleaning up CallPopupComponent...');
     this.signalRService.hubConnection.off('CallEnded');
-    this.stopLocalStream();
+    this.signalRService.hubConnection.off('CallAccepted');
+    this.cleanupStreams();
   }
 }

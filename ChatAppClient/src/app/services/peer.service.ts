@@ -1,7 +1,7 @@
 import Peer, { MediaConnection } from 'peerjs';
 import { Injectable } from '@angular/core';
 import { SignalRService } from './signalr.service';
-import {first} from "rxjs";
+import { first } from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +23,6 @@ export class PeerService {
 
     console.log('Waiting for SignalR connection...');
 
-    // Đợi SignalR kết nối thành công rồi mới khởi tạo Peer
     this.signalRService.getConnectionState().pipe(first(isConnected => isConnected === true))
       .subscribe(() => {
         console.log('SignalR connected. Initializing Peer...');
@@ -46,7 +45,20 @@ export class PeerService {
       });
   }
 
-  // Phương thức đăng ký callback khi nhận được stream từ đối tác
+  public waitForCallAcceptedThenStream(callback: (stream: MediaStream) => void): void {
+    this.signalRService.hubConnection.on('CallAccepted', () => {
+      console.log('CallAccepted signal received! Starting to listen for stream.');
+
+      if (this.mediaCall) {
+        this.mediaCall.on('stream', (remoteStream: MediaStream) => {
+          callback(remoteStream);
+        });
+      } else {
+        console.error('No active call to handle stream.');
+      }
+    });
+  }
+
   public onStream(callback: (stream: MediaStream) => void): void {
     if (this.mediaCall) {
       this.mediaCall.on('stream', (remoteStream: MediaStream) => {
@@ -71,22 +83,19 @@ export class PeerService {
   private incomingCallHandler(call: MediaConnection): void {
     if (this.mediaCall) {
       console.warn('Already in a call. Rejecting new incoming call.');
-      call.close(); // Nếu đã có cuộc gọi, từ chối cuộc gọi mới
+      call.close();
       return;
     }
 
     this.mediaCall = call;
 
-    // Giả sử `call.metadata` có chứa thông tin về cuộc gọi, bao gồm `isVideoCall`
-    const isVideoCall = call.metadata?.isVideoCall ?? false; // Đảm bảo rằng chúng ta có giá trị `isVideoCall`
-
+    const isVideoCall = call.metadata?.isVideoCall ?? false;
     this.signalRService.notifyIncomingCall(call.peer, isVideoCall);
     console.log('Sending isVideoCall to SignalR:', isVideoCall);
   }
 
   public async acceptCall(isVideoCall: boolean): Promise<MediaStream | null> {
     try {
-      // Dựa trên giá trị isVideoCall để yêu cầu quyền truy cập camera và microphone
       this.localStream = await navigator.mediaDevices.getUserMedia({
         video: isVideoCall,
         audio: true
@@ -94,22 +103,24 @@ export class PeerService {
 
       if (this.mediaCall) {
         this.mediaCall.answer(this.localStream);
-        this.mediaCall.on('stream', (remoteStream: MediaStream) => this.handleRemoteStream(remoteStream));
+
+        this.waitForCallAcceptedThenStream((remoteStream) => {
+          this.handleRemoteStream(remoteStream);
+        });
+
         this.mediaCall.on('close', () => this.cleanup());
       } else {
         console.error('No incoming call to accept.');
         return null;
       }
 
-      return this.localStream;  // Trả về localStream
+      return this.localStream;
     } catch (error) {
       console.error('Failed to get local stream:', error);
-      return null;  // Trả về null nếu có lỗi
+      return null;
     }
   }
 
-
-  // Xử lý người nhận từ chối cuộc gọi
   public rejectCall(): void {
     if (this.mediaCall) {
       this.mediaCall.close();
@@ -121,13 +132,10 @@ export class PeerService {
 
   public async makeCall(peerId: string, isVideoCall: boolean): Promise<void> {
     try {
-      // Dựa trên giá trị isVideoCall để yêu cầu quyền truy cập camera và microphone
       this.localStream = await navigator.mediaDevices.getUserMedia({
         video: isVideoCall,
         audio: true
       });
-
-      this.localStream.getTracks().forEach(track => console.log(track.kind));
 
       if (!this.peer) {
         console.error('Peer instance is not initialized.');
@@ -140,9 +148,12 @@ export class PeerService {
       }
 
       this.mediaCall = this.peer.call(peerId, this.localStream, { metadata: { isVideoCall } });
-      console.log('isVideoCall:', isVideoCall);
+
       if (this.mediaCall) {
-        this.mediaCall.on('stream', (remoteStream: MediaStream) => this.handleRemoteStream(remoteStream));
+        this.waitForCallAcceptedThenStream((remoteStream) => {
+          this.handleRemoteStream(remoteStream);
+        });
+
         this.mediaCall.on('close', () => this.cleanup());
       } else {
         console.error('Failed to make call.');
@@ -151,18 +162,18 @@ export class PeerService {
       console.error('Failed to get local stream:', error);
     }
   }
+
   public endCall(): void {
     if (this.mediaCall) {
       const peerId = this.mediaCall.peer;
-      let isVideoCall = false; // Mặc định là false
+      let isVideoCall = false;
 
-      // Kiểm tra nếu localStream tồn tại và có video tracks
       if (this.localStream && this.localStream.getVideoTracks().length > 0) {
         isVideoCall = true;
       }
 
       this.mediaCall.close();
-      this.signalRService.handleEndCall(peerId, isVideoCall); // Gửi tín hiệu kết thúc cuộc gọi cùng với isVideoCall
+      this.signalRService.handleEndCall(peerId, isVideoCall);
       this.cleanup();
       console.log('Call manually ended.');
     } else {
@@ -171,30 +182,38 @@ export class PeerService {
   }
 
   private handleRemoteStream(remoteStream: MediaStream): void {
-    const videoElement = document.createElement('video');
-    videoElement.srcObject = remoteStream;
-    videoElement.autoplay = true;
-    videoElement.style.width = "100%"; // Thêm style nếu cần thiết
-    document.body.appendChild(videoElement);
+    const videoElement = document.getElementById('remote-video') as HTMLVideoElement;
+
+    if (videoElement) {
+      videoElement.srcObject = remoteStream;
+      videoElement.onloadedmetadata = () => {
+        videoElement.play().then(() => {
+          console.log('Remote stream is playing.');
+        }).catch(err => console.error('Error playing remote stream:', err));
+      };
+    } else {
+      console.error('Remote video element not found.');
+    }
   }
 
-  // Cleanup resources
   private cleanup(): void {
-    // Dừng tất cả các track của webcam và microphone
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
-      this.localStream = null;  // Xóa stream sau khi đã dừng tất cả các track
+      this.localStream = null;
     }
 
-    this.mediaCall = null;
-
-    // Xóa video element
-    const videoElement = document.querySelector('video');
-    if (videoElement) {
-      videoElement.pause();
-      videoElement.srcObject = null;
-      videoElement.remove();
+    if (this.mediaCall) {
+      this.mediaCall.close();
+      this.mediaCall = null;
     }
+
+    const remoteVideoElement = document.getElementById('remote-video') as HTMLVideoElement;
+    if (remoteVideoElement) {
+      remoteVideoElement.pause();
+      remoteVideoElement.srcObject = null;
+    }
+
+    console.log('Call resources cleaned up.');
   }
 
   private getCurrentUserId(): string | null {

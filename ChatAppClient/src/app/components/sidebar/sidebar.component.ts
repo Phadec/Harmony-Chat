@@ -510,7 +510,7 @@ export class SidebarComponent implements OnInit {
   }
 
   getAvatarUrl(avatar: string): string {
-    return `https://localhost:7267/${avatar}`;
+    return `https://192.168.1.102:7267/${avatar}`;
   }
 
   onCreateGroup(): void {

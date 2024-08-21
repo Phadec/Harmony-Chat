@@ -1,4 +1,13 @@
-import { Component, Inject, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  Inject,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  ChangeDetectorRef
+} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PeerService } from '../../services/peer.service';
 import { SignalRService } from '../../services/signalr.service';
@@ -11,8 +20,8 @@ import { SignalRService } from '../../services/signalr.service';
 export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDestroy {
   callAccepted: boolean = false;
   localStream: MediaStream | null = null;
+  remoteStream: MediaStream | null = null;
 
-  // Sử dụng ViewChild để tham chiếu đến phần tử video
   @ViewChild('localVideo') localVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteVideo') remoteVideoRef!: ElementRef<HTMLVideoElement>;
 
@@ -20,6 +29,7 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
     public dialogRef: MatDialogRef<IncomingCallPopupComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { callerName: string, peerId: string, isVideoCall: boolean },
     private peerService: PeerService,
+    private cdRef: ChangeDetectorRef,
     private signalRService: SignalRService
   ) {}
 
@@ -34,107 +44,114 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
       }
     });
 
+    // Lắng nghe stream từ đối tác ngay khi nhận cuộc gọi
     this.listenForRemoteStream();
   }
 
   ngAfterViewInit(): void {
-    if (this.data.isVideoCall && this.localVideoRef && this.localStream) {
-      this.playStream(this.localStream, this.localVideoRef.nativeElement);
-    }
+    // Chỉ định lại các thành phần ViewChild sau khi View đã được khởi tạo
+    this.cdRef.detectChanges();
   }
 
   async acceptCall(): Promise<void> {
     try {
       console.log('Accepting call...');
 
-      // Chấp nhận cuộc gọi với loại cuộc gọi (video/audio) dựa trên `isVideoCall`
+      // Chấp nhận cuộc gọi và nhận stream từ thiết bị local
       this.localStream = await this.peerService.acceptCall(this.data.isVideoCall);
-      this.callAccepted = !!this.localStream;  // Đánh dấu là cuộc gọi đã được chấp nhận nếu có localStream
+      this.callAccepted = !!this.localStream;
 
-      // Nếu là cuộc gọi video, phát stream video cục bộ
+      // Gửi tín hiệu chấp nhận cuộc gọi lên server
+      this.signalRService.hubConnection.send('AcceptCall', this.data.peerId);
+
+      // Đảm bảo localVideoRef đã sẵn sàng trước khi phát stream
       if (this.data.isVideoCall && this.localStream) {
-        console.log('Local stream obtained:', this.localStream);
-        this.playStream(this.localStream, this.localVideoRef?.nativeElement);
+        this.tryPlayingLocalStream(5); // Thử phát stream với tối đa 5 lần thử
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Failed to accept call:', error);
-
-      if (error instanceof Error) {
-        // Xử lý các loại lỗi khác nhau
-        if (error.name === 'NotAllowedError') {
-          alert('Permission to access media devices was denied.');
-        } else if (error.name === 'NotFoundError') {
-          alert('No media devices found. Please connect a camera and microphone.');
-        } else if (error.name === 'NotReadableError') {
-          alert('Media device is already in use by another application.');
-        } else {
-          alert('Could not access media devices. Please check your permissions.');
-        }
-      } else {
-        alert('An unknown error occurred.');
-      }
-
-      this.rejectCall();  // Tự động từ chối cuộc gọi nếu không lấy được thiết bị
+      this.handleMediaErrors(error);
+      this.rejectCall();
     }
   }
 
+  tryPlayingLocalStream(retries: number): void {
+    // Kiểm tra xem localStream có null không trước khi tiếp tục
+    if (!this.localStream) {
+      console.error('Local stream is null or undefined.');
+      return;
+    }
 
+    if (this.localVideoRef?.nativeElement) {
+      console.log('Local stream obtained:', this.localStream);
+      this.playStream(this.localStream, this.localVideoRef.nativeElement);
+    } else if (retries > 0) {
+      console.warn('Local video element not ready, retrying...', retries, 'attempts left.');
+      setTimeout(() => this.tryPlayingLocalStream(retries - 1), 100); // Thử lại sau 100ms
+    } else {
+      console.error('Failed to initialize local video element after multiple attempts.');
+      // Nếu thất bại sau nhiều lần thử, bạn có thể xử lý thêm tại đây (ví dụ: thông báo lỗi cho người dùng)
+    }
+  }
 
+  listenForRemoteStream(): void {
+    console.log('Listening for remote stream...');
 
-  // Từ chối cuộc gọi
+    this.peerService.onStream((remoteStream: MediaStream) => {
+      console.log('Received remote stream:', remoteStream);
+
+      if (remoteStream.getVideoTracks().length > 0) {
+        console.log('Remote stream contains video tracks.');
+        this.remoteStream = remoteStream;
+
+        this.cdRef.detectChanges(); // Cập nhật giao diện
+
+        if (this.remoteVideoRef?.nativeElement) {
+          console.log('Applying remote stream to the video element.');
+          this.playStream(remoteStream, this.remoteVideoRef.nativeElement);
+        } else {
+          console.warn('Remote video element is not found or not initialized.');
+        }
+      } else {
+        console.warn('Remote stream does not contain any video tracks.');
+      }
+    });
+  }
+
+  playStream(stream: MediaStream, videoElement: HTMLVideoElement): void {
+    if (videoElement) {
+      console.log('Assigning stream to video element', videoElement);
+      videoElement.srcObject = stream;
+
+      videoElement.onloadedmetadata = () => {
+        console.log('Metadata loaded, attempting to play video');
+        videoElement.play().catch((error) => {
+          console.error('Failed to play video:', error);
+        });
+      };
+    } else {
+      console.error('Video element is not initialized.');
+    }
+  }
+
   rejectCall(): void {
     try {
       console.log('Rejecting call...');
-
-      // Gọi phương thức để xử lý kết thúc cuộc gọi trên server
       this.signalRService.handleEndCall(this.data.peerId, this.data.isVideoCall);
-
-      // Đảm bảo dừng bất kỳ stream nào nếu có
       this.stopLocalStream();
-
-      // Đóng dialog popup
       this.dialogRef.close();
     } catch (error) {
       console.error('Error while rejecting call:', error);
     }
   }
 
-  // Lắng nghe remote stream từ đối tác
-  listenForRemoteStream(): void {
-    this.peerService.onStream((remoteStream) => {
-      console.log('Received remote stream:', remoteStream);
-      if (this.data.isVideoCall) {
-        this.playStream(remoteStream, this.remoteVideoRef?.nativeElement);
-      }
-    });
-  }
-
-  // Phương thức phát video đã được sửa đổi
-  playStream(stream: MediaStream, videoElement: HTMLVideoElement | undefined): void {
-    if (videoElement) {
-      console.log(`Playing stream on video element`, videoElement);
-
-      // Gán stream cho srcObject của phần tử video
-      videoElement.srcObject = stream;
-
-      // Đảm bảo phát video sau khi metadata đã được load
-      videoElement.onloadedmetadata = () => {
-        videoElement.play().catch((error) => {
-          console.error(`Failed to play video:`, error);
-        });
-      };
-    } else {
-      console.error(`Video element not found or not initialized.`);
-    }
-  }
-  // Kết thúc cuộc gọi
   endCall(): void {
+    console.log('Ending call...');
     this.peerService.endCall();
     this.stopLocalStream();
     this.dialogRef.close();
   }
 
-  // Dừng stream cục bộ
   stopLocalStream(): void {
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
@@ -142,9 +159,29 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
     }
   }
 
-  // Cleanup khi component bị hủy
   ngOnDestroy(): void {
     this.signalRService.hubConnection.off('CallEnded');
     this.stopLocalStream();
+  }
+
+  private handleMediaErrors(error: unknown): void {
+    if (error instanceof Error) {
+      switch (error.name) {
+        case 'NotAllowedError':
+          alert('Permission to access media devices was denied.');
+          break;
+        case 'NotFoundError':
+          alert('No media devices found. Please connect a camera and microphone.');
+          break;
+        case 'NotReadableError':
+          alert('Media device is already in use by another application.');
+          break;
+        default:
+          alert('Could not access media devices. Please check your permissions.');
+          break;
+      }
+    } else {
+      alert('An unknown error occurred.');
+    }
   }
 }

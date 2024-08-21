@@ -7,7 +7,7 @@ import {RecipientInfo} from "../models/recipient-info.model";
   providedIn: 'root'
 })
 export class ChatService {
-  private apiUrl = 'https://localhost:7267/api/chats';
+  private apiUrl = 'https://192.168.1.102:7267/api/chats';
 
   constructor(private http: HttpClient) {}
 

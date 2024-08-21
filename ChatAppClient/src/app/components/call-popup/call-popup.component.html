@@ -3,7 +3,7 @@
 
   <div class="video-container" *ngIf="data.isVideoCall"> <!-- Chỉ hiển thị khi là video call -->
     <video id="local-video" autoplay muted></video>
-    <video id="remote-video" autoplay></video>
+    <video id="remote-video" autoplay playsinline></video>
   </div>
 
   <button mat-raised-button color="warn" (click)="endCall()">Kết thúc cuộc gọi</button>

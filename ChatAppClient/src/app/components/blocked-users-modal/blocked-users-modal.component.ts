@@ -51,7 +51,7 @@ export class BlockedUsersModalComponent implements OnInit {
   }
 
   getAvatarUrl(avatar: string): string {
-    return `https://localhost:7267/${avatar}`; // Update with your actual avatar URL
+    return `https://192.168.1.102:7267/${avatar}`; // Update with your actual avatar URL
   }
 
   onClose(): void {

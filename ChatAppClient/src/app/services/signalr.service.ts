@@ -29,7 +29,7 @@ export class SignalRService implements OnDestroy {
 
   constructor(private router: Router, private dialog: MatDialog) {
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl('https://localhost:7267/chat-hub', {
+      .withUrl('https://192.168.1.102:7267/chat-hub', {
         accessTokenFactory: () => this.getAccessToken()
       })
       .configureLogging(signalR.LogLevel.Information)

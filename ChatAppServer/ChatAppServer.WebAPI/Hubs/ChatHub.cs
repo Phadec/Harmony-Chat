@@ -380,6 +380,33 @@ public sealed class ChatHub : Hub
         }
     }
 
+    public async Task AcceptCall(string peerId)
+    {
+        try
+        {
+            // Lấy userId từ peerId
+            var userId = GetUserIdByPeerId(peerId);
+
+            // Gửi thông báo đến tất cả các connectionId của người gọi rằng cuộc gọi đã được chấp nhận
+            if (UserConnections.TryGetValue(userId, out var connectionIds))
+            {
+                foreach (var connectionId in connectionIds)
+                {
+                    await Clients.Client(connectionId).SendAsync("CallAccepted");
+                }
+            }
+            else
+            {
+                _logger.LogWarning($"No connections found for user {userId} when trying to accept call.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error handling call acceptance. PeerId: {peerId}, Error: {ex.Message}");
+        }
+    }
+
+
     // Phương thức để xử lý khi người dùng kết thúc cuộc gọi
     public async Task HandleEndingCall(string peerId, bool isVideoCall)
     {
