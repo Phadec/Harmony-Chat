@@ -86,10 +86,28 @@ export class CallPopupComponent implements OnInit, OnDestroy {
       console.log('Constraints used for local stream:', constraints);
       this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
 
-      if (this.localStream && this.data.isVideoCall) {
-        this.playStream(this.localStream, 'local-video');
+      if (this.localStream) {
+        // If video call, play video stream
+        if (this.data.isVideoCall) {
+          this.playStream(this.localStream, 'local-video');
+        }
+
+        // Always handle local audio stream
+        const audioElement = document.getElementById('local-audio') as HTMLAudioElement;
+        if (audioElement) {
+          audioElement.srcObject = this.localStream;
+          audioElement.onloadedmetadata = () => {
+            audioElement.play().then(() => {
+              console.log('Local audio playback started');
+            }).catch(error => {
+              console.error('Failed to play local audio:', error);
+            });
+          };
+        } else {
+          console.error('Local audio element not found.');
+        }
       } else {
-        console.log('Audio-only stream started');
+        console.log('No local stream available');
       }
     } catch (error) {
       console.error('Failed to get local stream:', error);
@@ -104,19 +122,10 @@ export class CallPopupComponent implements OnInit, OnDestroy {
 
       const audioTracks = remoteStream.getAudioTracks();
       if (audioTracks.length > 0) {
-        console.log('Audio tracks in remote stream:', audioTracks);
-      } else {
-        console.error('No audio tracks found in remote stream.');
-      }
-
-      if (this.data.isVideoCall && remoteStream.getVideoTracks().length > 0 && this.callAccepted) {
-        this.playStream(remoteStream, 'remote-video');
-      } else if (!this.data.isVideoCall && remoteStream.getAudioTracks().length > 0) {
-        // For voice calls, use the audio element
         const audioElement = document.getElementById('remote-audio') as HTMLAudioElement;
         if (audioElement) {
           console.log('Assigning remote stream to audio element');
-          audioElement.srcObject = remoteStream;  // Assign the remote stream to the audio element
+          audioElement.srcObject = remoteStream;
           audioElement.onloadedmetadata = () => {
             audioElement.play().then(() => {
               console.log('Remote audio playback started');
@@ -125,12 +134,17 @@ export class CallPopupComponent implements OnInit, OnDestroy {
             });
           };
         } else {
-          console.error('Audio element not found');
+          console.error('Remote audio element not found.');
         }
+      } else {
+        console.error('No audio tracks found in remote stream.');
+      }
+
+      if (this.data.isVideoCall && remoteStream.getVideoTracks().length > 0 && this.callAccepted) {
+        this.playStream(remoteStream, 'remote-video');
       }
     });
   }
-
 
   playStream(stream: MediaStream, elementId: string): void {
     const videoElement = document.getElementById(elementId) as HTMLVideoElement;

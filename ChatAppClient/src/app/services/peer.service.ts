@@ -193,6 +193,43 @@ export class PeerService {
     }
   }
 
+  private handleRemoteStream(remoteStream: MediaStream): void {
+    const videoTracks = remoteStream.getVideoTracks();
+    const audioTracks = remoteStream.getAudioTracks();
+
+    if (videoTracks.length > 0) {
+      // Handle video stream
+      const videoElement = document.getElementById('remote-video') as HTMLVideoElement;
+      if (videoElement) {
+        videoElement.srcObject = remoteStream;
+        videoElement.onloadedmetadata = () => {
+          videoElement.play().then(() => {
+            console.log('Remote video stream is playing.');
+          }).catch(err => console.error('Error playing remote video stream:', err));
+        };
+      } else {
+        console.error('Remote video element not found.');
+      }
+    }
+
+    if (audioTracks.length > 0) {
+      // Handle audio stream
+      const audioElement = document.getElementById('remote-audio') as HTMLAudioElement;
+      if (audioElement) {
+        audioElement.srcObject = remoteStream;
+        audioElement.onloadedmetadata = () => {
+          audioElement.play().then(() => {
+            console.log('Remote audio stream is playing.');
+          }).catch(err => console.error('Error playing remote audio stream:', err));
+        };
+      } else {
+        console.error('Remote audio element not found.');
+      }
+    } else {
+      console.warn('No audio tracks found in the remote stream.');
+    }
+  }
+
   public endCall(): void {
     if (this.mediaCall) {
       const peerId = this.mediaCall.peer;
@@ -208,37 +245,6 @@ export class PeerService {
       console.log('Call manually ended.');
     } else {
       console.error('No active call to end.');
-    }
-  }
-
-  private handleRemoteStream(remoteStream: MediaStream): void {
-    const videoTracks = remoteStream.getVideoTracks();
-    if (videoTracks.length > 0) {
-      // Handle video stream
-      const videoElement = document.getElementById('remote-video') as HTMLVideoElement;
-      if (videoElement) {
-        videoElement.srcObject = remoteStream;
-        videoElement.onloadedmetadata = () => {
-          videoElement.play().then(() => {
-            console.log('Remote video stream is playing.');
-          }).catch(err => console.error('Error playing remote video stream:', err));
-        };
-      } else {
-        console.error('Remote video element not found.');
-      }
-    } else {
-      // Handle audio stream
-      const audioElement = document.getElementById('remote-audio') as HTMLAudioElement;
-      if (audioElement) {
-        audioElement.srcObject = remoteStream;
-        audioElement.onloadedmetadata = () => {
-          audioElement.play().then(() => {
-            console.log('Remote audio stream is playing.');
-          }).catch(err => console.error('Error playing remote audio stream:', err));
-        };
-      } else {
-        console.error('Remote audio element not found.');
-      }
     }
   }
 
