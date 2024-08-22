@@ -9,13 +9,24 @@ export class AuthGuard implements CanActivate {
 
   canActivate(): boolean {
     const userId = localStorage.getItem('userId');
-    if (userId) {
-      return true;
+    const userRole = localStorage.getItem('role');
+
+    if (userId && userRole) {
+      if (userRole === 'Admin') {
+        // Nếu là admin, cho phép truy cập trang admin
+        return true;
+      } else if (userRole === 'User') {
+        // Nếu là user, cho phép truy cập trang người dùng
+        return true;
+      } else {
+        // Nếu không xác định được role, điều hướng về trang login
+        this.router.navigate(['/login']);
+        return false;
+      }
     } else {
-      // Redirect to the login page if the user is not authenticated
+      // Nếu chưa đăng nhập, điều hướng về trang login
       this.router.navigate(['/login']);
       return false;
     }
   }
 }
-

@@ -336,6 +336,7 @@ namespace ChatAppServer.WebAPI.Controllers
                     user.Avatar,
                     user.Status,
                     user.TagName,
+                    user.Role,
                     Token = token
                 });
             }

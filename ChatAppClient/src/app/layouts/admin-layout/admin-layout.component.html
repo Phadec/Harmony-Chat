@@ -1,0 +1,22 @@
+<!-- admin-layout.component.html -->
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <!-- Sidebar với các link điều hướng -->
+    <nav>
+      <ul>
+        <li><a routerLink="/admin">Dashboard</a></li>
+        <!-- Thêm các link khác tại đây -->
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="admin-content">
+    <header class="admin-header">
+      <h1>Admin Panel</h1>
+    </header>
+
+    <main>
+      <router-outlet></router-outlet> <!-- Đây là nơi hiển thị các route con -->
+    </main>
+  </div>
+</div>

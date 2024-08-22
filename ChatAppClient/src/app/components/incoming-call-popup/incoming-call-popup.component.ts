@@ -52,26 +52,36 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
     // Chỉ định lại các thành phần ViewChild sau khi View đã được khởi tạo
     this.cdRef.detectChanges();
   }
-
   async acceptCall(): Promise<void> {
     try {
       console.log('Accepting call...');
 
-      // Chấp nhận cuộc gọi và nhận stream từ thiết bị local
+      // Chấp nhận cuộc gọi và nhận stream từ thiết bị local (video hoặc audio tùy thuộc vào cuộc gọi)
       this.localStream = await this.peerService.acceptCall(this.data.isVideoCall);
+
+      // Đánh dấu rằng cuộc gọi đã được chấp nhận nếu có localStream
       this.callAccepted = !!this.localStream;
 
+      if (!this.callAccepted) {
+        throw new Error('Failed to access local media stream.');
+      }
+
       // Gửi tín hiệu chấp nhận cuộc gọi lên server
-      this.signalRService.hubConnection.send('AcceptCall', this.data.peerId);
+      await this.signalRService.hubConnection.send('AcceptCall', this.data.peerId);
+
+      // Phát tín hiệu dừng âm thanh khi cuộc gọi đã được chấp nhận
+      this.signalRService.callAccepted();
 
       // Đảm bảo localVideoRef đã sẵn sàng trước khi phát stream
       if (this.data.isVideoCall && this.localStream) {
         this.tryPlayingLocalStream(5); // Thử phát stream với tối đa 5 lần thử
       }
+
+      console.log('Call accepted successfully.');
     } catch (error) {
       console.error('Failed to accept call:', error);
       this.handleMediaErrors(error);
-      this.rejectCall();
+      this.rejectCall(); // Hủy bỏ cuộc gọi nếu xảy ra lỗi
     }
   }
 

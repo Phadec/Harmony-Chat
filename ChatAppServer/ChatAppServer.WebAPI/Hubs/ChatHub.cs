@@ -333,8 +333,10 @@ public sealed class ChatHub : Hub
         }
 
         _logger.LogWarning($"No peerId found for user {userId}.");
-        throw new HubException("User not found.");
+        // Trả về null hoặc chuỗi rỗng khi không tìm thấy
+        return null;  // Hoặc return string.Empty;
     }
+
 
     // Phương thức để lấy userId từ peerId
     public Guid GetUserIdByPeerId(string peerId)
@@ -405,6 +407,7 @@ public sealed class ChatHub : Hub
             _logger.LogError($"Error handling call acceptance. PeerId: {peerId}, Error: {ex.Message}");
         }
     }
+
 
 
     // Phương thức để xử lý khi người dùng kết thúc cuộc gọi

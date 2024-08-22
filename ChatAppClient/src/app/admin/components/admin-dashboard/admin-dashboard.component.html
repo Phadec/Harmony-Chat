@@ -1,0 +1,28 @@
+<div class="admin-dashboard">
+  <header class="admin-header">
+    <h2>User Management</h2>
+    <button class="logout-btn" (click)="signOut()">Logout</button>
+  </header>
+
+  <table>
+    <thead>
+    <tr>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let user of users">
+      <td>{{ user.username }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ user.isLocked ? 'Locked' : 'Active' }}</td>
+      <td>
+        <button class="action-btn" (click)="lockUser(user.id)" [disabled]="user.isLocked">Lock</button>
+        <button class="action-btn" (click)="unlockUser(user.id)" [disabled]="!user.isLocked">Unlock</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>

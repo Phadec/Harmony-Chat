@@ -165,10 +165,7 @@ body, html {
 .attachment-preview {
   position: fixed;
   bottom: 65px; /* Căn chỉnh phía trên khung nhập tin nhắn */
-  left: 15px;
-  right: 15px;
   background-color: #f9f9f9;
-  padding: 8px; /* Thu nhỏ padding */
   border-radius: 5px;
   border: 1px solid #ddd;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -176,7 +173,7 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: space-between; /* Tách biệt nút "Remove" và phần xem trước */
-  max-width: calc(100% - 30px); /* Giữ vừa khít trong khung chat */
+  width: 50%;
 }
 
 .attachment-preview p {

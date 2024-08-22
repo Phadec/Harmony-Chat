@@ -18,7 +18,8 @@ export class CallPopupComponent implements OnInit, OnDestroy {
   localStream: MediaStream | null = null;
   remoteStream: MediaStream | null = null;
   callAccepted: boolean = false;
-
+  ringingAudio: HTMLAudioElement | null = null;  // Biến để quản lý âm thanh
+  timeoutId: any;
   constructor(
     public dialogRef: MatDialogRef<CallPopupComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { recipientName: string, isVideoCall: boolean },
@@ -34,15 +35,42 @@ export class CallPopupComponent implements OnInit, OnDestroy {
     this.signalRService.hubConnection.on('CallAccepted', () => {
       console.log('CallAccepted signal received!');
       this.callAccepted = true;
+      this.stopRinging();  // Dừng âm thanh khi cuộc gọi được chấp nhận
+      clearTimeout(this.timeoutId);  // Hủy bỏ timeout khi cuộc gọi được chấp nhận
       this.startLocalStream();
     });
 
     // Lắng nghe sự kiện kết thúc cuộc gọi
     this.signalRService.hubConnection.on('CallEnded', (data: { isVideoCall: boolean }) => {
       if (data.isVideoCall === this.data.isVideoCall) {
+        this.stopRinging();  // Dừng âm thanh khi cuộc gọi kết thúc
         this.endCall();
       }
     });
+
+    // Bắt đầu phát âm thanh khi mở popup
+    this.startRinging();
+
+    // Thiết lập timeout tự động kết thúc cuộc gọi sau 15 giây nếu không được chấp nhận
+    this.timeoutId = setTimeout(() => {
+      console.log('Call not accepted within 15 seconds, ending call automatically.');
+      this.endCall();  // Tự động kết thúc cuộc gọi
+    }, 15000);  // 15 giây
+  }
+  startRinging(): void {
+    this.ringingAudio = new Audio('assets/ringcall.mp3');
+    this.ringingAudio.loop = true;
+    this.ringingAudio.play().then(() => {
+      console.log('Ringing sound started');
+    }).catch(error => {
+      console.error('Failed to play ringing sound:', error);
+    });
+  }
+    stopRinging(): void {
+    if (this.ringingAudio) {
+      this.ringingAudio.pause();
+      this.ringingAudio.currentTime = 0;  // Đặt lại thời gian về 0 để phát lại từ đầu nếu cần
+    }
   }
 
   async startLocalStream(): Promise<void> {

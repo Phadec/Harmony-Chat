@@ -12,6 +12,7 @@ import {AppConfigService} from "./app-config.service";
 export class SignalRService implements OnDestroy {
   public hubConnection: signalR.HubConnection;
   private urlSubscription: Subscription;
+  private callAcceptedSubject = new Subject<void>();
   private connectionState = new BehaviorSubject<boolean>(false);
   private messageReceived = new BehaviorSubject<any>(null);
   private messageRead = new BehaviorSubject<string | null>(null);
@@ -26,7 +27,7 @@ export class SignalRService implements OnDestroy {
   public connectedUsers$: Observable<any[]> = this.connectedUsers.asObservable();
   public groupNotificationReceived$: Observable<any> = this.groupNotificationReceived.asObservable();
   public friendEventNotification$: Observable<any> = this.friendEventNotification.asObservable();
-
+  private ringingAudio: HTMLAudioElement | null = null;
 
   constructor(private router: Router, private dialog: MatDialog, private appConfig: AppConfigService) {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -89,6 +90,22 @@ export class SignalRService implements OnDestroy {
         });
     } else {
       console.log('SignalR connection is already established.');
+    }
+  }
+// Phương thức phát âm thanh khi có cuộc gọi đến
+  private startRinging(): void {
+    this.ringingAudio = new Audio('assets/ringreceive.mp3'); // Đảm bảo đường dẫn này đúng
+    this.ringingAudio.loop = true;
+    this.ringingAudio.play().catch(error => {
+      console.error('Failed to play ringing sound:', error);
+    });
+  }
+
+  // Phương thức dừng phát âm thanh
+  private stopRinging(): void {
+    if (this.ringingAudio) {
+      this.ringingAudio.pause();
+      this.ringingAudio.currentTime = 0;
     }
   }
 
@@ -164,7 +181,12 @@ export class SignalRService implements OnDestroy {
       console.warn('Hub connection is not established. Cannot send read notification.');
     }
   }
-
+  public callAccepted(): void {
+    this.callAcceptedSubject.next();
+  }
+  public onCallAccepted(): Observable<void> {
+    return this.callAcceptedSubject.asObservable();
+  }
   public sendNewMessageNotification(chat: any): void {
     if (this.hubConnection.state === signalR.HubConnectionState.Connected) {
       this.hubConnection.invoke('NotifyNewMessage', chat)
@@ -212,21 +234,33 @@ export class SignalRService implements OnDestroy {
   private handleIncomingCall(data: { callerName: string, peerId: string, isVideoCall: boolean }): void {
     // Kiểm tra nếu popup đã mở
     if (this.dialog.openDialogs.length === 0) {
-      this.dialog.open(IncomingCallPopupComponent, {
+      // Phát âm thanh khi có cuộc gọi đến
+      this.startRinging();
+
+      const dialogRef = this.dialog.open(IncomingCallPopupComponent, {
         width: '60%',
         maxWidth: '800px',
         height: 'auto',
-        maxHeight: '90vh',  // Giới hạn chiều cao để không vượt quá màn hình
+        maxHeight: '90vh',
         panelClass: 'no-scroll-popup',
         data: { callerName: data.callerName, peerId: data.peerId, isVideoCall: data.isVideoCall }
       });
 
+      // Dừng âm thanh khi cuộc gọi được chấp nhận
+      this.onCallAccepted().subscribe(() => {
+        console.log('CallAccepted event received!');
+        this.stopRinging();  // Dừng âm thanh khi cuộc gọi được chấp nhận
+      });
 
-
+      // Dừng âm thanh khi popup đóng nếu không có sự kiện CallAccepted
+      dialogRef.afterClosed().subscribe(() => {
+        this.stopRinging();
+      });
     } else {
       console.warn('Popup already opened. Skipping duplicate call.');
     }
   }
+
 
   public notifyIncomingCall(peerId: string, isVideoCall: boolean): void {
     this.hubConnection.invoke('HandleIncomingCall', peerId, isVideoCall)

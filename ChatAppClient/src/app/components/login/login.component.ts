@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { SignalRService } from '../../services/signalr.service';
+import { PeerService } from '../../services/peer.service'; // Import PeerService
 
 @Component({
   selector: 'app-login',
@@ -16,9 +17,9 @@ export class LoginComponent {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private signalRService: SignalRService  // Inject SignalRService
-  ) {
-  }
+    private signalRService: SignalRService, // Inject SignalRService
+    private peerService: PeerService // Inject PeerService
+  ) {}
 
   onLogin(): void {
     this.authService.login(this.username, this.password).subscribe({
@@ -27,6 +28,7 @@ export class LoginComponent {
         localStorage.setItem('userId', response.id);
         localStorage.setItem('token', response.token);
         localStorage.setItem('userAvatar', response.avatar);
+        localStorage.setItem('role', response.role); // Lưu role của người dùng
 
         console.log("Login successful");
         console.log("User ID:", response.id);
@@ -35,8 +37,18 @@ export class LoginComponent {
         // Kết nối SignalR sau khi đăng nhập thành công
         await this.signalRService.startConnection();
 
-        // Chuyển đến trang chats
-        this.router.navigate(['/chats']);
+        // Khởi tạo Peer và đăng ký peerId sau khi đăng nhập thành công
+        this.peerService.initializePeer();
+
+        // Điều hướng dựa trên role của người dùng
+        if (response.role === 'Admin') {
+          this.router.navigate(['/admin']);
+        } else if (response.role === 'User') {
+          this.router.navigate(['/chats']);
+        } else {
+          // Nếu role không xác định, có thể chuyển đến một trang mặc định hoặc trang lỗi
+          this.router.navigate(['/login']);
+        }
       },
       error: (error) => {
         console.error("Login failed", error);

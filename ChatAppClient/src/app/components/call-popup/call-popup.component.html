@@ -1,10 +1,12 @@
 <div class="call-popup">
-  <h2>Đang gọi {{ data.recipientName }}</h2>
+  <h2>Calling {{ data.recipientName }}</h2>
 
-  <div class="video-container" *ngIf="data.isVideoCall"> <!-- Chỉ hiển thị khi là video call -->
+  <div class="video-container" *ngIf="data.isVideoCall"> <!-- Only display for video calls -->
     <video id="local-video" autoplay muted></video>
     <video id="remote-video" autoplay playsinline></video>
   </div>
 
-  <button mat-raised-button color="warn" (click)="endCall()">Kết thúc cuộc gọi</button>
+  <button mat-icon-button color="warn" (click)="endCall()"> <!-- Sử dụng icon thay vì văn bản -->
+    <mat-icon>call_end</mat-icon> <!-- Icon kết thúc cuộc gọi -->
+  </button>
 </div>

@@ -19,6 +19,7 @@ export class ChatHeaderComponent implements OnInit {
     private signalRService: SignalRService,
     private appConfig: AppConfigService,
     public dialog: MatDialog
+
   ) {}
 
   ngOnInit(): void {

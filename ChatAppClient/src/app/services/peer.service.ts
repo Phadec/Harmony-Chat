@@ -15,7 +15,8 @@ export class PeerService {
     this.initializePeer();
   }
 
-  private initializePeer(): void {
+  public initializePeer(): void {
+    // Kiểm tra xem Peer đã được khởi tạo chưa
     if (this.peer) {
       console.log('Peer already initialized.');
       return;
@@ -23,8 +24,11 @@ export class PeerService {
 
     console.log('Waiting for SignalR connection...');
 
-    this.signalRService.getConnectionState().pipe(first(isConnected => isConnected === true))
-      .subscribe(() => {
+    // Đợi cho đến khi kết nối SignalR thành công trước khi khởi tạo Peer
+    this.signalRService.getConnectionState().pipe(
+      first(isConnected => isConnected === true)
+    ).subscribe({
+      next: () => {
         console.log('SignalR connected. Initializing Peer...');
         this.peer = new Peer({
           config: {
@@ -41,8 +45,17 @@ export class PeerService {
         });
 
         this.peer.on('call', (call) => this.incomingCallHandler(call));
-        this.peer.on('error', (err) => console.error('PeerJS error:', err));
-      });
+
+        this.peer.on('error', (err) => {
+          console.error('PeerJS error:', err);
+          // Xử lý lỗi trong quá trình sử dụng PeerJS
+        });
+      },
+      error: (err) => {
+        console.error('Error connecting to SignalR:', err);
+        // Xử lý lỗi kết nối SignalR tại đây, bạn có thể muốn thử kết nối lại
+      }
+    });
   }
 
   public waitForCallAcceptedThenStream(callback: (stream: MediaStream) => void): void {
