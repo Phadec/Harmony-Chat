@@ -24,6 +24,7 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
 
   @ViewChild('localVideo') localVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteVideo') remoteVideoRef!: ElementRef<HTMLVideoElement>;
+  @ViewChild('remoteAudio') remoteAudioRef!: ElementRef<HTMLAudioElement>;  // Thêm phần tử audio
 
   constructor(
     public dialogRef: MatDialogRef<IncomingCallPopupComponent>,
@@ -37,56 +38,45 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
     console.log('Incoming call from:', this.data.callerName);
     console.log('Is Video Call:', this.data.isVideoCall);
 
-    // Lắng nghe sự kiện kết thúc cuộc gọi từ đối tác
     this.signalRService.hubConnection.on('CallEnded', (data: { isVideoCall: boolean }) => {
       if (data.isVideoCall === this.data.isVideoCall) {
         this.endCall();
       }
     });
 
-    // Lắng nghe stream từ đối tác ngay khi nhận cuộc gọi
     this.listenForRemoteStream();
   }
 
   ngAfterViewInit(): void {
-    // Chỉ định lại các thành phần ViewChild sau khi View đã được khởi tạo
     this.cdRef.detectChanges();
   }
+
   async acceptCall(): Promise<void> {
     try {
       console.log('Accepting call...');
-
-      // Chấp nhận cuộc gọi và nhận stream từ thiết bị local (video hoặc audio tùy thuộc vào cuộc gọi)
       this.localStream = await this.peerService.acceptCall(this.data.isVideoCall);
-
-      // Đánh dấu rằng cuộc gọi đã được chấp nhận nếu có localStream
       this.callAccepted = !!this.localStream;
 
       if (!this.callAccepted) {
         throw new Error('Failed to access local media stream.');
       }
 
-      // Gửi tín hiệu chấp nhận cuộc gọi lên server
       await this.signalRService.hubConnection.send('AcceptCall', this.data.peerId);
-
-      // Phát tín hiệu dừng âm thanh khi cuộc gọi đã được chấp nhận
       this.signalRService.callAccepted();
 
-      // Đảm bảo localVideoRef đã sẵn sàng trước khi phát stream
       if (this.data.isVideoCall && this.localStream) {
-        this.tryPlayingLocalStream(5); // Thử phát stream với tối đa 5 lần thử
+        this.tryPlayingLocalStream(5);
       }
 
       console.log('Call accepted successfully.');
     } catch (error) {
       console.error('Failed to accept call:', error);
       this.handleMediaErrors(error);
-      this.rejectCall(); // Hủy bỏ cuộc gọi nếu xảy ra lỗi
+      this.rejectCall();
     }
   }
 
   tryPlayingLocalStream(retries: number): void {
-    // Kiểm tra xem localStream có null không trước khi tiếp tục
     if (!this.localStream) {
       console.error('Local stream is null or undefined.');
       return;
@@ -97,10 +87,9 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
       this.playStream(this.localStream, this.localVideoRef.nativeElement);
     } else if (retries > 0) {
       console.warn('Local video element not ready, retrying...', retries, 'attempts left.');
-      setTimeout(() => this.tryPlayingLocalStream(retries - 1), 100); // Thử lại sau 100ms
+      setTimeout(() => this.tryPlayingLocalStream(retries - 1), 100);
     } else {
       console.error('Failed to initialize local video element after multiple attempts.');
-      // Nếu thất bại sau nhiều lần thử, bạn có thể xử lý thêm tại đây (ví dụ: thông báo lỗi cho người dùng)
     }
   }
 
@@ -110,39 +99,36 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
     this.peerService.onStream((remoteStream: MediaStream) => {
       console.log('Received remote stream:', remoteStream);
 
+      this.remoteStream = remoteStream;
+
       if (remoteStream.getVideoTracks().length > 0) {
-        console.log('Remote stream contains video tracks.');
-        this.remoteStream = remoteStream;
-
-        this.cdRef.detectChanges(); // Cập nhật giao diện
-
-        if (this.remoteVideoRef?.nativeElement) {
-          console.log('Applying remote stream to the video element.');
-          this.playStream(remoteStream, this.remoteVideoRef.nativeElement);
-        } else {
-          console.warn('Remote video element is not found or not initialized.');
-        }
+        // For video call
+        this.playStream(remoteStream, this.remoteVideoRef.nativeElement);
+      } else if (remoteStream.getAudioTracks().length > 0) {
+        // For voice call
+        this.playStream(remoteStream, this.remoteAudioRef.nativeElement);
       } else {
-        console.warn('Remote stream does not contain any video tracks.');
+        console.warn('Remote stream does not contain any audio or video tracks.');
       }
     });
   }
 
-  playStream(stream: MediaStream, videoElement: HTMLVideoElement): void {
-    if (videoElement) {
-      console.log('Assigning stream to video element', videoElement);
-      videoElement.srcObject = stream;
+  playStream(stream: MediaStream, mediaElement: HTMLMediaElement): void {
+    if (mediaElement) {
+      console.log('Assigning stream to media element', mediaElement);
+      mediaElement.srcObject = stream;
 
-      videoElement.onloadedmetadata = () => {
-        console.log('Metadata loaded, attempting to play video');
-        videoElement.play().catch((error) => {
-          console.error('Failed to play video:', error);
+      mediaElement.onloadedmetadata = () => {
+        console.log('Metadata loaded, attempting to play media');
+        mediaElement.play().catch((error) => {
+          console.error('Failed to play media:', error);
         });
       };
     } else {
-      console.error('Video element is not initialized.');
+      console.error('Media element is not initialized.');
     }
   }
+
 
   rejectCall(): void {
     try {

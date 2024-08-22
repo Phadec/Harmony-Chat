@@ -15,6 +15,10 @@
       <video #localVideo id="local-video" autoplay muted></video>
       <video #remoteVideo id="remote-video" autoplay></video>
     </div>
+
+    <!-- Audio element for voice calls -->
+    <audio #remoteAudio id="remote-audio" *ngIf="!data.isVideoCall" autoplay></audio>
+
     <button mat-icon-button color="warn" (click)="endCall()">
       <mat-icon>call_end</mat-icon> <!-- Icon cho End Call -->
     </button>

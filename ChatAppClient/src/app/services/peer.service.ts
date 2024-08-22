@@ -9,22 +9,19 @@ import { first } from "rxjs";
 export class PeerService {
   private peer: Peer | null = null;
   private mediaCall: MediaConnection | null = null;
-  private localStream: MediaStream | null = null;  // Lưu trữ MediaStream của webcam và microphone
+  private localStream: MediaStream | null = null;
 
   constructor(private signalRService: SignalRService) {
     this.initializePeer();
   }
 
   public initializePeer(): void {
-    // Kiểm tra xem Peer đã được khởi tạo chưa
     if (this.peer) {
       console.log('Peer already initialized.');
       return;
     }
 
     console.log('Waiting for SignalR connection...');
-
-    // Đợi cho đến khi kết nối SignalR thành công trước khi khởi tạo Peer
     this.signalRService.getConnectionState().pipe(
       first(isConnected => isConnected === true)
     ).subscribe({
@@ -46,14 +43,20 @@ export class PeerService {
 
         this.peer.on('call', (call) => this.incomingCallHandler(call));
 
+        this.peer.on('disconnected', () => {
+          console.error('Peer disconnected.');
+        });
+
+        this.peer.on('close', () => {
+          console.error('Peer connection closed.');
+        });
+
         this.peer.on('error', (err) => {
           console.error('PeerJS error:', err);
-          // Xử lý lỗi trong quá trình sử dụng PeerJS
         });
       },
       error: (err) => {
         console.error('Error connecting to SignalR:', err);
-        // Xử lý lỗi kết nối SignalR tại đây, bạn có thể muốn thử kết nối lại
       }
     });
   }
@@ -64,6 +67,7 @@ export class PeerService {
 
       if (this.mediaCall) {
         this.mediaCall.on('stream', (remoteStream: MediaStream) => {
+          console.log('Remote stream received:', remoteStream);
           callback(remoteStream);
         });
       } else {
@@ -75,12 +79,20 @@ export class PeerService {
   public onStream(callback: (stream: MediaStream) => void): void {
     if (this.mediaCall) {
       this.mediaCall.on('stream', (remoteStream: MediaStream) => {
-        callback(remoteStream);
+        console.log('Remote stream received:', remoteStream);
+
+        if (remoteStream.getAudioTracks().length > 0) {
+          console.log('Audio stream received');
+          callback(remoteStream);
+        } else {
+          console.log('No audio tracks found in the remote stream.');
+        }
       });
     } else {
       console.error('No active call to handle stream.');
     }
   }
+
 
   private registerPeerId(peerId: string): void {
     const userId = this.getCurrentUserId();
@@ -101,10 +113,11 @@ export class PeerService {
     }
 
     this.mediaCall = call;
+    console.log('Incoming call received:', call);
 
     const isVideoCall = call.metadata?.isVideoCall ?? false;
     this.signalRService.notifyIncomingCall(call.peer, isVideoCall);
-    console.log('Sending isVideoCall to SignalR:', isVideoCall);
+    console.log('Notifying SignalR of incoming call with isVideoCall:', isVideoCall);
   }
 
   public async acceptCall(isVideoCall: boolean): Promise<MediaStream | null> {
@@ -116,6 +129,7 @@ export class PeerService {
 
       if (this.mediaCall) {
         this.mediaCall.answer(this.localStream);
+        console.log('Call answered with local stream:', this.localStream);
 
         this.waitForCallAcceptedThenStream((remoteStream) => {
           this.handleRemoteStream(remoteStream);
@@ -136,6 +150,7 @@ export class PeerService {
 
   public rejectCall(): void {
     if (this.mediaCall) {
+      console.log('Rejecting call...');
       this.mediaCall.close();
       this.cleanup();
     } else {
@@ -149,6 +164,7 @@ export class PeerService {
         video: isVideoCall,
         audio: true
       });
+      console.log('Local stream obtained for making call:', this.localStream);
 
       if (!this.peer) {
         console.error('Peer instance is not initialized.');
@@ -163,6 +179,7 @@ export class PeerService {
       this.mediaCall = this.peer.call(peerId, this.localStream, { metadata: { isVideoCall } });
 
       if (this.mediaCall) {
+        console.log('Outgoing call initiated with peerId:', peerId);
         this.waitForCallAcceptedThenStream((remoteStream) => {
           this.handleRemoteStream(remoteStream);
         });
@@ -195,35 +212,57 @@ export class PeerService {
   }
 
   private handleRemoteStream(remoteStream: MediaStream): void {
-    const videoElement = document.getElementById('remote-video') as HTMLVideoElement;
-
-    if (videoElement) {
-      videoElement.srcObject = remoteStream;
-      videoElement.onloadedmetadata = () => {
-        videoElement.play().then(() => {
-          console.log('Remote stream is playing.');
-        }).catch(err => console.error('Error playing remote stream:', err));
-      };
+    const videoTracks = remoteStream.getVideoTracks();
+    if (videoTracks.length > 0) {
+      // Handle video stream
+      const videoElement = document.getElementById('remote-video') as HTMLVideoElement;
+      if (videoElement) {
+        videoElement.srcObject = remoteStream;
+        videoElement.onloadedmetadata = () => {
+          videoElement.play().then(() => {
+            console.log('Remote video stream is playing.');
+          }).catch(err => console.error('Error playing remote video stream:', err));
+        };
+      } else {
+        console.error('Remote video element not found.');
+      }
     } else {
-      console.error('Remote video element not found.');
+      // Handle audio stream
+      const audioElement = document.getElementById('remote-audio') as HTMLAudioElement;
+      if (audioElement) {
+        audioElement.srcObject = remoteStream;
+        audioElement.onloadedmetadata = () => {
+          audioElement.play().then(() => {
+            console.log('Remote audio stream is playing.');
+          }).catch(err => console.error('Error playing remote audio stream:', err));
+        };
+      } else {
+        console.error('Remote audio element not found.');
+      }
     }
   }
 
+
   private cleanup(): void {
+    console.log('Cleaning up call resources...');
+
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
+      console.log('Local stream stopped.');
     }
 
     if (this.mediaCall) {
       this.mediaCall.close();
       this.mediaCall = null;
+      console.log('Media call closed.');
     }
 
     const remoteVideoElement = document.getElementById('remote-video') as HTMLVideoElement;
     if (remoteVideoElement) {
       remoteVideoElement.pause();
       remoteVideoElement.srcObject = null;
+      console.log('Remote video element cleaned up.');
     }
 
     console.log('Call resources cleaned up.');

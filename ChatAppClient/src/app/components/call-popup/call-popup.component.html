@@ -6,7 +6,10 @@
     <video id="remote-video" autoplay playsinline></video>
   </div>
 
-  <button mat-icon-button color="warn" (click)="endCall()"> <!-- Sử dụng icon thay vì văn bản -->
-    <mat-icon>call_end</mat-icon> <!-- Icon kết thúc cuộc gọi -->
+  <!-- Audio element for voice calls -->
+  <audio id="remote-audio" *ngIf="!data.isVideoCall" autoplay></audio>
+
+  <button mat-icon-button color="warn" (click)="endCall()"> <!-- Icon for ending call -->
+    <mat-icon>call_end</mat-icon>
   </button>
 </div>
