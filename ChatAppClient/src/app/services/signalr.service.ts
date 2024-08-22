@@ -243,7 +243,8 @@ export class SignalRService implements OnDestroy {
         height: 'auto',
         maxHeight: '90vh',
         panelClass: 'no-scroll-popup',
-        data: { callerName: data.callerName, peerId: data.peerId, isVideoCall: data.isVideoCall }
+        data: { callerName: data.callerName, peerId: data.peerId, isVideoCall: data.isVideoCall },
+        disableClose: true
       });
 
       // Dừng âm thanh khi cuộc gọi được chấp nhận

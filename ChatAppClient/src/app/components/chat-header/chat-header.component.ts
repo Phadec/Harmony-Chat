@@ -50,7 +50,8 @@ export class ChatHeaderComponent implements OnInit {
             data: {
               recipientName: this.recipientInfo.fullName,
               isVideoCall: false  // Truyền isVideoCall = false
-            }
+            },
+            disableClose: true
           });
         }
       } else {
@@ -83,7 +84,8 @@ export class ChatHeaderComponent implements OnInit {
             data: {
               recipientName: this.recipientInfo.fullName,
               isVideoCall: true  // Truyền isVideoCall = true
-            }
+            },
+            disableClose: true
           });
         }
       } else {

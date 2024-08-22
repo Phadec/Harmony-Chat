@@ -41,6 +41,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   attachmentFile: File | null = null; // Biến lưu trữ tệp đính kèm
   emojiPickerVisible: boolean = false;
   previewAttachmentUrl: string | ArrayBuffer | null = null;
+  private notificationSound = new Audio('assets/newmessage.mp3');
   constructor(
     private chatService: ChatService,
     private signalRService: SignalRService,
@@ -48,7 +49,8 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     public dialog: MatDialog,
     private eventService: EventService,
     private appConfig: AppConfigService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+
   ) {}
 
   ngOnInit(): void {
@@ -101,6 +103,9 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     // Nhận tin nhắn
     this.signalRService.messageReceived$.subscribe((message: any) => {
       this.handleReceivedMessage(message);
+      if (document.visibilityState !== 'visible') {
+        this.playNotificationSound();
+      }
     });
 
     // Nhận thông báo tin nhắn đã đọc
@@ -145,6 +150,12 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       });
     }
   }
+  playNotificationSound(): void {
+    this.notificationSound.play().catch(error => {
+      console.error('Error playing notification sound:', error);
+    });
+  }
+
 
   handleUserBlockedEvent(event: { eventType: string, data: { blockedUserId: string } }): void {
     console.log(`Handling event: ${event.eventType}, for blockedUserId: ${event.data.blockedUserId}, current recipientId: ${this.recipientId}`);
