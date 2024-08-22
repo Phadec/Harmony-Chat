@@ -35,7 +35,9 @@
   <div class="sidebar-content">
     <!-- Recent Conversations -->
     <ul *ngIf="!searchQuery.startsWith('@') && selectedTab === 'recent'">
-      <li *ngFor="let relationship of filteredRelationships" (click)="onSelectRecipient(relationship.id)">
+      <li *ngFor="let relationship of filteredRelationships"
+          (click)="onSelectRecipient(relationship.id)"
+          [ngClass]="{'selected': relationship.id === selectedRecipientId}">
         <img [src]="getAvatarUrl(relationship.avatar)" alt="Avatar">
         <div class="relationship-details">
           <h4>{{ relationship.fullName }}</h4>
@@ -100,7 +102,8 @@
       <!-- Danh sách các nhóm -->
       <div class="group-content">
         <ul>
-          <li *ngFor="let group of groups" (click)="onSelectRecipient(group.id)">
+          <li *ngFor="let group of groups" (click)="onSelectRecipient(group.id)"
+              [ngClass]="{'selected': group.id === selectedRecipientId}">
             <img [src]="getAvatarUrl(group.avatar)" alt="Avatar">
             <div class="group-details">
               <h4>{{ group.name }}</h4>
@@ -112,7 +115,8 @@
 
     <!-- Friends -->
     <ul *ngIf="selectedTab === 'friends'">
-      <li *ngFor="let friend of friends" (click)="onSelectRecipient(friend.id)">
+      <li *ngFor="let friend of friends" (click)="onSelectRecipient(friend.id)"
+          [ngClass]="{'selected': friend.id === selectedRecipientId}">
         <img [src]="getAvatarUrl(friend.avatar)" alt="Avatar">
         <div class="friend-details">
           <h4>{{ friend.fullName }}</h4>

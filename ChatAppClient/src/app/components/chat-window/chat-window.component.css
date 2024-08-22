@@ -110,6 +110,9 @@ body, html {
   display: inline-block;
   max-width: 75%;
   line-height: 1.5;
+  word-wrap: break-word; /* Đảm bảo từ dài không phá vỡ bố cục */
+  word-break: break-word; /* Đảm bảo từ dài không phá vỡ bố cục */
+  text-align: left;
 }
 
 .sent .message-content {

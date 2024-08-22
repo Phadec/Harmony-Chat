@@ -72,7 +72,6 @@
   scrollbar-width: none; /* Hide scrollbar for Firefox */
 }
 
-/* Sidebar Content Styling */
 .sidebar-content ul {
   list-style-type: none;
   padding: 0;
@@ -88,6 +87,7 @@
 }
 
 .sidebar-content li {
+  position: relative;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #e9ecef;
@@ -95,11 +95,17 @@
   padding: 10px 0;
   max-width: 100%;
   width: 300px;
-  transition: background-color 0.3s ease; /* Smooth background color transition */
+  transition: background-color 0.3s ease;
 }
 
 .sidebar-content li:hover {
   background-color: #e0e0e0; /* Darker background color on hover */
+}
+
+/* Định dạng mục được chọn */
+.sidebar-content li.selected {
+  font-weight: bold;
+  background-color: #e9ecef; /* Thay đổi màu nền khi mục được chọn */
 }
 
 /* Ensure that image and text stay in place */
@@ -110,7 +116,6 @@
   margin-right: 15px;
   object-fit: cover;
 }
-
 
 /* Details Styling */
 .relationship-details,
@@ -146,13 +151,20 @@
   margin-left: auto;
 }
 
+/* Notification Dot Styling */
 .notification-dot {
-  width: 10px;
-  height: 10px;
-  background-color: #dc3545;
+  width: 12px; /* Tăng kích thước để dễ nhìn hơn */
+  height: 12px;
+  background-color: #ff4d4f; /* Đổi màu đỏ đậm hơn */
   border-radius: 50%;
-  margin-left: 10px;
+  position: absolute; /* Đặt vị trí tuyệt đối để dễ dàng căn chỉnh */
+  top: 8px; /* Điều chỉnh vị trí gần với nội dung hơn */
+  right: 12px; /* Điều chỉnh vị trí gần với nội dung hơn */
+  border: 2px solid #f8f9fa; /* Thêm viền trắng để nổi bật hơn */
+  box-shadow: 0 0 8px rgba(255, 77, 79, 0.5); /* Thêm hiệu ứng đổ bóng mềm mại */
 }
+
+
 
 /* No Content Message Styling */
 .no-content {
@@ -404,4 +416,3 @@ button:hover {
 .user-avatar:hover {
   transform: scale(1.1); /* Slightly enlarge the avatar on hover */
 }
-

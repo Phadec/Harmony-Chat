@@ -187,3 +187,24 @@ audio {
   justify-content: center;
   animation: pulse 1s infinite;
 }
+/* Tin nhắn chứa đường link */
+.link-message {
+  background-color: #e0f7fa; /* Màu nền đặc biệt cho tin nhắn chứa link */
+  color: #00796b; /* Màu chữ đậm hơn */
+  padding: 12px 16px; /* Tăng kích thước padding cho thoải mái */
+  border-radius: 12px; /* Bo góc mềm mại */
+  word-wrap: break-word; /* Đảm bảo nội dung được bao gọn trong khung */
+  word-break: break-all; /* Đảm bảo link dài không phá vỡ bố cục */
+}
+
+/* Link trong tin nhắn chứa đường link */
+.link-message a {
+  color: #007bff; /* Màu xanh dương nhạt cho link */
+  text-decoration: none; /* Bỏ gạch chân mặc định */
+  word-break: break-all; /* Đảm bảo link không làm vỡ bố cục */
+  display: inline-block; /* Đảm bảo link nằm trong khung chat */
+}
+
+.link-message a:hover {
+  text-decoration: underline; /* Hiệu ứng gạch chân khi hover */
+}

@@ -22,6 +22,7 @@ import timezone from 'dayjs/plugin/timezone';
 import {EventService} from "../../services/event.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {AppConfigService} from "../../services/app-config.service";
+import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 const vietnamTimezone = 'Asia/Ho_Chi_Minh';
@@ -42,6 +43,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   emojiPickerVisible: boolean = false;
   previewAttachmentUrl: string | ArrayBuffer | null = null;
   private notificationSound = new Audio('assets/newmessage.mp3');
+
   constructor(
     private chatService: ChatService,
     private signalRService: SignalRService,
@@ -50,6 +52,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     private eventService: EventService,
     private appConfig: AppConfigService,
     private snackBar: MatSnackBar,
+    private sanitizer: DomSanitizer
 
   ) {}
 
@@ -92,6 +95,16 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   removeAttachment(): void {
     this.attachmentFile = null; // Xóa tệp đính kèm đã chọn
   }
+  convertTextToLink(text: any): SafeHtml {
+    if (typeof text !== 'string') {
+      return text;  // Trả về giá trị gốc nếu không phải là chuỗi
+    }
+
+    const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    const htmlString = text.replace(urlPattern, '<a href="$1" target="_blank">$1</a>');
+    return this.sanitizer.bypassSecurityTrustHtml(htmlString);
+  }
+
   registerSignalREvents(): void {
     // Nhận thông báo từ nhóm
     this.signalRService.groupNotificationReceived$.subscribe(notification => {
@@ -259,6 +272,11 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     let lastMessageDate: dayjs.Dayjs | null = null;
 
     this.messages.forEach((message, index) => {
+      // Chỉ chuyển đổi link trong tin nhắn nếu không có tệp đính kèm
+      if (!message.attachmentUrl) {
+        message.message = this.convertTextToLink(message.message);
+      }
+
       // Sử dụng utc() để đảm bảo thời gian được chuẩn hóa trước khi chuyển đổi sang múi giờ Việt Nam
       const messageDate = dayjs.utc(message.date).tz(vietnamTimezone);
 
@@ -280,6 +298,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
     this.cdr.detectChanges(); // Cập nhật lại UI
   }
+
 
   loadRecipientInfo(): void {
     if (this.recipientId && this.currentUserId) {
@@ -309,15 +328,22 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     if (isForCurrentRecipient) {
       const isDuplicate = this.messages.some(msg => msg.id === message.id);
       if (!isDuplicate) {
+        // Chỉ xử lý chuyển đổi link nếu tin nhắn không có tệp đính kèm
+        if (!message.attachmentUrl) {
+          message.message = this.convertTextToLink(message.message);
+        }
+
         this.messages = [...this.messages, message];
-        this.processMessages(); // Re-process messages after new message
-        this.cdr.detectChanges(); // Force UI update
-        this.scrollToBottom(); // Scroll to bottom after receiving a message
-        this.markMessageAsRead(message.id); // Mark message as read
+        this.processMessages(); // Xử lý lại tin nhắn sau khi nhận được tin nhắn mới
+        this.cdr.detectChanges(); // Buộc UI cập nhật
+        this.scrollToBottom(); // Cuộn xuống cuối sau khi nhận tin nhắn
+        this.markMessageAsRead(message.id); // Đánh dấu tin nhắn là đã đọc
         console.log(`New message received by recipient ${this.recipientId} from user ${message.userId} (${message.fullName}):`, message);
       }
     }
   }
+
+
 
   markMessageAsRead(chatId: string): void {
     if (this.recipientId) {

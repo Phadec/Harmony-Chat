@@ -1,0 +1,118 @@
+1. ASP.NET MVC
+Kiến trúc MVC
+Model-View-Controller (MVC) là một mẫu thiết kế phần mềm giúp tách biệt ứng dụng thành ba thành phần chính:
+
+Model: Là lớp chịu trách nhiệm quản lý dữ liệu, thực hiện các thao tác logic liên quan đến dữ liệu và truyền dữ liệu giữa View và Controller. Model chứa các dữ liệu dùng chung giữa Controller và View.
+View: Chịu trách nhiệm hiển thị giao diện người dùng. View nhận dữ liệu từ Model và tạo giao diện tương ứng để hiển thị cho người dùng.
+Controller: Nhận yêu cầu từ người dùng (qua trình duyệt web), xử lý các yêu cầu đó và tương tác với Model để tạo ra dữ liệu cần thiết, sau đó gửi dữ liệu đó đến View để hiển thị cho người dùng. Controller đóng vai trò trung gian giữa Model và View.
+Lợi ích của MVC:
+
+Tách biệt rõ ràng các nhiệm vụ: giúp tăng tính linh hoạt và dễ bảo trì ứng dụng.
+Tự động nhận diện thiết bị người dùng và tự chọn giao diện phù hợp.
+Dễ dàng kiểm thử các thành phần (Controller, Model).
+ASP.NET MVC 5
+ASP.NET MVC 5 là một framework mạnh mẽ của Microsoft cho phép tạo các ứng dụng web động theo kiến trúc MVC. Các tính năng nổi bật của ASP.NET MVC 5:
+Razor: Là một engine tạo giao diện trong ASP.NET MVC, cho phép tạo ra các trang web động với cú pháp đơn giản và dễ sử dụng. Razor giúp dễ dàng nhúng mã C# vào trong HTML để tạo ra giao diện động mà không cần tách biệt rõ ràng giữa mã C# và HTML.
+Ajax cải tiến: ASP.NET MVC 5 cải thiện việc sử dụng Ajax thông qua sự kết hợp của Jquery và Helper Ajax, giúp giảm tải cho server bằng cách gửi các yêu cầu không đồng bộ mà không cần tải lại toàn bộ trang web.
+Web API: Là một thư viện web mạnh mẽ trong ASP.NET MVC, cho phép các ứng dụng web phục vụ các loại thiết bị khác nhau (như điện thoại di động, máy tính bảng) bằng cách cung cấp dữ liệu ở định dạng JSON hoặc XML thông qua các API RESTful.
+Action Filter: Cho phép kiểm soát hành vi của các action trong Controller bằng cách thêm logic vào trước hoặc sau khi action được thực hiện. Action Filters rất hữu ích trong việc xử lý các yêu cầu như kiểm tra quyền truy cập hoặc ghi log.
+Cấu trúc dự án trong ASP.NET MVC
+App_Data: Thư mục này chứa các tệp cơ sở dữ liệu (nếu có) được sử dụng trong ứng dụng. Đây là nơi lưu trữ dữ liệu của ứng dụng mà không cần phải liên kết với các cơ sở dữ liệu bên ngoài.
+App_Start: Chứa các tệp cấu hình và các lớp được chạy khi ứng dụng khởi động. Ví dụ, tệp RouteConfig.cs trong thư mục này chứa cấu hình cho hệ thống routing của ứng dụng.
+Content: Thư mục chứa các tài nguyên tĩnh như hình ảnh, tệp CSS, giúp định dạng giao diện người dùng.
+Scripts: Chứa các tệp JavaScript cần thiết cho ứng dụng, bao gồm các thư viện JavaScript như Jquery, Bootstrap.
+Global.asax: Đây là tệp sự kiện toàn cục của ứng dụng, giúp quản lý vòng đời của ứng dụng, bao gồm các sự kiện như Application_Start, Session_Start, Application_Error, và Application_End.
+Web.config: Là tệp cấu hình của ứng dụng, chứa các thông tin quan trọng như chuỗi kết nối cơ sở dữ liệu, cấu hình bảo mật, và các cài đặt khác cho ứng dụng web.
+Routing trong ASP.NET MVC
+Routing là một tính năng quan trọng của ASP.NET MVC, giúp ánh xạ các URL yêu cầu từ người dùng tới các hành động (Action) cụ thể trong Controller mà không cần phải ánh xạ từng URL với một tệp vật lý trên server. Ví dụ:
+URL http://localhost/home/index/123 sẽ được ánh xạ tới phương thức Index trong HomeController với tham số id là 123.
+Cấu hình routing được thực hiện trong tệp RouteConfig.cs nằm trong thư mục App_Start. Mặc định, một ứng dụng MVC phải đăng ký ít nhất một tuyến đường (route) do framework MVC cấu hình sẵn.
+Nhận tham số trong ASP.NET MVC
+Trong MVC, có 4 cách chính để nhận các tham số từ người dùng trong một Action của Controller:
+Sử dụng đối tượng Request: Truy xuất các tham số từ chuỗi truy vấn hoặc trường form thông qua các thuộc tính như Request.QueryString hoặc Request.Form.
+Sử dụng đối số Action: Các tham số có thể được truyền trực tiếp vào phương thức Action dưới dạng đối số.
+Sử dụng FormCollection: Đối tượng này chứa toàn bộ các giá trị được gửi từ form HTML.
+Sử dụng Model: Tạo một lớp Model với các thuộc tính tương ứng với tên các tham số trong form, sau đó truyền lớp này vào Action để nhận dữ liệu.
+2. Lập trình C#
+Giới thiệu về C#
+C# là một ngôn ngữ lập trình hướng đối tượng được phát triển bởi Microsoft, dựa trên các ngôn ngữ C và C++. C# được thiết kế để trở thành một ngôn ngữ lập trình đơn giản, hiện đại và mạnh mẽ, với nhiều điểm tương đồng với Java.
+C# được sử dụng trong nhiều dự án khác nhau, từ xử lý văn bản, đồ họa, ứng dụng bảng tính, cho đến việc tạo ra các trình biên dịch cho ngôn ngữ khác.
+Tính năng quan trọng của C#:
+Garbage Collection (GC): C# hỗ trợ thu gom rác tự động, giúp giải phóng bộ nhớ không còn được sử dụng, giảm thiểu nguy cơ rò rỉ bộ nhớ.
+Thư viện chuẩn: C# cung cấp một thư viện phong phú, hỗ trợ nhiều chức năng từ cơ bản đến nâng cao, giúp lập trình viên phát triển ứng dụng một cách dễ dàng.
+Hỗ trợ đa luồng: C# tích hợp tính năng lập trình đa luồng, cho phép xử lý nhiều công việc cùng một lúc.
+Cú pháp cơ bản trong C#
+Khai báo lớp: Sử dụng từ khoá class để khai báo một lớp trong C#. Ví dụ:
+class MyClass {
+    // Các thuộc tính và phương thức của lớp
+Comment trong C#: C# hỗ trợ hai loại comment:
+
+Comment một dòng: Sử dụng // để comment một dòng duy nhất. Ví dụ:
+// Đây là một comment một dòng
+/* Đây là một
+comment nhiều dòng */
+Identifier (Tên định danh): Tên định danh trong C# dùng để xác định các lớp, biến, hàm hoặc các đối tượng khác do người dùng định nghĩa. Một tên định danh phải bắt đầu bằng một chữ cái và có thể chứa các chữ cái, số hoặc dấu gạch dưới (_). Nó không được phép chứa các ký tự đặc biệt và không được trùng với từ khoá trong C#. Ví dụ:
+int myVariable = 10;
+Kiểu dữ liệu trong C#
+Kiểu dữ liệu trong C# được chia thành hai loại chính:
+Value type: Chứa dữ liệu thực tế. Các giá trị này được lưu trữ trực tiếp trong vùng nhớ của biến. Ví dụ: int, float, char.
+Reference type: Không chứa dữ liệu thực tế mà chứa tham chiếu tới vị trí bộ nhớ nơi dữ liệu được lưu trữ. Ví dụ: object, string, dynamic.
+Dynamic Type trong C#
+Dynamic type trong C# cho phép lưu trữ bất kỳ loại giá trị nào và kiểm tra kiểu dữ liệu này sẽ diễn ra tại thời gian chạy (runtime). Dynamic type tương tự như kiểu object, nhưng khác biệt ở chỗ các kiểm tra kiểu dữ liệu diễn ra tại thời gian chạy thay vì thời gian biên dịch. Ví dụ:
+dynamic myVar = 10;
+myVar = "Hello"; // Giá trị có thể thay đổi kiểu dữ liệu tại runtime
+Ép kiểu trong C#
+Implicit casting (Ép kiểu ngầm định): Xảy ra tự động khi kiểu dữ liệu đích có phạm vi giá trị lớn hơn kiểu dữ liệu nguồn, giúp tránh mất dữ liệu. Ví dụ:
+int valueOne = 34;
+float valueTwo = valueOne; // Ép kiểu từ int sang float
+Explicit casting (Ép kiểu tường minh): Xảy ra khi chuyển đổi từ kiểu dữ liệu có phạm vi lớn hơn sang kiểu dữ liệu có phạm vi nhỏ hơn. Điều này có thể dẫn đến mất dữ liệu và cần phải sử dụng cú pháp ép kiểu tường minh. Ví dụ:
+float valueOne = 34.5f;
+int valueTwo = (int)valueOne; // Ép kiểu từ float sang int
+Chuyển đổi kiểu dữ liệu từ chuỗi
+Trong C#, để chuyển đổi một chuỗi thành kiểu dữ liệu cơ bản, ta sử dụng phương thức Parse. Ví dụ:
+int myInt = int.Parse("123");
+3. Windows Forms
+Giới thiệu về Windows Forms
+Windows Forms là một môi trường lập trình giao diện đồ họa (GUI) trong .NET framework, cho phép lập trình viên tạo ra các ứng dụng giao diện người dùng dựa trên các điều khiển (control) như nút bấm, hộp thoại, nhãn, và nhiều thành phần khác. Windows Forms giúp tạo các ứng dụng tương tác với người dùng thông qua các giao diện trực quan.
+Thiết kế Form trong Windows Forms
+Toolbox: Chứa các điều khiển (controls) có sẵn trong .NET framework, được chia thành nhiều nhóm dựa trên chức năng. Lập trình viên có thể kéo và thả các điều khiển trực tiếp vào Form.
+Form Design: Là khu vực thiết kế giao diện của Form, cho phép lập trình viên thiết kế bố cục và thêm các điều khiển. Khi người dùng nhấp đúp vào Form hoặc điều khiển, IDE sẽ tự động tạo sự kiện và mở mã sự kiện đó để lập trình.
+Properties: Bảng thuộc tính giúp thay đổi cấu hình của các điều khiển như màu sắc, kích thước, và nội dung hiển thị.
+Các thuộc tính quan trọng của Form
+Name: Tên của Form, thường bắt đầu bằng tiền tố frm. Ví dụ: frmMain.
+Text: Tiêu đề của Form, sẽ hiển thị trên thanh tiêu đề của cửa sổ.
+BackColor: Màu nền của Form.
+StartPosition: Xác định vị trí xuất hiện của Form khi được hiển thị lần đầu (ví dụ: center of screen).
+WindowState: Xác định trạng thái của cửa sổ khi được hiển thị lần đầu (ví dụ: bình thường, thu nhỏ, hoặc phóng to).
+Các sự kiện quan trọng của Form
+Click: Sự kiện xảy ra khi người dùng nhấp chuột vào Form hoặc điều khiển.
+DoubleClick: Sự kiện xảy ra khi người dùng nhấp đúp chuột vào Form hoặc điều khiển.
+Load: Sự kiện xảy ra khi Form được mở lần đầu tiên, thường dùng để khởi tạo các thành phần trong Form.
+FormClosing: Sự kiện xảy ra ngay trước khi Form bị đóng, có thể được sử dụng để kiểm tra hoặc hủy bỏ quá trình đóng cửa sổ.
+Các điều khiển phổ biến trong Windows Forms
+Label: Điều khiển dùng để hiển thị văn bản hoặc chuỗi ký tự trên Form.
+Thuộc tính quan trọng: Name, Text, BackColor, ForeColor, Font.
+TextBox: Điều khiển cho phép người dùng nhập văn bản vào chương trình.
+Thuộc tính quan trọng: Name, Text, Multiline, PasswordChar, ReadOnly.
+Button: Nút bấm, thường được sử dụng để kích hoạt các sự kiện hoặc hành động.
+Thuộc tính quan trọng: Name, Text, BackColor, ForeColor.
+CheckBox và RadioButton:
+CheckBox: Cho phép người dùng chọn nhiều lựa chọn.
+RadioButton: Chỉ cho phép người dùng chọn một lựa chọn duy nhất trong một nhóm các RadioButton. Thường được nhóm lại bằng GroupBox.
+Thuộc tính quan trọng: Name, Text, Checked.
+PictureBox: Điều khiển hiển thị hình ảnh trên giao diện Form.
+Thuộc tính quan trọng: Name, BackgroundImage, BackgroundImageLayout, Image.
+DateTimePicker: Điều khiển cho phép người dùng chọn ngày tháng năm.
+Thuộc tính quan trọng: Name, Format, CustomFormat, Value.
+ListBox: Tạo danh sách các lựa chọn cho người dùng, có thể cho phép chọn một hoặc nhiều mục.
+Thuộc tính quan trọng: Name, SelectionMode, Items, SelectedIndex, SelectedItem.
+ListView: Hiển thị thông tin dưới dạng bảng (dòng và cột), thường được sử dụng để hiển thị danh sách các mục có tổ chức.
+TreeView: Hiển thị thông tin dưới dạng cây thư mục, thường được kết hợp với ListView để tạo giao diện dạng thư mục và tập tin.
+System Dialogs: Các hộp thoại hệ thống tích hợp sẵn trong C#, bao gồm:
+MessageBox: Hiển thị thông báo hoặc yêu cầu xác nhận từ người dùng.
+FontDialog: Cấu hình phông chữ.
+ColorDialog: Cấu hình màu sắc.
+OpenFileDialog: Mở tệp từ ổ cứng.
+SaveFileDialog: Lưu tệp từ phần mềm xuống ổ cứng.
+FolderBrowserDialog: Quản lý cây thư mục trên hệ thống máy tính.
+}

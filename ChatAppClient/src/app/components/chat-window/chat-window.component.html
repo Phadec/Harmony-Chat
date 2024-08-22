@@ -18,9 +18,8 @@
         <p *ngIf="message.groupId" class="sender-name">{{ message.senderFullName }}</p>
 
         <!-- Hiển thị nội dung tin nhắn -->
-        <div *ngIf="message.message" class="message-content">
-          {{ message.message }}
-        </div>
+        <div *ngIf="message.message" class="message-content" [innerHTML]="message.message"></div>
+
 
         <!-- Hiển thị đính kèm nếu có -->
         <div *ngIf="message.attachmentUrl" class="attachment">
