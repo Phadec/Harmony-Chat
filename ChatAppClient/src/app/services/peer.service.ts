@@ -82,7 +82,7 @@ export class PeerService {
         console.log('Remote stream received:', remoteStream);
 
         if (remoteStream.getAudioTracks().length > 0) {
-          console.log('Audio stream received');
+          console.log('Audio stream received from remote peer.');
           callback(remoteStream);
         } else {
           console.log('No audio tracks found in the remote stream.');
@@ -92,7 +92,6 @@ export class PeerService {
       console.error('No active call to handle stream.');
     }
   }
-
 
   private registerPeerId(peerId: string): void {
     const userId = this.getCurrentUserId();
@@ -131,7 +130,8 @@ export class PeerService {
         this.mediaCall.answer(this.localStream);
         console.log('Call answered with local stream:', this.localStream);
 
-        this.waitForCallAcceptedThenStream((remoteStream) => {
+        // Lắng nghe luồng từ phía đối phương
+        this.mediaCall.on('stream', (remoteStream: MediaStream) => {
           this.handleRemoteStream(remoteStream);
         });
 
@@ -180,7 +180,7 @@ export class PeerService {
 
       if (this.mediaCall) {
         console.log('Outgoing call initiated with peerId:', peerId);
-        this.waitForCallAcceptedThenStream((remoteStream) => {
+        this.mediaCall.on('stream', (remoteStream: MediaStream) => {
           this.handleRemoteStream(remoteStream);
         });
 
@@ -198,7 +198,7 @@ export class PeerService {
     const audioTracks = remoteStream.getAudioTracks();
 
     if (videoTracks.length > 0) {
-      // Handle video stream
+      // Phát video từ remote
       const videoElement = document.getElementById('remote-video') as HTMLVideoElement;
       if (videoElement) {
         videoElement.srcObject = remoteStream;
@@ -213,7 +213,7 @@ export class PeerService {
     }
 
     if (audioTracks.length > 0) {
-      // Handle audio stream
+      // Phát âm thanh từ remote
       const audioElement = document.getElementById('remote-audio') as HTMLAudioElement;
       if (audioElement) {
         audioElement.srcObject = remoteStream;
@@ -247,7 +247,6 @@ export class PeerService {
       console.error('No active call to end.');
     }
   }
-
 
   private cleanup(): void {
     console.log('Cleaning up call resources...');

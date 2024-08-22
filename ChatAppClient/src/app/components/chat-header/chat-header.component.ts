@@ -1,10 +1,10 @@
-import { PeerService } from "../../services/peer.service";
-import { SignalRService } from "../../services/signalr.service";  // Import SignalRService
-import { MatDialog } from "@angular/material/dialog";
 import { Component, Input, OnInit } from "@angular/core";
-import { ImagePreviewDialogComponent } from "../image-preview-dialog/image-preview-dialog.component";
+import { MatDialog } from "@angular/material/dialog";
+import { PeerService } from "../../services/peer.service";
+import { SignalRService } from "../../services/signalr.service";
 import { CallPopupComponent } from "../call-popup/call-popup.component";
-import {AppConfigService} from "../../services/app-config.service";
+import { ImagePreviewDialogComponent } from "../image-preview-dialog/image-preview-dialog.component";
+import { AppConfigService } from "../../services/app-config.service";
 
 @Component({
   selector: 'app-chat-header',
@@ -19,7 +19,6 @@ export class ChatHeaderComponent implements OnInit {
     private signalRService: SignalRService,
     private appConfig: AppConfigService,
     public dialog: MatDialog
-
   ) {}
 
   ngOnInit(): void {
@@ -39,7 +38,7 @@ export class ChatHeaderComponent implements OnInit {
       const recipientPeerId = await this.signalRService.getPeerId(this.recipientInfo.id);
       if (recipientPeerId) {
         console.log('Opening voice call dialog...');
-        this.peerService.makeCall(recipientPeerId, false); // Không truyền isVideoCall = false
+        this.peerService.makeCall(recipientPeerId, false); // Truyền isVideoCall = false
 
         if (!this.dialog.openDialogs.length) {
           this.dialog.open(CallPopupComponent, {
@@ -72,7 +71,7 @@ export class ChatHeaderComponent implements OnInit {
       const recipientPeerId = await this.signalRService.getPeerId(this.recipientInfo.id);
       if (recipientPeerId) {
         console.log('Opening video call dialog...');
-        this.peerService.makeCall(recipientPeerId, true); // Không truyền isVideoCall = true
+        this.peerService.makeCall(recipientPeerId, true); // Truyền isVideoCall = true
 
         if (!this.dialog.openDialogs.length) {
           this.dialog.open(CallPopupComponent, {
@@ -124,6 +123,7 @@ export class ChatHeaderComponent implements OnInit {
       panelClass: 'custom-dialog-container'
     });
   }
+
   getAvatarUrl(avatar: string): string {
     const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService
     return `${baseUrl}/${avatar}`;

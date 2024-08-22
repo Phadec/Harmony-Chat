@@ -101,10 +101,13 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
 
       this.remoteStream = remoteStream;
 
-      if (remoteStream.getVideoTracks().length > 0) {
+      const audioTracks = remoteStream.getAudioTracks();
+      const videoTracks = remoteStream.getVideoTracks();
+
+      if (videoTracks.length > 0) {
         // For video call
         this.playStream(remoteStream, this.remoteVideoRef.nativeElement);
-      } else if (remoteStream.getAudioTracks().length > 0) {
+      } else if (audioTracks.length > 0) {
         // For voice call
         this.playStream(remoteStream, this.remoteAudioRef.nativeElement);
       } else {
@@ -120,15 +123,18 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
 
       mediaElement.onloadedmetadata = () => {
         console.log('Metadata loaded, attempting to play media');
-        mediaElement.play().catch((error) => {
+        mediaElement.play().then(() => {
+          console.log('Media playback started successfully.');
+        }).catch((error) => {
           console.error('Failed to play media:', error);
+          // If media playback fails due to browser restrictions, alert the user
+          alert('Unable to autoplay the media. Please interact with the page to start the media playback.');
         });
       };
     } else {
       console.error('Media element is not initialized.');
     }
   }
-
 
   rejectCall(): void {
     try {
