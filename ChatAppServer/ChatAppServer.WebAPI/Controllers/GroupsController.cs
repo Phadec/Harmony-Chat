@@ -491,8 +491,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 groupMember.IsAdmin = true;
                 await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation($"User {request.UserId} admin status updated to true in group {request.GroupId}");
-                var notificationMessage = $"User {groupMember.User.Username} has been promoted to admin in group {group.Name}.";
+                _logger.LogInformation($"Admin status updated to true in group {request.GroupId}");
+                var notificationMessage = $"User {groupMember.User} has been promoted to admin in group {group.Name}.";
                 await _hubContext.Clients.All.SendAsync("NotifyGroupMembers", request.GroupId, notificationMessage);
 
 
@@ -540,7 +540,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 groupMember.IsAdmin = false;
                 await _context.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation($"Admin rights revoked for user {request.UserId} in group {request.GroupId}");
+                _logger.LogInformation($"Admin rights revoked in group {request.GroupId}");
 
                 var anyAdminsLeft = await _context.GroupMembers
                     .AnyAsync(gm => gm.GroupId == request.GroupId && gm.IsAdmin, cancellationToken);

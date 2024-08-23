@@ -20,7 +20,6 @@
         <!-- Hiển thị nội dung tin nhắn -->
         <div *ngIf="message.message" class="message-content" [innerHTML]="message.message"></div>
 
-
         <!-- Hiển thị đính kèm nếu có -->
         <div *ngIf="message.attachmentUrl" class="attachment">
           <ng-container [ngSwitch]="getAttachmentType(message.attachmentUrl)">
@@ -31,6 +30,10 @@
             <!-- Đính kèm video -->
             <video *ngSwitchCase="'video'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
                    (click)="openAttachmentPreview(message.attachmentUrl, 'video')" class="attachment-preview-video"></video>
+
+            <!-- Đính kèm âm thanh -->
+            <audio *ngSwitchCase="'audio'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
+                   class="attachment-preview-audio"></audio>
 
             <!-- Đính kèm PDF -->
             <div *ngSwitchCase="'pdf'" class="attachment-file">
@@ -73,6 +76,9 @@
 
         <!-- Hiển thị xem trước video -->
         <video *ngSwitchCase="'video'" controls [src]="previewAttachmentUrl" class="attachment-preview-video"></video>
+
+        <!-- Hiển thị xem trước âm thanh -->
+        <audio *ngSwitchCase="'audio'" controls [src]="previewAttachmentUrl" class="attachment-preview-audio"></audio>
 
         <!-- Hiển thị file PDF -->
         <div *ngSwitchCase="'pdf'" class="attachment-file-preview">

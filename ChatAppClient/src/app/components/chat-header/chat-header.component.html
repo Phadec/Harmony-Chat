@@ -11,7 +11,9 @@
       <div class="chat-tag">{{ recipientInfo.tagName }}</div>
     </div>
   </div>
-  <div class="chat-actions">
+
+  <!-- Kiểm tra nếu type không phải là 'Group' thì hiển thị các nút gọi -->
+  <div class="chat-actions" *ngIf="recipientInfo.type !== 'Group'">
     <button mat-icon-button (click)="startVoiceCall()">
       <mat-icon>call</mat-icon> <!-- Cuộc gọi thoại -->
     </button>

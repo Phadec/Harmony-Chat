@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\uploads\f23502ec-c851-47ed-871f-8d0b25d1e71a.jpg" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="DefaultCorsPolicy" Version="8.0.0" />
     <PackageReference Include="GenericFileService" Version="8.0.0" />

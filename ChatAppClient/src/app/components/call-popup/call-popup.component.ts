@@ -19,6 +19,7 @@ export class CallPopupComponent implements OnInit, OnDestroy {
   remoteStream: MediaStream | null = null;
   callAccepted: boolean = false;
   ringingAudio: HTMLAudioElement | null = null;
+  endCallAudio: HTMLAudioElement | null = null;
   timeoutId: any;
 
   constructor(
@@ -163,9 +164,17 @@ export class CallPopupComponent implements OnInit, OnDestroy {
       console.error(`Video element with ID: ${elementId} not found.`);
     }
   }
-
+  playEndCallSound(): void {
+    this.endCallAudio = new Audio('assets/endcall.mp3'); // Đường dẫn đến tệp âm thanh kết thúc cuộc gọi
+    this.endCallAudio.play().then(() => {
+      console.log('End call sound played');
+    }).catch(error => {
+      console.error('Failed to play end call sound:', error);
+    });
+  }
   endCall(): void {
     console.log('Ending call...');
+    this.playEndCallSound();  // Phát âm thanh kết thúc cuộc gọi
     this.peerService.endCall();
     this.cleanupStreams();
     this.dialogRef.close();

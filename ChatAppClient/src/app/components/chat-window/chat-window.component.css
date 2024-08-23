@@ -124,7 +124,16 @@ body, html {
   background-color: #f1f3f5;
   color: #343a40;
 }
-
+.sent .message-content a{
+  color: white;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  text-decoration: none;
+}
+.receive .message-content a{
+  background-color: #007bff;
+  color: black;
+}
 .sent {
   text-align: right;
 }

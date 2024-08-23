@@ -25,7 +25,7 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
   @ViewChild('localVideo') localVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteVideo') remoteVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteAudio') remoteAudioRef!: ElementRef<HTMLAudioElement>;  // Thêm phần tử audio
-
+  endCallAudio: HTMLAudioElement | null = null;
   constructor(
     public dialogRef: MatDialogRef<IncomingCallPopupComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { callerName: string, peerId: string, isVideoCall: boolean },
@@ -149,9 +149,18 @@ export class IncomingCallPopupComponent implements OnInit, AfterViewInit, OnDest
 
   endCall(): void {
     console.log('Ending call...');
+    this.playEndCallSound();  // Phát âm thanh kết thúc cuộc gọi
     this.peerService.endCall();
     this.stopLocalStream();
     this.dialogRef.close();
+  }
+  playEndCallSound(): void {
+    this.endCallAudio = new Audio('assets/endcall.mp3'); // Đường dẫn đến tệp âm thanh kết thúc cuộc gọi
+    this.endCallAudio.play().then(() => {
+      console.log('End call sound played');
+    }).catch(error => {
+      console.error('Failed to play end call sound:', error);
+    });
   }
 
   stopLocalStream(): void {
