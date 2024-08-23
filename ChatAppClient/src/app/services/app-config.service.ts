@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 export class AppConfigService {
 
   // Khai báo baseURL
-  private baseUrl = 'https://192.168.1.6:7267';
+  private baseUrl = 'https://172.20.10.4:7267';
 
   constructor() { }
 
