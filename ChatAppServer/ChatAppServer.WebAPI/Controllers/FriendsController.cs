@@ -306,6 +306,45 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
+        [HttpPost("{userId}/update-chat-theme/{friendId}")]
+        public async Task<IActionResult> UpdateChatThemeWithFriend(Guid userId, Guid friendId, [FromBody] UpdateChatThemeDto request, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to update the chat theme for this friend.");
+            }
+
+            // Tìm kiếm mối quan hệ từ userId đến friendId
+            var friendship1 = await _context.Friendships
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == friendId, cancellationToken);
+
+            // Tìm kiếm mối quan hệ ngược lại từ friendId đến userId
+            var friendship2 = await _context.Friendships
+                .FirstOrDefaultAsync(f => f.UserId == friendId && f.FriendId == userId, cancellationToken);
+
+            // Kiểm tra xem ít nhất một mối quan hệ có tồn tại không
+            if (friendship1 == null && friendship2 == null)
+            {
+                return NotFound("Friendship not found.");
+            }
+
+            // Cập nhật chat theme cho cả hai mối quan hệ nếu chúng tồn tại
+            if (friendship1 != null)
+            {
+                friendship1.ChatTheme = request.Theme;
+            }
+
+            if (friendship2 != null)
+            {
+                friendship2.ChatTheme = request.Theme;
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Ok(new { Message = "Chat theme updated successfully for both directions." });
+        }
+
         [HttpGet("{userId}/friends")]
         public async Task<IActionResult> GetFriends(Guid userId, CancellationToken cancellationToken)
         {

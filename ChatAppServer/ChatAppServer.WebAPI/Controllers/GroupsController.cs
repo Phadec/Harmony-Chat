@@ -233,6 +233,50 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
+        [HttpPost("{groupId}/update-chat-theme")]
+        public async Task<IActionResult> UpdateChatThemeForGroup(Guid groupId, [FromBody] UpdateChatThemeDto request, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to update the chat theme for this group.");
+            }
+
+            // Kiểm tra xem người dùng có phải là thành viên của nhóm không
+            var groupMember = await _context.GroupMembers
+                .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == Guid.Parse(authenticatedUserId), cancellationToken);
+
+            if (groupMember == null)
+            {
+                return NotFound("Group member not found.");
+            }
+
+            // Kiểm tra xem người dùng có phải là admin của nhóm không
+            if (!groupMember.IsAdmin)
+            {
+                return Forbid("You are not authorized to update the chat theme for this group.");
+            }
+
+            // Lấy thông tin nhóm và cập nhật theme
+            var group = await _context.Groups
+                .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+            if (group == null)
+            {
+                return NotFound("Group not found.");
+            }
+
+            group.ChatTheme = request.Theme;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Notify members about the chat theme update
+            var notificationMessage = $"Group chat theme has been updated to {request.Theme}.";
+            await _hubContext.Clients.Group(groupId.ToString()).SendAsync("NotifyGroupMembers", groupId, notificationMessage);
+
+            return Ok(new { Message = "Chat theme updated successfully." });
+        }
+
+
         [HttpGet("{groupId}/members")]
         public async Task<IActionResult> GetGroupMembers(Guid groupId, CancellationToken cancellationToken)
         {
@@ -704,7 +748,8 @@ namespace ChatAppServer.WebAPI.Controllers
                         Birthday = f.Birthday,
                         Email = f.Email,
                         Avatar = f.Avatar,
-                        Status = f.Status
+                        Status = f.Status,
+                        TagName = f.TagName
                     })
                     .ToList();
 

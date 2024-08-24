@@ -11,5 +11,6 @@
         public string Avatar { get; set; } = string.Empty;
         public string Status { get; set; } = "offline";
         public bool ShowOnlineStatus { get; set; } = true;
+        public string TagName { get; set; } = string.Empty;
     }
 }

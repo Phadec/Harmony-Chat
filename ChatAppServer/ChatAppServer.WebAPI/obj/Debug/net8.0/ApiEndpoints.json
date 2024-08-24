@@ -345,20 +345,15 @@
   },
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.ChatsController",
-    "Method": "UpdateChatThemeForGroup",
-    "RelativePath": "api/Chats/{groupId}/update-chat-theme",
-    "HttpMethod": "POST",
+    "Method": "RemoveReaction",
+    "RelativePath": "api/Chats/{chatId}/remove-reaction",
+    "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "groupId",
+        "Name": "chatId",
         "Type": "System.Guid",
-        "IsRequired": true
-      },
-      {
-        "Name": "request",
-        "Type": "ChatAppServer.WebAPI.Dtos.UpdateChatThemeDto",
         "IsRequired": true
       }
     ],
@@ -401,32 +396,6 @@
       {
         "Name": "recipientId",
         "Type": "System.Guid",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ChatAppServer.WebAPI.Controllers.ChatsController",
-    "Method": "UpdateChatThemeWithFriend",
-    "RelativePath": "api/Chats/{userId}/update-chat-theme/{friendId}",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "userId",
-        "Type": "System.Guid",
-        "IsRequired": true
-      },
-      {
-        "Name": "friendId",
-        "Type": "System.Guid",
-        "IsRequired": true
-      },
-      {
-        "Name": "request",
-        "Type": "ChatAppServer.WebAPI.Dtos.UpdateChatThemeDto",
         "IsRequired": true
       }
     ],
@@ -775,6 +744,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "ChatAppServer.WebAPI.Controllers.FriendsController",
+    "Method": "UpdateChatThemeWithFriend",
+    "RelativePath": "api/Friends/{userId}/update-chat-theme/{friendId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "friendId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "ChatAppServer.WebAPI.Dtos.UpdateChatThemeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.GroupsController",
     "Method": "DeleteGroup",
     "RelativePath": "api/Groups/{groupId}/delete",
@@ -833,6 +828,27 @@
       {
         "Name": "groupId",
         "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ChatAppServer.WebAPI.Controllers.GroupsController",
+    "Method": "UpdateChatThemeForGroup",
+    "RelativePath": "api/Groups/{groupId}/update-chat-theme",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "groupId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "ChatAppServer.WebAPI.Dtos.UpdateChatThemeDto",
         "IsRequired": true
       }
     ],

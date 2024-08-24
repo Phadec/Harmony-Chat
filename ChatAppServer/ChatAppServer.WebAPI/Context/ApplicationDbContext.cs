@@ -21,6 +21,7 @@ namespace ChatAppServer.WebAPI.Models
         public DbSet<MessageReadStatus> MessageReadStatuses { get; set; }
         public DbSet<UserDeletedMessage> UserDeletedMessages { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
+        public DbSet<NewReactionStatus> NewReactionStatuses { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -118,6 +119,10 @@ namespace ChatAppServer.WebAPI.Models
 
                 entity.Property(e => e.Message)
                     .IsRequired();
+
+                entity.Property(e => e.IsDeleted)
+                    .HasDefaultValue(false);
+
 
                 entity.HasOne(e => e.User)
                     .WithMany(u => u.SentChats)
@@ -217,6 +222,24 @@ namespace ChatAppServer.WebAPI.Models
                 }).IsUnique();
                 entity.Property(e => e.DeletedAt).IsRequired();
             });
+            modelBuilder.Entity<NewReactionStatus>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Chat)
+                    .WithMany()
+                    .HasForeignKey(e => e.ChatId)
+                    .OnDelete(DeleteBehavior.Cascade); // Đảm bảo phản ứng được xóa khi Chat bị xóa
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade); // Đảm bảo phản ứng được xóa khi User bị xóa
+
+                entity.Property(e => e.CreatedAt)
+                    .IsRequired(); // Đảm bảo thời gian tạo phản ứng mới luôn có giá trị
+            });
+
 
             // Configure Token entity
             modelBuilder.Entity<UserToken>(entity =>
