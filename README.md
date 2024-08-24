@@ -1,10 +1,10 @@
-# ProjectDotNet
+# Harmony Chat
 
-**ProjectDotNet - Ứng Dụng Chat Thời Gian Thực**
+**Harmony Chat - Ứng Dụng Chat Thời Gian Thực**
 
 ## Mô Tả Dự Án
 
-**ProjectDotNet - ChatRealtime** là một ứng dụng chat thời gian thực được xây dựng trên nền tảng ASP.NET Core. Ứng dụng cho phép người dùng gửi và nhận tin nhắn trong thời gian thực, tạo ra trải nghiệm chat trực quan và mượt mà. Ứng dụng này cũng tích hợp các hàng đợi nền (background queue) để xử lý các tác vụ quan trọng, nhằm cải thiện hiệu suất và khả năng mở rộng.
+**Harmony Chat - ChatRealtime** là một ứng dụng chat thời gian thực được xây dựng trên nền tảng ASP.NET Core. Ứng dụng cho phép người dùng gửi và nhận tin nhắn trong thời gian thực, tạo ra trải nghiệm chat trực quan và mượt mà. Ứng dụng này cũng tích hợp các hàng đợi nền (background queue) để xử lý các tác vụ quan trọng, nhằm cải thiện hiệu suất và khả năng mở rộng.
 
 ## Công Nghệ Sử Dụng
 
