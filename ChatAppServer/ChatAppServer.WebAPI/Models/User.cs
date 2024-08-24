@@ -38,6 +38,8 @@
         public List<Chat> SentChats { get; set; }
         public List<Chat> ReceivedChats { get; set; }
         public List<GroupMember> Groups { get; set; }
+        public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
+
 
         public void AddFriend(Guid friendId)
         {

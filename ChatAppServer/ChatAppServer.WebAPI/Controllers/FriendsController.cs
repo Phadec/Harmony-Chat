@@ -339,7 +339,9 @@ namespace ChatAppServer.WebAPI.Controllers
                     Email = f.UserId == userId ? f.Friend.Email : f.User.Email,
                     Avatar = f.UserId == userId ? f.Friend.Avatar : f.User.Avatar,
                     Status = f.UserId == userId ? f.Friend.Status : f.User.Status,
-                    Nickname = f.Nickname
+                    Nickname = f.Nickname,
+                    NotificationsMuted = f.NotificationsMuted, // Thêm thông tin về trạng thái tắt thông báo
+                    ChatTheme = f.ChatTheme,
                 }).ToList();
 
                 // Trả về danh sách bạn bè (có thể là danh sách rỗng)
@@ -746,6 +748,55 @@ namespace ChatAppServer.WebAPI.Controllers
                 _logger.LogError(ex, "An error occurred while unblocking user {BlockedUserId} for user {UserId}.", blockedUserId, userId);
                 return StatusCode(500, "An error occurred while processing your request.");
             }
+        }
+        [HttpPost("{userId}/mute-friend-notifications/{friendId}")]
+        public async Task<IActionResult> MuteFriendNotifications(Guid userId, Guid friendId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to mute notifications for this friend.");
+            }
+
+            var friendship = await _context.Friendships
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == friendId, cancellationToken);
+
+            if (friendship == null)
+            {
+                return NotFound("Friendship not found.");
+            }
+
+            // Toggle the NotificationsMuted status
+            friendship.NotificationsMuted = !friendship.NotificationsMuted;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Prepare the message
+            var notificationMessage = friendship.NotificationsMuted
+                ? "Friend notifications muted successfully."
+                : "Friend notifications unmuted successfully.";
+
+            // Send the notification to the user via SignalR
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("NotifyUser", new
+            {
+                Message = notificationMessage,
+                FriendId = friendId
+            });
+
+            // Return the response
+            return Ok(new { Message = notificationMessage });
+        }
+
+        private async Task NotifyUser(string userId, string message, object data = null)
+        {
+            // Prepare the notification payload
+            var notification = new
+            {
+                Message = message,
+                Data = data
+            };
+
+            // Send the notification to the user via SignalR
+            await _hubContext.Clients.User(userId).SendAsync("NotifyUser", notification);
         }
 
 

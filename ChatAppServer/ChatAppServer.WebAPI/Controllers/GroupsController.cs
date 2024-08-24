@@ -369,7 +369,6 @@ namespace ChatAppServer.WebAPI.Controllers
         }
 
 
-
         [HttpGet("user-groups-with-details/{userId}")]
         public async Task<IActionResult> GetUserGroupsWithDetails(Guid userId, CancellationToken cancellationToken)
         {
@@ -386,14 +385,20 @@ namespace ChatAppServer.WebAPI.Controllers
                     return BadRequest(new { Message = "Invalid userId" });
                 }
 
-                // Truy vấn để lấy các nhóm mà người dùng tham gia và chỉ trả về id, name, avatar
+                // Truy vấn để lấy các nhóm mà người dùng tham gia và kiểm tra xem có bị tắt thông báo hay không
                 var userGroups = await _context.Groups
                     .Where(g => g.Members.Any(gm => gm.UserId == userId))
                     .Select(g => new
                     {
                         g.Id,
                         g.Name,
-                        g.Avatar
+                        g.Avatar,
+                        g.ChatTheme,
+                        NotificationsMuted = g.Members
+                            .Where(gm => gm.UserId == userId)
+                            .Select(gm => gm.NotificationsMuted)
+                            .FirstOrDefault() // Lấy trạng thái thông báo tắt của nhóm cho người dùng
+
                     })
                     .ToListAsync(cancellationToken);
 
@@ -410,6 +415,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "An error occurred while processing your request." });
             }
         }
+
 
 
         [HttpPut("rename-group")]
@@ -709,6 +715,55 @@ namespace ChatAppServer.WebAPI.Controllers
                 _logger.LogError(ex, "An error occurred while fetching non-members for group {GroupId}", groupId);
                 return StatusCode(500, new { Message = "An error occurred while processing your request." });
             }
+        }
+
+        [HttpPost("{groupId}/mute-group-notifications")]
+        public async Task<IActionResult> MuteGroupNotifications(Guid groupId, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to mute notifications for this group.");
+            }
+
+            var groupMember = await _context.GroupMembers
+                .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == Guid.Parse(authenticatedUserId), cancellationToken);
+
+            if (groupMember == null)
+            {
+                return NotFound("Group member not found.");
+            }
+
+            // Toggle the NotificationsMuted status
+            groupMember.NotificationsMuted = !groupMember.NotificationsMuted;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Prepare the message
+            var notificationMessage = groupMember.NotificationsMuted
+                ? "Group notifications muted successfully."
+                : "Group notifications unmuted successfully.";
+
+            // Send the notification to the user via SignalR
+            await _hubContext.Clients.User(authenticatedUserId).SendAsync("NotifyUser", new
+            {
+                Message = notificationMessage,
+                GroupId = groupId
+            });
+
+            // Return the response
+            return Ok(new { Message = notificationMessage });
+        }
+        private async Task NotifyUser(string userId, string message, object data = null)
+        {
+            // Prepare the notification payload
+            var notification = new
+            {
+                Message = message,
+                Data = data
+            };
+
+            // Send the notification to the user via SignalR
+            await _hubContext.Clients.User(userId).SendAsync("NotifyUser", notification);
         }
 
 

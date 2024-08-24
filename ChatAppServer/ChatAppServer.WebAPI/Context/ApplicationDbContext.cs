@@ -20,6 +20,7 @@ namespace ChatAppServer.WebAPI.Models
         public DbSet<UserBlock> UserBlocks { get; set; }
         public DbSet<MessageReadStatus> MessageReadStatuses { get; set; }
         public DbSet<UserDeletedMessage> UserDeletedMessages { get; set; }
+        public DbSet<Reaction> Reactions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -63,6 +64,7 @@ namespace ChatAppServer.WebAPI.Models
                     .OnDelete(DeleteBehavior.Restrict);
 
             });
+
             // Configure UserBlock entity
             modelBuilder.Entity<UserBlock>(entity =>
             {
@@ -85,6 +87,11 @@ namespace ChatAppServer.WebAPI.Models
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired();
 
+                // Set default value for ChatTheme to "default"
+                entity.Property(e => e.ChatTheme)
+                    .IsRequired()
+                    .HasDefaultValue("default");
+
                 entity.HasMany(e => e.Members)
                     .WithOne(gm => gm.Group)
                     .HasForeignKey(gm => gm.GroupId)
@@ -95,6 +102,7 @@ namespace ChatAppServer.WebAPI.Models
                     .HasForeignKey(c => c.GroupId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
 
             // Configure GroupMember entity
             modelBuilder.Entity<GroupMember>(entity =>
@@ -164,19 +172,49 @@ namespace ChatAppServer.WebAPI.Models
 
                 entity.Property(e => e.Nickname)
                     .HasMaxLength(100)
-                    .HasDefaultValue(""); // Set default value to empty string
+                    .HasDefaultValue(string.Empty);
+
+                // Configure default value for ChatTheme
+                entity.Property(e => e.ChatTheme)
+                    .IsRequired()
+                    .HasDefaultValue("default");
+            });
+
+            modelBuilder.Entity<Reaction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(r => r.Chat)
+                    .WithMany(c => c.Reactions)
+                    .HasForeignKey(r => r.ChatId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(r => r.User)
+                    .WithMany(u => u.Reactions)
+                    .HasForeignKey(r => r.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(r => r.ReactionType).IsRequired();
+
+                // Thêm ràng buộc duy nhất cho ChatId và UserId
+                entity.HasIndex(r => new { r.ChatId, r.UserId })
+                    .IsUnique(); // Đảm bảo mỗi người chỉ có 1 reaction cho mỗi tin nhắn
             });
 
             // Configure PendingUser entity
             modelBuilder.Entity<PendingUser>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.TokenExpiration).IsRequired();
-            });
+                {
+                    entity.HasKey(e => e.Id);
+                    entity.Property(e => e.TokenExpiration).IsRequired();
+                });
             modelBuilder.Entity<UserDeletedMessage>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => new { e.UserId, e.MessageId }).IsUnique();
+                entity.HasIndex(e => new
+                {
+                    e.UserId,
+                    e.MessageId
+                }).IsUnique();
                 entity.Property(e => e.DeletedAt).IsRequired();
             });
 

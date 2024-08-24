@@ -6,6 +6,7 @@
         {
             Id = Guid.NewGuid();
             IsAdmin = false; // Thiết lập mặc định IsAdmin là false
+            NotificationsMuted = false; // Thiết lập mặc định là nhận thông báo
         }
 
         public Guid Id { get; set; }
@@ -14,5 +15,6 @@
         public Guid UserId { get; set; }
         public User User { get; set; }
         public bool IsAdmin { get; set; } // Thêm thuộc tính IsAdmin
+        public bool NotificationsMuted { get; set; } // Thêm thuộc tính NotificationsMuted để quản lý thông báo
     }
 }

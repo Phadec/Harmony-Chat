@@ -7,5 +7,10 @@
         public Guid FriendId { get; set; }
         public User Friend { get; set; }
         public string Nickname { get; set; }
+
+        // Thêm thuộc tính tắt thông báo
+        public bool NotificationsMuted { get; set; } = false;
+        public string ChatTheme { get; set; } = "default";
     }
+
 }

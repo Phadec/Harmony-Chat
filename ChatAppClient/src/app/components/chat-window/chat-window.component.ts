@@ -248,6 +248,9 @@ export class ChatWindowComponent implements OnInit, OnChanges {
           this.cdr.detectChanges(); // Force UI update
           this.scrollToBottom(); // Scroll to bottom after loading messages
 
+          // In ra danh sách tin nhắn trong console
+          console.log('Danh sách tin nhắn:', this.messages);
+
           // Check for attachments and mark the last message as read
           this.messages.forEach(message => {
             if (message.attachmentUrl && message.attachmentOriginalName) {
@@ -268,6 +271,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       );
     }
   }
+
   processMessages(): void {
     let lastMessageDate: dayjs.Dayjs | null = null;
 

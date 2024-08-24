@@ -17,7 +17,7 @@ namespace ChatAppServer.WebAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.7")
+                .HasAnnotation("ProductVersion", "8.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -103,12 +103,21 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.Property<Guid>("FriendId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ChatTheme")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("default");
+
                     b.Property<string>("Nickname")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
                         .HasDefaultValue("");
+
+                    b.Property<bool>("NotificationsMuted")
+                        .HasColumnType("bit");
 
                     b.HasKey("UserId", "FriendId");
 
@@ -126,6 +135,12 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.Property<string>("Avatar")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ChatTheme")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("default");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -149,6 +164,9 @@ namespace ChatAppServer.WebAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<bool>("NotificationsMuted")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -238,6 +256,35 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PendingUsers");
+                });
+
+            modelBuilder.Entity("ChatAppServer.WebAPI.Models.Reaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChatId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReactionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ChatId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("Reactions");
                 });
 
             modelBuilder.Entity("ChatAppServer.WebAPI.Models.User", b =>
@@ -480,6 +527,25 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ChatAppServer.WebAPI.Models.Reaction", b =>
+                {
+                    b.HasOne("Chat", "Chat")
+                        .WithMany("Reactions")
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChatAppServer.WebAPI.Models.User", "User")
+                        .WithMany("Reactions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chat");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ChatAppServer.WebAPI.Models.UserBlock", b =>
                 {
                     b.HasOne("ChatAppServer.WebAPI.Models.User", "BlockedUser")
@@ -510,6 +576,11 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Chat", b =>
+                {
+                    b.Navigation("Reactions");
+                });
+
             modelBuilder.Entity("ChatAppServer.WebAPI.Models.Group", b =>
                 {
                     b.Navigation("Chats");
@@ -522,6 +593,8 @@ namespace ChatAppServer.WebAPI.Migrations
                     b.Navigation("Friends");
 
                     b.Navigation("Groups");
+
+                    b.Navigation("Reactions");
 
                     b.Navigation("ReceivedChats");
 

@@ -10,5 +10,7 @@
         public string Avatar { get; set; }
         public string Status { get; set; }
         public string Nickname { get; set; }
+        public bool NotificationsMuted { get; set; } // Ensure this is of type bool
+        public string ChatTheme { get; set; }
     }
 }

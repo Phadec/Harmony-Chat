@@ -23,4 +23,6 @@ public sealed class Chat
     // Thuộc tính mới để lưu trạng thái đã đọc
     public bool IsRead { get; set; } = false; // Mặc định là chưa đọc
     public DateTime? ReadAt { get; set; } // Thời gian đã đọc (nullable)
+    public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
+
 }

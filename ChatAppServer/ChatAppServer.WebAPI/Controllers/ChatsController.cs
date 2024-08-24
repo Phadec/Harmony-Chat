@@ -370,7 +370,8 @@ namespace ChatAppServer.WebAPI.Controllers
                             AttachmentUrl = c.AttachmentUrl ?? string.Empty,  // Xử lý giá trị null
                             AttachmentOriginalName = c.AttachmentOriginalName ?? string.Empty,
                             c.Date,
-                            IsRead = c.IsRead  // Xử lý giá trị null
+                            IsRead = c.IsRead,  // Xử lý giá trị null
+                            Reaction = c.Reactions,
 
                         })
                         .ToListAsync(cancellationToken);
@@ -407,7 +408,8 @@ namespace ChatAppServer.WebAPI.Controllers
                     IsRead = _context.MessageReadStatuses
                     .Where(mrs => mrs.MessageId == p.Id && mrs.UserId == userId)
                     .Select(mrs => mrs.IsRead)
-                    .FirstOrDefault()  // Lấy giá trị IsRead từ bảng MessageReadStatuses
+                    .FirstOrDefault(),  // Lấy giá trị IsRead từ bảng MessageReadStatuses
+                    p.Reactions,
                 })
      .ToListAsync(cancellationToken);
 
@@ -587,6 +589,48 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+        [HttpPost("{chatId}/delete-message")]
+        [Authorize]
+        public async Task<IActionResult> DeleteChatMessage(Guid chatId, CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var userGuid = Guid.Parse(userId);
+
+            // Fetch the chat message from the database
+            var chatMessage = await _context.Chats.FirstOrDefaultAsync(m => m.Id == chatId, cancellationToken);
+
+            if (chatMessage == null)
+            {
+                return NotFound("Message not found.");
+            }
+
+            // Ensure the user is the sender of the message
+            if (chatMessage.UserId != userGuid)
+            {
+                return Forbid("You are not authorized to delete this message.");
+            }
+
+            // Update the message content to "Message has been deleted"
+            chatMessage.Message = "Message has been deleted";
+            chatMessage.AttachmentUrl = null;  // Optionally, remove attachment if needed
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Notify the recipient or group members of the message deletion
+            if (chatMessage.GroupId.HasValue)
+            {
+                await _hubContext.Clients.Group(chatMessage.GroupId.ToString()).SendAsync("MessageDeleted", chatMessage.Id);
+            }
+            else if (chatMessage.ToUserId.HasValue)
+            {
+                await _hubContext.Clients.User(chatMessage.ToUserId.ToString()).SendAsync("MessageDeleted", chatMessage.Id);
+            }
+
+            return Ok(new { Message = "Message has been deleted." });
+        }
+
         [HttpDelete("{userId}/delete-chats/{recipientId}")]
         public async Task<IActionResult> DeleteChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
         {
@@ -682,6 +726,165 @@ namespace ChatAppServer.WebAPI.Controllers
                    await _context.Users
                 .AnyAsync(u => u.Id == userId2 && u.Friends.Any(f => f.FriendId == userId1), cancellationToken);
         }
+
+        [HttpPost("{chatId}/react")]
+        [Authorize]
+        public async Task<IActionResult> AddReaction(Guid chatId, [FromBody] AddReactionDto request, CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "Unauthorized." });
+            }
+
+            var existingReaction = await _context.Reactions
+                .FirstOrDefaultAsync(r => r.ChatId == chatId && r.UserId == Guid.Parse(userId), cancellationToken);
+
+            if (existingReaction != null)
+            {
+                // Nếu đã có reaction, cập nhật lại reaction hiện tại
+                existingReaction.ReactionType = request.ReactionType;
+                await _context.SaveChangesAsync(cancellationToken);
+
+                // Gửi thông báo qua SignalR nếu cần thiết
+                await _hubContext.Clients.User(existingReaction.Chat.UserId.ToString()).SendAsync("ReactionUpdated", new
+                {
+                    ChatId = chatId,
+                    ReactionType = existingReaction.ReactionType,
+                    UserId = userId
+                });
+
+                return Ok(new { Message = "Reaction updated successfully." });
+            }
+            else
+            {
+                // Nếu chưa có reaction, tạo mới
+                var reaction = new Reaction
+                {
+                    ChatId = chatId,
+                    UserId = Guid.Parse(userId),
+                    ReactionType = request.ReactionType
+                };
+
+                _context.Reactions.Add(reaction);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                // Gửi thông báo qua SignalR nếu cần thiết
+                await _hubContext.Clients.User(reaction.Chat.UserId.ToString()).SendAsync("ReactionAdded", new
+                {
+                    ChatId = chatId,
+                    ReactionType = reaction.ReactionType,
+                    UserId = userId
+                });
+
+                return Ok(new { Message = "Reaction added successfully." });
+            }
+        }
+
+
+        [HttpGet("{chatId}/reactions")]
+        [Authorize]
+        public async Task<IActionResult> GetReactions(Guid chatId, CancellationToken cancellationToken)
+        {
+            var reactions = await _context.Reactions
+                .Where(r => r.ChatId == chatId)
+                .Select(r => new
+                {
+                    r.UserId,
+                    r.ReactionType,
+                    r.CreatedAt
+                })
+                .ToListAsync(cancellationToken);
+
+            return Ok(reactions);
+        }
+        [HttpDelete("{chatId}/remove-reaction")]
+        [Authorize]
+        public async Task<IActionResult> RemoveReaction(Guid chatId, CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "Unauthorized." });
+            }
+
+            var reaction = await _context.Reactions
+                .FirstOrDefaultAsync(r => r.ChatId == chatId && r.UserId == Guid.Parse(userId), cancellationToken);
+
+            if (reaction == null)
+            {
+                return NotFound(new { Message = "Reaction not found." });
+            }
+
+            _context.Reactions.Remove(reaction);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Gửi thông báo qua SignalR nếu cần thiết
+            await _hubContext.Clients.User(reaction.Chat.UserId.ToString()).SendAsync("ReactionRemoved", new
+            {
+                ChatId = chatId,
+                UserId = userId
+            });
+
+            return Ok(new { Message = "Reaction removed successfully." });
+        }
+
+
+        [HttpPost("{userId}/update-chat-theme/{friendId}")]
+        public async Task<IActionResult> UpdateChatThemeWithFriend(Guid userId, Guid friendId, [FromBody] UpdateChatThemeDto request, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null || userId.ToString() != authenticatedUserId)
+            {
+                return Forbid("You are not authorized to update the chat theme for this friend.");
+            }
+
+            var friendship = await _context.Friendships
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == friendId, cancellationToken);
+
+            if (friendship == null)
+            {
+                return NotFound("Friendship not found.");
+            }
+
+            friendship.ChatTheme = request.Theme;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Ok(new { Message = "Chat theme updated successfully." });
+        }
+        [HttpPost("{groupId}/update-chat-theme")]
+        public async Task<IActionResult> UpdateChatThemeForGroup(Guid groupId, [FromBody] UpdateChatThemeDto request, CancellationToken cancellationToken)
+        {
+            var authenticatedUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (authenticatedUserId == null)
+            {
+                return Forbid("You are not authorized to update the chat theme for this group.");
+            }
+
+            // Kiểm tra xem người dùng có phải là thành viên của nhóm không
+            var groupMember = await _context.GroupMembers
+                .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == Guid.Parse(authenticatedUserId), cancellationToken);
+
+            if (groupMember == null)
+            {
+                return NotFound("Group member not found.");
+            }
+
+            // Lấy thông tin nhóm và cập nhật theme
+            var group = await _context.Groups
+                .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+            if (group == null)
+            {
+                return NotFound("Group not found.");
+            }
+
+            group.ChatTheme = request.Theme;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Ok(new { Message = "Chat theme updated successfully." });
+        }
+
 
     }
 }

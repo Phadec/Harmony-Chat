@@ -162,7 +162,8 @@ public sealed class ChatHub : Hub
                             chat.GroupId,
                             chat.Message,
                             chat.AttachmentUrl,
-                            chat.Date
+                            chat.Date,
+                            chat.Reactions
                         });
                     }
                 }
@@ -188,7 +189,8 @@ public sealed class ChatHub : Hub
                         chat.ToUserId, // Đây là UserId của người nhận
                         chat.Message,
                         chat.AttachmentUrl,
-                        chat.Date
+                        chat.Date,
+                        chat.Reactions
                     });
                 }
             }
