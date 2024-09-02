@@ -103,6 +103,7 @@ body, html {
   color: #343a40;
 }
 
+/* Nội dung tin nhắn */
 .message-content {
   background-color: #e9ecef;
   padding: 10px 15px;
@@ -115,25 +116,34 @@ body, html {
   text-align: left;
 }
 
+/* Tin nhắn của người gửi (màu nền xanh, chữ trắng) */
 .sent .message-content {
   background-color: #007bff;
-  color: white;
+  color: white; /* Màu chữ trắng */
 }
 
+/* Tin nhắn của người nhận (màu nền xám, chữ xám) */
 .received .message-content {
   background-color: #f1f3f5;
-  color: #343a40;
+  color: gray;
 }
-.sent .message-content a{
+
+/* Thay đổi màu chữ cho liên kết trong tin nhắn */
+.sent .message-content a {
   color: white;
   word-break: break-all;
   overflow-wrap: break-word;
   text-decoration: none;
 }
-.receive .message-content a{
-  background-color: #007bff;
-  color: black;
+
+.received .message-content a {
+  color: #007bff;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  text-decoration: none;
 }
+
+/* Vị trí căn chỉnh của tin nhắn */
 .sent {
   text-align: right;
 }
@@ -141,6 +151,7 @@ body, html {
 .received {
   text-align: left;
 }
+
 
 /* Thời gian tin nhắn */
 .message-time {
@@ -361,4 +372,22 @@ body, html {
   background-color: #f9f9f9;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.delete-button {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+  padding: 0;
+}
+
+.delete-button:hover {
+  color: darkred;
+}
+
+.deleted-message {
+  color: gray;
+  font-style: italic;
 }

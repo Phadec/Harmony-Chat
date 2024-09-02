@@ -43,5 +43,8 @@ export class ChatService {
   removeReaction(chatId: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${chatId}/remove-reaction`);
   }
+  deleteMessage(chatId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${chatId}/delete-message`, {});
+  }
 
 }

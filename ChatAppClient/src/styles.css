@@ -3,19 +3,6 @@ body, html {
   font-family: 'Roboto', sans-serif;
 }
 
-/* Bạn có thể tùy chỉnh thêm các phần khác của giao diện, ví dụ: */
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 700; /* Sử dụng Roboto với trọng lượng 700 cho các tiêu đề */
-  color: gray;
-}
-
-p, span, a, li, div {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 400; /* Sử dụng Roboto với trọng lượng 400 cho văn bản thông thường */
-  color: gray;
-}
 
 
 html, body { height: 100%; }

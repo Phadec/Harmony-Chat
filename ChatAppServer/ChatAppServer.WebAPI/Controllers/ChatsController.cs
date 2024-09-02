@@ -177,8 +177,6 @@ namespace ChatAppServer.WebAPI.Controllers
             }
         }
 
-
-
         [HttpGet("{userId}/recipient-info/{recipientId}")]
         public async Task<IActionResult> GetRecipientInfo(Guid userId, Guid recipientId, CancellationToken cancellationToken)
         {
@@ -439,7 +437,8 @@ namespace ChatAppServer.WebAPI.Controllers
                             IsRead = _context.MessageReadStatuses
                                 .Where(mrs => mrs.MessageId == p.Id && mrs.UserId == userId)
                                 .Select(mrs => mrs.IsRead)
-                                .FirstOrDefault(),  // Lấy giá trị IsRead từ bảng MessageReadStatuses
+                                .FirstOrDefault(),
+                            IsDeleted = p.IsDeleted,
                             p.Reactions
                         })
                         .ToListAsync(cancellationToken);
@@ -647,26 +646,11 @@ namespace ChatAppServer.WebAPI.Controllers
                 return Forbid("You are not authorized to delete this message.");
             }
 
-            // Kiểm tra nếu tin nhắn đã được gửi quá 15 phút
-            var currentTime = DateTime.UtcNow;
-            if ((currentTime - chatMessage.Date).TotalMinutes > 15)
-            {
-                return BadRequest(new { Message = "You can no longer delete this message as it was sent more than 15 minutes ago." });
-            }
-
-            // Xóa các reaction liên quan đến message
-            var reactions = await _context.Reactions
-                .Where(r => r.ChatId == chatId)
-                .ToListAsync(cancellationToken);
-
-            if (reactions.Any())
-            {
-                _context.Reactions.RemoveRange(reactions);
-            }
-
-            // Update the message content to "Message has been deleted"
+            // Chỉ cập nhật thuộc tính isDeleted thành true và thay đổi nội dung đoạn chat
+            chatMessage.IsDeleted = true;
             chatMessage.Message = "Message has been deleted";
-            chatMessage.AttachmentUrl = null;  // Optionally, remove attachment if needed
+            chatMessage.AttachmentOriginalName = null;
+            chatMessage.AttachmentUrl = null;
 
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -680,8 +664,10 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _hubContext.Clients.User(chatMessage.ToUserId.ToString()).SendAsync("MessageDeleted", chatMessage.Id);
             }
 
-            return Ok(new { Message = "Message and related reactions have been deleted." });
+            return Ok(new { Message = "Message has been marked as deleted." });
         }
+
+
 
 
         [HttpDelete("{userId}/delete-chats/{recipientId}")]
@@ -828,30 +814,46 @@ namespace ChatAppServer.WebAPI.Controllers
                 await _context.SaveChangesAsync(cancellationToken);
             }
 
-            // Nếu người gửi phản ứng không phải là người gửi tin nhắn, thêm bản ghi vào NewReactionStatus
-            if (chat.UserId != Guid.Parse(userId))
+            // Thông báo qua SignalR cho người dùng bị ảnh hưởng
+            if (chat.GroupId.HasValue)
             {
-                var newReactionStatus = new NewReactionStatus
-                {
-                    ChatId = chatId,
-                    UserId = chat.UserId // Lưu trạng thái cho người nhận tin nhắn
-                };
+                // Thông báo cho tất cả các thành viên trong nhóm
+                var groupMembers = await _context.GroupMembers
+                    .Where(gm => gm.GroupId == chat.GroupId)
+                    .Select(gm => gm.UserId)
+                    .ToListAsync();
 
-                _context.NewReactionStatuses.Add(newReactionStatus);
-                await _context.SaveChangesAsync(cancellationToken);
-
-                // Gửi thông báo qua SignalR
-                await _hubContext.Clients.User(chat.UserId.ToString()).SendAsync("ReactionAdded", new
+                foreach (var memberId in groupMembers)
                 {
-                    ChatId = chatId,
-                    ReactionType = request.ReactionType,
-                    UserId = userId,
-                    HasNewMessage = true // Đánh dấu có phản ứng mới
-                });
+                    await _hubContext.Clients.User(memberId.ToString()).SendAsync("ReactionAdded", new
+                    {
+                        ChatId = chatId,
+                        ReactionType = request.ReactionType,
+                        UserId = userId,
+                        HasNewMessage = true // Đánh dấu có phản ứng mới
+                    });
+                }
+            }
+            else if (chat.ToUserId.HasValue)
+            {
+                // Thông báo cho cả hai người dùng trong cuộc trò chuyện riêng tư
+                var affectedUsers = new List<Guid> { chat.UserId, chat.ToUserId.Value };
+
+                foreach (var affectedUserId in affectedUsers)
+                {
+                    await _hubContext.Clients.User(affectedUserId.ToString()).SendAsync("ReactionAdded", new
+                    {
+                        ChatId = chatId,
+                        ReactionType = request.ReactionType,
+                        UserId = userId,
+                        HasNewMessage = true // Đánh dấu có phản ứng mới
+                    });
+                }
             }
 
             return Ok(new { Message = "Reaction added successfully." });
         }
+
 
 
 
@@ -904,12 +906,38 @@ namespace ChatAppServer.WebAPI.Controllers
             _context.Reactions.Remove(reaction);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Gửi thông báo qua SignalR nếu cần thiết
-            await _hubContext.Clients.User(reaction.Chat.UserId.ToString()).SendAsync("ReactionRemoved", new
+            // Gửi thông báo qua SignalR cho người dùng bị ảnh hưởng
+            if (reaction.Chat.GroupId.HasValue)
             {
-                ChatId = chatId,
-                UserId = userId
-            });
+                // Thông báo cho tất cả các thành viên trong nhóm
+                var groupMembers = await _context.GroupMembers
+                    .Where(gm => gm.GroupId == reaction.Chat.GroupId)
+                    .Select(gm => gm.UserId)
+                    .ToListAsync();
+
+                foreach (var memberId in groupMembers)
+                {
+                    await _hubContext.Clients.User(memberId.ToString()).SendAsync("ReactionRemoved", new
+                    {
+                        ChatId = chatId,
+                        UserId = userId
+                    });
+                }
+            }
+            else if (reaction.Chat.ToUserId.HasValue)
+            {
+                // Thông báo cho cả hai người dùng trong cuộc trò chuyện riêng tư
+                var affectedUsers = new List<Guid> { reaction.Chat.UserId, reaction.Chat.ToUserId.Value };
+
+                foreach (var affectedUserId in affectedUsers)
+                {
+                    await _hubContext.Clients.User(affectedUserId.ToString()).SendAsync("ReactionRemoved", new
+                    {
+                        ChatId = chatId,
+                        UserId = userId
+                    });
+                }
+            }
 
             return Ok(new { Message = "Reaction removed successfully." });
         }

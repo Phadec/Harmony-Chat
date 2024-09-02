@@ -64,4 +64,8 @@ export class FriendsService {
   getFriendInfo(userId: string, entityId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/${userId}/relationship-info/${entityId}`);
   }
+  updateChatTheme(userId: string, friendId: string, theme: string): Observable<any> {
+    const payload = { theme }; // Tạo payload với theme được gửi lên API
+    return this.http.post(`${this.apiUrl}/${userId}/update-chat-theme/${friendId}`, payload);
+  }
 }

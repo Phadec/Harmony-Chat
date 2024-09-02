@@ -45,6 +45,7 @@ import { CallPopupComponent } from './components/call-popup/call-popup.component
 import { IncomingCallPopupComponent } from './components/incoming-call-popup/incoming-call-popup.component';
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
 import { NoAccessComponent } from './components/no-access/no-access.component';
+import { ThemeSelectorDialogComponent } from './components/theme-selector-dialog/theme-selector-dialog.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -75,6 +76,7 @@ import { NoAccessComponent } from './components/no-access/no-access.component';
     IncomingCallPopupComponent,
     AdminLayoutComponent,
     NoAccessComponent,
+    ThemeSelectorDialogComponent,
   ],
   imports: [
     BrowserModule,

@@ -24,6 +24,9 @@ export class EventService {
   // Quản lý sự kiện xóa chat (Subject)
   private chatDeletedSource = new Subject<void>();
   public chatDeleted$ = this.chatDeletedSource.asObservable();
+  // Sự kiện khi tin nhắn bị xóa
+  private messageDeletedSource = new Subject<string>();
+  public messageDeleted$ = this.messageDeletedSource.asObservable();
 
   // Hàm phát sự kiện nickname thay đổi
   emitNicknameChanged(newNickname: string): void {
@@ -48,5 +51,9 @@ export class EventService {
   // Hàm phát sự kiện xóa chat (không có tham số)
   emitDeleteChat(): void {
     this.chatDeletedSource.next();
+  }
+  // Phát sự kiện khi tin nhắn bị xóa
+  emitMessageDeleted(messageId: string): void {
+    this.messageDeletedSource.next(messageId);
   }
 }

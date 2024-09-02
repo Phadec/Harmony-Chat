@@ -12,6 +12,7 @@ import {ImagePreviewDialogComponent} from "../image-preview-dialog/image-preview
 import {SignalRService} from "../../services/signalr.service";
 import {EventService} from "../../services/event.service";
 import {AppConfigService} from "../../services/app-config.service";
+import {ThemeSelectorDialogComponent} from "../theme-selector-dialog/theme-selector-dialog.component";
 
 interface GroupMember {
   userId: string;
@@ -452,7 +453,48 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
       panelClass: 'custom-dialog-container'
     });
   }
+  updateChatTheme(): void {
+    if (!this.recipientInfo) return;
 
+    const dialogRef = this.dialog.open(ThemeSelectorDialogComponent, {
+      width: '300px',
+    });
+
+    dialogRef.afterClosed().subscribe((selectedTheme: string) => {
+      if (selectedTheme) {
+        if (this.recipientInfo.isGroup) {
+          // Cập nhật theme cho nhóm
+          if (this.recipientInfo.isAdmin) {
+            this.groupService.updateChatTheme(this.recipientInfo.id, selectedTheme).subscribe(
+              (response) => {
+                console.log('Group chat theme updated successfully:', response);
+                this.loadRecipientInfo(); // Tải lại thông tin sau khi cập nhật theme
+              },
+              (error) => {
+                console.error('Failed to update group chat theme:', error);
+              }
+            );
+          } else {
+            console.error('Only admins can update the group chat theme.');
+          }
+        } else {
+          // Cập nhật theme cho cá nhân
+          const userId = localStorage.getItem('userId');
+          if (userId) {
+            this.friendsService.updateChatTheme(userId, this.recipientInfo.id, selectedTheme).subscribe(
+              (response) => {
+                console.log('Private chat theme updated successfully:', response);
+                this.loadRecipientInfo(); // Tải lại thông tin sau khi cập nhật theme
+              },
+              (error) => {
+                console.error('Failed to update private chat theme:', error);
+              }
+            );
+          }
+        }
+      }
+    });
+  }
 
   getAvatarUrl(avatar: string): string {
     const baseUrl = this.appConfig.getBaseUrl(); // Lấy baseUrl từ AppConfigService

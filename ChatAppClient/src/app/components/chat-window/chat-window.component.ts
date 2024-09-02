@@ -53,8 +53,8 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     private appConfig: AppConfigService,
     private snackBar: MatSnackBar,
     private sanitizer: DomSanitizer
-
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     // Tải tin nhắn và thông tin người nhận nếu đã có recipientId
@@ -90,9 +90,11 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     // Đăng ký các sự kiện từ SignalR
     this.registerSignalREvents();
   }
+
   removeAttachment(): void {
     this.attachmentFile = null; // Xóa tệp đính kèm đã chọn
   }
+
   convertTextToLink(text: any): SafeHtml {
     if (typeof text !== 'string') {
       return text;  // Trả về giá trị gốc nếu không phải là chuỗi
@@ -119,9 +121,15 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       }
     });
 
-    this.signalRService.hubConnection.on('ReactionAdded', () => {
-      console.log('ReactionAdded event received');
-      this.loadMessages();
+    // Nhận sự kiện khi có Reaction mới
+    this.signalRService.hubConnection.on('ReactionAdded', (reactionData: any) => {
+      console.log('ReactionAdded event received:', reactionData);
+      this.handleReactionAdded(reactionData);
+    });
+    // Nhận sự kiện khi phản ứng bị xóa
+    this.signalRService.hubConnection.on('ReactionRemoved', (reactionData: any) => {
+      console.log('ReactionRemoved event received:', reactionData);
+      this.handleReactionRemoved(reactionData);
     });
 
     // Nhận thông báo tin nhắn đã đọc
@@ -135,6 +143,17 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     this.signalRService.connectedUsers$.subscribe((connectedUsers: any[]) => {
       console.log('Connected users:', connectedUsers);
     });
+    this.signalRService.hubConnection.on('MessageDeleted', (chatId: string) => {
+      const message = this.messages.find(msg => msg.id === chatId);
+      if (message) {
+        message.isDeleted = true;
+        message.message = 'Message has been deleted';
+        message.attachmentUrl = null;
+        this.cdr.detectChanges();
+      }
+    });
+
+
 
     // Nhận sự kiện liên quan đến bạn bè từ Observable
     this.signalRService.friendEventNotification$.subscribe(event => {
@@ -144,6 +163,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       this.handleUserBlockedEvent(event);
     });
   }
+
   clearMessages(): void {
     this.messages = [];  // Làm rỗng danh sách tin nhắn
     console.log("messages cleared");
@@ -166,12 +186,100 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       });
     }
   }
+
   playNotificationSound(): void {
     this.notificationSound.play().catch(error => {
       console.error('Error playing notification sound:', error);
     });
   }
 
+  handleReactionRemoved(reactionData: any): void {
+    const messageIndex = this.messages.findIndex(msg => msg.id === reactionData.chatId);
+    if (messageIndex !== -1 && this.messages[messageIndex].Reaction?.$values) {
+      const reactionIndex = this.messages[messageIndex].Reaction.$values.findIndex(
+        (r: any) => r.userId === reactionData.userId
+      );
+
+      if (reactionIndex !== -1) {
+        this.messages[messageIndex].Reaction.$values.splice(reactionIndex, 1); // Xóa phản ứng khỏi danh sách
+
+        if (this.messages[messageIndex].Reaction.$values.length === 0) {
+          delete this.messages[messageIndex].Reaction; // Hoặc đặt message.Reaction = { $values: [] };
+        }
+
+        // Buộc Angular phát hiện sự thay đổi
+        this.messages = [...this.messages];
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  handleMessageDeleted(deletedMessageId: string): void {
+    const message = this.messages.find(msg => msg.id === deletedMessageId);
+    if (message) {
+      message.isDeleted = true;
+      message.message = 'Message has been deleted';
+      message.attachmentUrl = null; // Optionally remove attachment
+      this.cdr.detectChanges(); // Update the UI
+    }
+  }
+
+  handleReactionAdded(reactionData: any): void {
+    const message = this.messages.find(msg => msg.id === reactionData.chatId);
+    if (message) {
+      // Khởi tạo lại mảng reaction nếu chưa có
+      if (!message.Reaction) {
+        message.Reaction = {$values: []};
+      }
+
+      // Tìm xem reaction của user này đã tồn tại hay chưa
+      const existingReactionIndex = message.Reaction.$values.findIndex(
+        (r: any) => r.userId === reactionData.userId
+      );
+
+      if (existingReactionIndex !== -1) {
+        // Nếu đã có reaction từ user này, thay thế bằng reaction mới
+        message.Reaction.$values[existingReactionIndex] = {
+          id: reactionData.reactionId,
+          reactionType: reactionData.reactionType,
+          createdAt: new Date().toISOString(),
+          userId: reactionData.userId
+        };
+      } else {
+        // Nếu chưa có, thêm reaction mới
+        message.Reaction.$values.push({
+          id: reactionData.reactionId,
+          reactionType: reactionData.reactionType,
+          createdAt: new Date().toISOString(),
+          userId: reactionData.userId
+        });
+      }
+
+      // Cập nhật UI
+      this.cdr.detectChanges();
+    }
+  }
+  onDeleteMessage(chatId: string): void {
+    if (confirm('Are you sure you want to delete this message?')) {
+      this.chatService.deleteMessage(chatId).subscribe(
+        () => {
+          // Cập nhật trạng thái của tin nhắn sau khi xóa
+          const message = this.messages.find(msg => msg.id === chatId);
+          if (message) {
+            message.isDeleted = true;
+            message.message = 'Message has been deleted';
+            message.attachmentUrl = null; // Xóa đính kèm nếu có
+            this.cdr.detectChanges();
+            // Phát sự kiện xóa tin nhắn
+            this.eventService.emitMessageDeleted(chatId);
+          }
+        },
+        (error) => {
+          console.error('Error deleting message:', error);
+        }
+      );
+    }
+  }
 
   handleUserBlockedEvent(event: { eventType: string, data: { blockedUserId: string } }): void {
     console.log(`Handling event: ${event.eventType}, for blockedUserId: ${event.data.blockedUserId}, current recipientId: ${this.recipientId}`);
@@ -250,18 +358,26 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         (response: any) => {
           if (response.messages && response.messages.$values) {
             this.messages = response.messages.$values.map((msg: any) => {
+              // Kiểm tra và gán giá trị của isDeleted nếu có
+              msg.isDeleted = msg.isDeleted || false;
+
               // Kiểm tra và gán reactions nếu tồn tại
-              msg.Reaction = msg.reaction || { $values: [] };
+              if (msg.reactions) {
+                msg.Reaction = msg.reactions || { $values: [] };
+              } else if (msg.reaction) {
+                msg.Reaction = msg.reaction || { $values: [] };
+              } else {
+                msg.Reaction = { $values: [] };
+              }
               return msg;
             });
           } else {
             this.messages = [];
           }
 
-          // Xử lý thời gian và ngày của tin nhắn
           this.processMessages();
-          this.cdr.detectChanges(); // Force UI update
-          this.scrollToBottom(); // Scroll to bottom after loading messages
+          this.cdr.detectChanges(); // Buộc UI cập nhật
+          this.scrollToBottom(); // Cuộn xuống cuối sau khi tải tin nhắn
         },
         (error) => {
           console.error('Error loading messages:', error);
@@ -282,20 +398,33 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     if (message) {
       this.chatService.addReaction(chatId, reactionType).subscribe(
         (response: any) => {
-          // Khởi tạo lại mảng reaction
+          // Khởi tạo mảng reaction nếu chưa có
           if (!message.Reaction) {
-            message.Reaction = { $values: [] };
-          } else {
-            message.Reaction.$values = []; // Làm rỗng mảng trước khi thêm reaction mới
+            message.Reaction = {$values: []};
           }
 
-          // Thêm reaction mới vào UI
-          message.Reaction.$values.push({
-            id: response.reactionId,
-            reactionType: reactionType,
-            createdAt: new Date().toISOString(),
-            userId: this.currentUserId
-          });
+          // Tìm xem reaction của người dùng này đã tồn tại hay chưa
+          const existingReactionIndex = message.Reaction.$values.findIndex(
+            (r: any) => r.userId === this.currentUserId
+          );
+
+          if (existingReactionIndex !== -1) {
+            // Nếu đã có reaction từ người dùng này, thay thế bằng reaction mới
+            message.Reaction.$values[existingReactionIndex] = {
+              id: response.reactionId,
+              reactionType: reactionType,
+              createdAt: new Date().toISOString(),
+              userId: this.currentUserId
+            };
+          } else {
+            // Nếu chưa có, thêm reaction mới vào UI
+            message.Reaction.$values.push({
+              id: response.reactionId,
+              reactionType: reactionType,
+              createdAt: new Date().toISOString(),
+              userId: this.currentUserId
+            });
+          }
 
           this.cdr.detectChanges();
           this.activeReactionPickerIndex = null; // Đóng picker sau khi chọn
@@ -323,8 +452,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       }
     );
   }
-
-
 
   processMessages(): void {
     let lastMessageDate: dayjs.Dayjs | null = null;
@@ -386,17 +513,14 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     if (isForCurrentRecipient) {
       const isDuplicate = this.messages.some(msg => msg.id === message.id);
       if (!isDuplicate) {
-        // Chỉ xử lý chuyển đổi link nếu tin nhắn không có tệp đính kèm
-        if (!message.attachmentUrl) {
-          message.message = this.convertTextToLink(message.message);
+        if (message.isDeleted) {
+          message.message = "Message has been deleted";
         }
-
         this.messages = [...this.messages, message];
-        this.processMessages(); // Xử lý lại tin nhắn sau khi nhận được tin nhắn mới
-        this.cdr.detectChanges(); // Buộc UI cập nhật
-        this.scrollToBottom(); // Cuộn xuống cuối sau khi nhận tin nhắn
-        this.markMessageAsRead(message.id); // Đánh dấu tin nhắn là đã đọc
-        console.log(`New message received by recipient ${this.recipientId} from user ${message.userId} (${message.fullName}):`, message);
+        this.processMessages();
+        this.cdr.detectChanges();
+        this.scrollToBottom();
+        this.markMessageAsRead(message.id);
       }
     }
   }

@@ -17,6 +17,8 @@ import {ChangePasswordDialogComponent} from "../change-password-dialog/change-pa
 import {ImagePreviewDialogComponent} from "../image-preview-dialog/image-preview-dialog.component";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {AppConfigService} from "../../services/app-config.service";
+import {EventService} from "../../services/event.service";
+import {Subscription} from "rxjs";
 
 @Component({
   selector: 'app-sidebar',
@@ -37,6 +39,7 @@ export class SidebarComponent implements OnInit {
   searchQuery: string = '';
   selectedTab: string = 'recent';
   userAvatar: string = '';
+  private subscriptions: Subscription[] = [];
   @Output() selectRecipient = new EventEmitter<string>();
 
   constructor(
@@ -50,7 +53,8 @@ export class SidebarComponent implements OnInit {
     private router: Router,
     public dialog: MatDialog,
     private appConfig: AppConfigService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private eventService: EventService
   ) {}
 
   ngOnInit(): void {
@@ -63,10 +67,24 @@ export class SidebarComponent implements OnInit {
     this.loadGroups();
     this.subscribeToSignalREvents();
     this.loadCurrentUserAvatar();
+
     this.signalRService.messageSent.subscribe(() => {
       this.loadRelationships(); // Cập nhật danh sách quan hệ khi có tin nhắn mới
     });
+
+    // Đăng ký lắng nghe sự kiện xóa tin nhắn
+    this.subscriptions.push(
+      this.eventService.messageDeleted$.subscribe((messageId: string) => {
+        console.log(`Message with ID ${messageId} has been deleted.`);
+        this.loadRelationships(); // Gọi lại phương thức loadRelationships để cập nhật danh sách quan hệ
+      })
+    );
   }
+  ngOnDestroy(): void {
+    // Hủy đăng ký sự kiện khi component bị hủy
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
   subscribeToSignalREvents(): void {
 // Lắng nghe sự kiện nhận tin nhắn riêng tư
     this.signalRService.messageReceived$.subscribe(() => {
@@ -78,6 +96,10 @@ export class SidebarComponent implements OnInit {
           duration: 3000,
         });
       }
+    });
+
+    this.signalRService.hubConnection.on('MessageDeleted', (chatId: string) => {
+      this.loadRelationships();
     });
 
 // Lắng nghe sự kiện tin nhắn đã được đọc

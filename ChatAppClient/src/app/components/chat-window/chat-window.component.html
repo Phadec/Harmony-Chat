@@ -17,11 +17,25 @@
         <!-- Tên người gửi trong nhóm chat -->
         <p *ngIf="message.groupId" class="sender-name">{{ message.senderFullName }}</p>
 
-        <!-- Hiển thị nội dung tin nhắn -->
-        <div *ngIf="message.message" class="message-content" [innerHTML]="message.message"></div>
+        <div class="message-and-actions">
+          <!-- Nút xóa tin nhắn, chỉ hiển thị nếu người dùng là người gửi và tin nhắn chưa bị xóa -->
+          <button *ngIf="!message.isDeleted && message.userId === currentUserId" class="delete-button" (click)="onDeleteMessage(message.id)">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+
+          <!-- Hiển thị nội dung tin nhắn nếu chưa bị xóa -->
+          <div *ngIf="!message.isDeleted && message.message" class="message-content">
+            <span [innerHTML]="message.message"></span>
+          </div>
+
+          <!-- Hiển thị thông báo tin nhắn đã bị xóa -->
+          <div *ngIf="message.isDeleted" class="message-content deleted-message">
+            Message has been deleted
+          </div>
+        </div>
 
         <!-- Hiển thị đính kèm nếu có -->
-        <div *ngIf="message.attachmentUrl" class="attachment">
+        <div *ngIf="!message.isDeleted && message.attachmentUrl" class="attachment">
           <ng-container [ngSwitch]="getAttachmentType(message.attachmentUrl)">
             <!-- Đính kèm hình ảnh -->
             <img *ngSwitchCase="'image'" [src]="getAttachmentUrl(message.attachmentUrl)" alt="Image attachment"
@@ -62,7 +76,7 @@
         </div>
 
         <!-- Hiển thị reactions nếu có -->
-        <div *ngIf="message.Reaction?.$values?.length > 0" class="message-reactions">
+        <div *ngIf="!message.isDeleted && message.Reaction?.$values?.length > 0" class="message-reactions">
           <ng-container *ngFor="let reaction of message.Reaction.$values">
             <span class="reaction" (click)="onRemoveReaction(message.id)">
               {{ reaction.reactionType }} <!-- Hiển thị emoji tương ứng -->
@@ -71,12 +85,12 @@
         </div>
 
         <!-- Thêm reaction -->
-        <div class="add-reaction" (click)="toggleReactionPicker(i)">
+        <div *ngIf="!message.isDeleted" class="add-reaction" (click)="toggleReactionPicker(i)">
           <i class="fas fa-smile"></i> Add Reaction
         </div>
 
         <!-- Picker reactions -->
-        <div *ngIf="activeReactionPickerIndex === i" class="reaction-picker">
+        <div *ngIf="activeReactionPickerIndex === i && !message.isDeleted" class="reaction-picker">
           <ng-container *ngFor="let reaction of availableReactions">
             <span class="reaction-option" (click)="onAddReaction(message.id, reaction)">
               {{ reaction }}
@@ -85,7 +99,7 @@
         </div>
 
         <!-- Hiển thị trạng thái "Đã đọc" nếu đây là tin nhắn đã đọc cuối cùng -->
-        <div *ngIf="message.isRead && message.userId === currentUserId && i === messages.length - 1" class="message-status">
+        <div *ngIf="!message.isDeleted && message.isRead && message.userId === currentUserId && i === messages.length - 1" class="message-status">
           Seen
         </div>
       </div>

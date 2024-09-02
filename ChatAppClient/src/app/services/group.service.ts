@@ -69,4 +69,8 @@ export class GroupService {
   getFriendsNotInGroup(groupId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/${groupId}/non-members`);
   }
+  updateChatTheme(groupId: string, theme: string): Observable<any> {
+    const payload = { theme }; // Tạo payload với theme được gửi lên API
+    return this.http.post(`${this.apiUrl}/${groupId}/update-chat-theme`, payload);
+  }
 }
