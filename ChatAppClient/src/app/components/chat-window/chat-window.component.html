@@ -1,4 +1,4 @@
-<div class="chat-content">
+<div class="chat-content" [ngClass]="'theme-' + chatTheme">
   <!-- Header hiển thị thông tin người nhận -->
   <app-chat-header *ngIf="recipientInfo" [recipientInfo]="recipientInfo"></app-chat-header>
 
@@ -58,6 +58,29 @@
                 {{ message.attachmentOriginalName }}
               </a>
             </div>
+          </ng-container>
+        </div>
+
+        <!-- Hiển thị reactions nếu có -->
+        <div *ngIf="message.Reaction?.$values?.length > 0" class="message-reactions">
+          <ng-container *ngFor="let reaction of message.Reaction.$values">
+            <span class="reaction" (click)="onRemoveReaction(message.id)">
+              {{ reaction.reactionType }} <!-- Hiển thị emoji tương ứng -->
+            </span>
+          </ng-container>
+        </div>
+
+        <!-- Thêm reaction -->
+        <div class="add-reaction" (click)="toggleReactionPicker(i)">
+          <i class="fas fa-smile"></i> Add Reaction
+        </div>
+
+        <!-- Picker reactions -->
+        <div *ngIf="activeReactionPickerIndex === i" class="reaction-picker">
+          <ng-container *ngFor="let reaction of availableReactions">
+            <span class="reaction-option" (click)="onAddReaction(message.id, reaction)">
+              {{ reaction }}
+            </span>
           </ng-container>
         </div>
 
