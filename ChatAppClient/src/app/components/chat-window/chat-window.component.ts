@@ -57,14 +57,12 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   ) {}
 
   ngOnInit(): void {
-    // Bắt đầu kết nối SignalR
-    this.signalRService.startConnection();
-
     // Tải tin nhắn và thông tin người nhận nếu đã có recipientId
     if (this.recipientId) {
       this.loadMessages();
       this.loadRecipientInfo();
     }
+
     // Lắng nghe sự kiện xóa chat từ EventService
     this.eventService.chatDeleted$.subscribe(() => {
       this.clearMessages(); // Chỉ làm rỗng danh sách tin nhắn
@@ -119,6 +117,11 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       if (document.visibilityState !== 'visible') {
         this.playNotificationSound();
       }
+    });
+
+    this.signalRService.hubConnection.on('ReactionAdded', () => {
+      console.log('ReactionAdded event received');
+      this.loadMessages();
     });
 
     // Nhận thông báo tin nhắn đã đọc
@@ -239,31 +242,26 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     }
   }
 
+  chatTheme: string = 'default';  // Thêm biến lưu trữ ChatTheme
+
   loadMessages(): void {
     if (this.recipientId) {
       this.chatService.getChats(this.recipientId).subscribe(
         (response: any) => {
-          this.messages = response.$values || [];
-          this.processMessages(); // Xử lý thời gian và ngày của tin nhắn
+          if (response.messages && response.messages.$values) {
+            this.messages = response.messages.$values.map((msg: any) => {
+              // Kiểm tra và gán reactions nếu tồn tại
+              msg.Reaction = msg.reaction || { $values: [] };
+              return msg;
+            });
+          } else {
+            this.messages = [];
+          }
+
+          // Xử lý thời gian và ngày của tin nhắn
+          this.processMessages();
           this.cdr.detectChanges(); // Force UI update
           this.scrollToBottom(); // Scroll to bottom after loading messages
-
-          // In ra danh sách tin nhắn trong console
-          console.log('Danh sách tin nhắn:', this.messages);
-
-          // Check for attachments and mark the last message as read
-          this.messages.forEach(message => {
-            if (message.attachmentUrl && message.attachmentOriginalName) {
-              console.log(`Attachment found: ${message.attachmentOriginalName} at ${message.attachmentUrl}`);
-            }
-          });
-
-          if (this.messages.length > 0) {
-            const lastMessage = this.messages[this.messages.length - 1];
-            if (!lastMessage.isRead) {
-              this.markMessageAsRead(lastMessage.id);
-            }
-          }
         },
         (error) => {
           console.error('Error loading messages:', error);
@@ -271,6 +269,62 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       );
     }
   }
+
+  availableReactions: string[] = ['😊', '😂', '😍', '😢', '😡', '👍', '👎'];
+  activeReactionPickerIndex: number | null = null;
+
+  toggleReactionPicker(index: number): void {
+    this.activeReactionPickerIndex = this.activeReactionPickerIndex === index ? null : index;
+  }
+
+  onAddReaction(chatId: string, reactionType: string): void {
+    const message = this.messages.find(msg => msg.id === chatId);
+    if (message) {
+      this.chatService.addReaction(chatId, reactionType).subscribe(
+        (response: any) => {
+          // Khởi tạo lại mảng reaction
+          if (!message.Reaction) {
+            message.Reaction = { $values: [] };
+          } else {
+            message.Reaction.$values = []; // Làm rỗng mảng trước khi thêm reaction mới
+          }
+
+          // Thêm reaction mới vào UI
+          message.Reaction.$values.push({
+            id: response.reactionId,
+            reactionType: reactionType,
+            createdAt: new Date().toISOString(),
+            userId: this.currentUserId
+          });
+
+          this.cdr.detectChanges();
+          this.activeReactionPickerIndex = null; // Đóng picker sau khi chọn
+        },
+        error => console.error('Error adding reaction:', error)
+      );
+    }
+  }
+
+  onRemoveReaction(chatId: string): void {
+    this.chatService.removeReaction(chatId).subscribe(
+      () => {
+        // Tìm tin nhắn có ID là chatId
+        const message = this.messages.find(msg => msg.id === chatId);
+        if (message && message.Reaction?.$values) {
+          // Lọc bỏ tất cả các phản ứng của người dùng hiện tại khỏi danh sách phản ứng
+          message.Reaction.$values = message.Reaction.$values.filter(
+            (r: { userId: string }) => r.userId !== this.currentUserId
+          );
+        }
+        this.cdr.detectChanges(); // Cập nhật giao diện
+      },
+      (error) => {
+        console.error('Error removing reaction:', error);
+      }
+    );
+  }
+
+
 
   processMessages(): void {
     let lastMessageDate: dayjs.Dayjs | null = null;

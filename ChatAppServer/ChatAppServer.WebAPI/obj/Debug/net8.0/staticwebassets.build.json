@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "LttzRzbtLnvKVGe2g7fd8DqRwsYC4TTPYQdnAu8iB1A=",
+  "Hash": "suVgN5uMcHZ2YgC+h979+X1a124RdvEOcPLRnv77kJ8=",
   "Source": "ChatAppServer.WebAPI",
   "BasePath": "_content/ChatAppServer.WebAPI",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "ChatAppServer.WebAPI\\wwwroot",
       "Source": "ChatAppServer.WebAPI",
-      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
+      "ContentRoot": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
       "BasePath": "_content/ChatAppServer.WebAPI",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\example.jpg",
+      "Identity": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\example.jpg",
       "SourceId": "ChatAppServer.WebAPI",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
+      "ContentRoot": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
       "BasePath": "_content/ChatAppServer.WebAPI",
       "RelativePath": "avatars/example.jpg",
       "AssetKind": "All",

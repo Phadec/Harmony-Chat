@@ -4749,11 +4749,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
+      "projectUniqueName": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
       "projectName": "ChatAppServer.WebAPI",
-      "projectPath": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
+      "projectPath": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
       "packagesPath": "C:\\Users\\vietp\\.nuget\\packages\\",
-      "outputPath": "D:\\ProjectDotNet\\ChatAppServer\\ChatAppServer.WebAPI\\obj\\",
+      "outputPath": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\vietp\\AppData\\Roaming\\NuGet\\NuGet.Config",
