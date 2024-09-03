@@ -198,17 +198,19 @@ body, html {
 
 /* Khung hiển thị tệp đính kèm đã chọn */
 .attachment-preview {
-  position: fixed;
-  bottom: 65px; /* Căn chỉnh phía trên khung nhập tin nhắn */
+  position: absolute;
+  bottom: 60px;
+  right: 330px;
   background-color: #f9f9f9;
   border-radius: 5px;
   border: 1px solid #ddd;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000; /* Đảm bảo phần này luôn ở trên các phần tử khác */
+  z-index: 1000;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Tách biệt nút "Remove" và phần xem trước */
-  width: 50%;
+  justify-content: space-between;
+  width: 710px;
+  padding: 10px;
 }
 
 .attachment-preview p {
@@ -386,31 +388,49 @@ body, html {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Nút xóa */
-.delete-button {
-  background: none;
-  border: none;
-  color: red;
-  cursor: pointer;
-  font-size: 14px;
-  margin-right: 10px;
-  padding: 0;
-}
-
-.delete-button:hover {
-  color: darkred;
-}
-
 /* Tin nhắn đã bị xóa */
 .deleted-message {
   color: gray;
   font-style: italic;
 }
 
-/* Hộp hành động (nút xóa và reaction) */
 .actions-container {
-  display: inline-flex;
+  display: flex;
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: space-between; /* Căn đều các nút với khoảng cách bằng nhau */
+  opacity: 0.1; /* Mặc định các nút mờ mờ */
+  transition: opacity 0.3s ease; /* Chuyển đổi độ mờ mượt mà */
+}
+
+.actions-container:hover {
+  opacity: 1; /* Khi hover, các nút hiện rõ */
+}
+
+.actions-container .delete-button,
+.actions-container .reply-button,
+.actions-container .add-reaction {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px; /* Tạo khoảng trống xung quanh icon */
+  display: flex;
   align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease; /* Chuyển đổi màu mượt mà khi hover */
+}
+
+.actions-container .delete-button:hover,
+.actions-container .reply-button:hover,
+.actions-container .add-reaction:hover {
+  color: #0056b3; /* Màu khi hover */
+}
+
+.actions-container .delete-button i,
+.actions-container .reply-button i,
+.actions-container .add-reaction i {
+  font-size: 18px; /* Kích thước của icon */
 }
 
 /* Căn chỉnh các nút cho tin nhắn gửi và nhận */
@@ -424,14 +444,165 @@ body, html {
   margin-left: 10px;
 }
 
-/* Thêm reaction */
-.add-reaction {
-  cursor: pointer;
-  font-size: 20px;
-  color: #007bff;
-  margin-left: 8px;
+.replied-message {
+  background-color: #f1f3f5;
+  padding: 5px;
+  border-left: 3px solid #007bff;
+  margin-bottom: 10px;
+  border-radius: 5px;
 }
 
-.add-reaction:hover {
-  color: #0056b3;
+.replied-message-content {
+  font-size: 13px;
+  color: #495057;
+}
+
+.reply-preview {
+  position: absolute;
+  bottom: 60px;
+  right: 330px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* max-width: 100%; */
+  width: 710px;
+  padding: 10px;
+}
+
+.reply-preview-header {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555; /* Consistent color with attachment preview */
+}
+
+.reply-preview-content {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: #555; /* Text color similar to the attachment preview */
+  word-break: break-word; /* Ensure long words break appropriately */
+}
+
+.cancel-reply {
+  background: none;
+  border: none;
+  color: #f00; /* Red color similar to remove button in attachment preview */
+  cursor: pointer;
+  font-size: 16px; /* Match size of the remove button */
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.cancel-reply i {
+  font-size: 18px; /* Size of the icon */
+}
+
+.cancel-reply:hover {
+  color: #d00;
+  text-decoration: none; /* Remove underline since we're using an icon */
+}
+
+.sent .replied-message {
+  background-color: #e1f5fe; /* Màu nền khác biệt cho tin nhắn gửi */
+  border-left: 3px solid #007bff; /* Màu viền xanh cho tin nhắn gửi */
+  text-align: right; /* Canh phải cho tin nhắn gửi */
+  margin-left: auto; /* Đẩy phần reply về phía bên phải */
+  width: 30%;
+}
+
+.received .replied-message {
+  background-color: #f9f9f9; /* Màu nền khác biệt cho tin nhắn nhận */
+  border-left: 3px solid #ddd; /* Màu viền xám cho tin nhắn nhận */
+  text-align: left; /* Canh trái cho tin nhắn nhận */
+  margin-right: auto; /* Đẩy phần reply về phía bên trái */
+  width: 30%;
+}
+
+.replied-message-content {
+  font-size: 12px;
+  color: #555;
+}
+.message-reactions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center; /* Căn giữa theo chiều ngang */
+  margin-top: 5px;
+}
+
+.reaction-group {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Căn giữa nội dung bên trong cụm */
+  background-color: #f1f3f5; /* Màu nền nhạt cho cụm reaction */
+  border-radius: 20px; /* Bo góc */
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.reaction {
+  font-size: 16px; /* Kích thước emoji */
+}
+
+.reaction-count {
+  font-size: 14px;
+  color: #555;
+  margin-left: 5px; /* Khoảng cách giữa emoji và số đếm */
+  background-color: #e9ecef; /* Màu nền cho số đếm */
+  border-radius: 100px;
+  padding: 2px 6px; /* Khoảng trống xung quanh số đếm */
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Căn giữa số đếm trong hình tròn */
+}
+
+
+.reaction-option {
+  font-size: 18px; /* Kích thước của emoji */
+  margin: 5px; /* Khoảng cách giữa các reactions */
+  cursor: pointer; /* Con trỏ thay đổi khi hover */
+  transition: transform 0.2s, background-color 0.2s; /* Hiệu ứng chuyển đổi nhẹ nhàng khi hover */
+  padding: 8px;
+  border-radius: 50%; /* Bo tròn */
+  display: inline-block; /* Xếp theo chiều ngang */
+}
+
+.reaction-option:hover {
+  background-color: #f1f3f5; /* Màu nền khi hover */
+  transform: scale(1.2); /* Tăng kích thước nhẹ khi hover */
+}
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  background-color: rgba(0, 0, 0, 0.7); /* Màu nền tối với độ trong suốt nhẹ hơn */
+  color: #fff;
+  text-align: center;
+  border-radius: 2px; /* Bo góc nhỏ hơn */
+  padding: 2px 4px; /* Giảm padding để tooltip nhỏ hơn */
+  position: absolute;
+  z-index: 1;
+  bottom: 140%; /* Hiển thị tooltip ở trên */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  font-size: 10px; /* Kích thước font nhỏ hơn */
+  white-space: nowrap;
+  pointer-events: none; /* Ngăn tương tác với tooltip */
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
 }

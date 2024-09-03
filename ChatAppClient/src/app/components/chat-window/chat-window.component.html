@@ -17,6 +17,15 @@
         <!-- Tên người gửi trong nhóm chat -->
         <p *ngIf="message.groupId" class="sender-name">{{ message.senderFullName }}</p>
 
+        <!-- Display the replied message if it exists -->
+        <div *ngIf="message.repliedToMessage" class="replied-message">
+          <p class="replied-message-content">
+            Replying to: <strong>{{ message.repliedToMessage.senderFullName }}</strong>
+            <br/>
+            <span [innerHTML]="message.repliedToMessage.message"></span>
+          </p>
+        </div>
+
         <!-- Gộp tin nhắn, reaction và delete button vào một thẻ div với display: flex -->
         <div class="message-container">
           <!-- Hiển thị nội dung tin nhắn nếu chưa bị xóa -->
@@ -29,68 +38,79 @@
             Message has been deleted
           </div>
 
+          <!-- Hiển thị đính kèm nếu có -->
+          <div *ngIf="!message.isDeleted && message.attachmentUrl" class="attachment">
+            <ng-container [ngSwitch]="getAttachmentType(message.attachmentUrl)">
+              <!-- Đính kèm hình ảnh -->
+              <img *ngSwitchCase="'image'" [src]="getAttachmentUrl(message.attachmentUrl)" alt="Image attachment"
+                   (click)="openAttachmentPreview(message.attachmentUrl, 'image')" class="attachment-preview-image" />
 
+              <!-- Đính kèm video -->
+              <video *ngSwitchCase="'video'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
+                     (click)="openAttachmentPreview(message.attachmentUrl, 'video')" class="attachment-preview-video"></video>
 
-        <!-- Hiển thị đính kèm nếu có -->
-        <div *ngIf="!message.isDeleted && message.attachmentUrl" class="attachment">
-          <ng-container [ngSwitch]="getAttachmentType(message.attachmentUrl)">
-            <!-- Đính kèm hình ảnh -->
-            <img *ngSwitchCase="'image'" [src]="getAttachmentUrl(message.attachmentUrl)" alt="Image attachment"
-                 (click)="openAttachmentPreview(message.attachmentUrl, 'image')" class="attachment-preview-image" />
+              <!-- Đính kèm âm thanh -->
+              <audio *ngSwitchCase="'audio'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
+                     class="attachment-preview-audio"></audio>
 
-            <!-- Đính kèm video -->
-            <video *ngSwitchCase="'video'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
-                   (click)="openAttachmentPreview(message.attachmentUrl, 'video')" class="attachment-preview-video"></video>
+              <!-- Đính kèm PDF -->
+              <div *ngSwitchCase="'pdf'" class="attachment-file">
+                <i class="fas fa-file-pdf"></i>
+                <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+                  {{ message.attachmentOriginalName }}
+                </a>
+              </div>
 
-            <!-- Đính kèm âm thanh -->
-            <audio *ngSwitchCase="'audio'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
-                   class="attachment-preview-audio"></audio>
+              <!-- Đính kèm DOCX -->
+              <div *ngSwitchCase="'docx'" class="attachment-file">
+                <i class="fas fa-file-word"></i>
+                <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+                  {{ message.attachmentOriginalName }}
+                </a>
+              </div>
 
-            <!-- Đính kèm PDF -->
-            <div *ngSwitchCase="'pdf'" class="attachment-file">
-              <i class="fas fa-file-pdf"></i>
-              <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
-                {{ message.attachmentOriginalName }}
-              </a>
-            </div>
-
-            <!-- Đính kèm DOCX -->
-            <div *ngSwitchCase="'docx'" class="attachment-file">
-              <i class="fas fa-file-word"></i>
-              <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
-                {{ message.attachmentOriginalName }}
-              </a>
-            </div>
-
-            <!-- Các loại đính kèm khác -->
-            <div *ngSwitchDefault class="attachment-file">
-              <i class="fas fa-file-alt"></i>
-              <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
-                {{ message.attachmentOriginalName }}
-              </a>
-            </div>
-          </ng-container>
+              <!-- Các loại đính kèm khác -->
+              <div *ngSwitchDefault class="attachment-file">
+                <i class="fas fa-file-alt"></i>
+                <a [href]="getAttachmentUrl(message.attachmentUrl)" target="_blank">
+                  {{ message.attachmentOriginalName }}
+                </a>
+              </div>
+            </ng-container>
           </div>
 
-          <!-- Nút xóa tin nhắn và reaction -->
+          <!-- Nút xóa tin nhắn, reply và reaction -->
           <div class="actions-container" [ngClass]="{'sent-actions': message.userId === currentUserId, 'received-actions': message.userId !== currentUserId}">
+
+            <!-- Nút xóa tin nhắn -->
             <button *ngIf="!message.isDeleted && message.userId === currentUserId" class="delete-button" (click)="onDeleteMessage(message.id)">
               <i class="fas fa-trash-alt"></i>
             </button>
+
+            <!-- Nút reply message -->
+            <button *ngIf="!message.isDeleted" class="reply-button" (click)="onReplyMessage(message)">
+              <i class="fas fa-reply"></i>
+            </button>
+
+            <!-- Nút reaction -->
             <div *ngIf="!message.isDeleted" class="add-reaction" (click)="toggleReactionPicker(i)">
               <i class="fas fa-smile"></i>
             </div>
+
           </div>
         </div>
+
         <!-- Hiển thị reactions nếu có -->
         <div *ngIf="!message.isDeleted && message.Reaction?.$values?.length > 0" class="message-reactions">
-          <ng-container *ngFor="let reaction of message.Reaction.$values">
-            <span class="reaction" (click)="onRemoveReaction(message.id)">
-              {{ reaction.reactionType }} <!-- Hiển thị emoji tương ứng -->
+        <span class="reaction-group">
+            <span class="reaction" *ngFor="let reaction of message.Reaction.$values; let i = index" (click)="onRemoveReaction(message.id)">
+      {{ reaction.reactionType }} <!-- Hiển thị emoji tương ứng -->
             </span>
-          </ng-container>
+          <span class="reaction-count" *ngIf="message.Reaction.$values.length > 1">
+      +{{ message.Reaction.$values.length - 1 }}
+          </span>
+         </span>
         </div>
-
         <!-- Picker reactions -->
         <div *ngIf="activeReactionPickerIndex === i && !message.isDeleted" class="reaction-picker">
           <ng-container *ngFor="let reaction of availableReactions">
@@ -144,6 +164,20 @@
 
     <!-- Vùng nhập tin nhắn -->
     <div class="message-input" *ngIf="recipientId">
+      <!-- Reply Preview Section -->
+      <div *ngIf="repliedToMessage" class="reply-preview">
+        <p class="reply-preview-header">Replying to:</p>
+        <div class="reply-preview-content">
+          <span>{{ repliedToMessage.senderFullName }}:</span>
+          <span [innerHTML]="repliedToMessage.message"></span>
+        </div>
+        <!-- Replace text with an icon -->
+        <button class="cancel-reply" (click)="cancelReply()" aria-label="Cancel reply">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+
       <div class="emoji-picker">
         <i class="fas fa-smile" (click)="onEmojiClick()" title="Insert emoji"></i>
       </div>

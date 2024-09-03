@@ -118,11 +118,10 @@ namespace ChatAppServer.WebAPI.Models
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Message)
-                    .IsRequired();
+                    .IsRequired(false);  // Cho phép null nếu tin nhắn chỉ có đính kèm
 
                 entity.Property(e => e.IsDeleted)
                     .HasDefaultValue(false);
-
 
                 entity.HasOne(e => e.User)
                     .WithMany(u => u.SentChats)
@@ -138,6 +137,25 @@ namespace ChatAppServer.WebAPI.Models
                     .WithMany(g => g.Chats)
                     .HasForeignKey(e => e.GroupId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                // Cấu hình mối quan hệ cho tin nhắn được reply đến
+                entity.HasOne(e => e.RepliedToMessage)
+                    .WithMany()
+                    .HasForeignKey(e => e.RepliedToMessageId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Cấu hình các khóa ngoại không bắt buộc
+                entity.HasIndex(e => e.ToUserId)
+                    .HasFilter(null)
+                    .HasDatabaseName("IX_Chat_ToUserId");
+
+                entity.HasIndex(e => e.GroupId)
+                    .HasFilter(null)
+                    .HasDatabaseName("IX_Chat_GroupId");
+
+                entity.HasIndex(e => e.RepliedToMessageId)
+                    .HasFilter(null)
+                    .HasDatabaseName("IX_Chat_RepliedToMessageId");
             });
             modelBuilder.Entity<MessageReadStatus>(entity =>
             {

@@ -18,13 +18,5 @@ export class AppComponent implements OnInit {
 
     // Đăng ký lắng nghe tin nhắn nhận được
     this.signalRService.registerServerEvents();
-    this.router.events.subscribe(event => {
-      if (event instanceof NavigationEnd) {
-        if (event.urlAfterRedirects === '/chats') {
-          // Khi người dùng truy cập trang /chats, đăng ký peerId
-          this.peerService.initializePeer();
-        }
-      }
-    });
   }
 }
