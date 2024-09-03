@@ -367,13 +367,11 @@ namespace ChatAppServer.WebAPI.Controllers
 
                 if (!isGroup)
                 {
-                    // Truy vấn để lấy theme của bạn bè
                     var friendship = await _context.Friendships
                         .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == recipientId, cancellationToken);
 
-                    var chatTheme = friendship?.ChatTheme ?? "default"; // Nếu không có theme, sử dụng mặc định
+                    var chatTheme = friendship?.ChatTheme ?? "default";
 
-                    // Lấy tin nhắn riêng tư giữa userId và recipientId, đồng thời bỏ qua tin nhắn đã bị xóa bởi userId
                     var privateChats = await _context.Chats
                         .Where(c =>
                             ((c.UserId == userId && c.ToUserId == recipientId) ||
@@ -385,13 +383,38 @@ namespace ChatAppServer.WebAPI.Controllers
                             c.Id,
                             c.UserId,
                             c.ToUserId,
-                            Message = c.Message ?? string.Empty,  // Xử lý giá trị null
-                            AttachmentUrl = c.AttachmentUrl ?? string.Empty,  // Xử lý giá trị null
+                            SenderFullName = c.User != null ? (c.User.FirstName + " " + c.User.LastName) : "Unknown",
+                            Message = c.Message ?? string.Empty,
+                            AttachmentUrl = c.AttachmentUrl ?? string.Empty,
                             AttachmentOriginalName = c.AttachmentOriginalName ?? string.Empty,
                             c.Date,
-                            IsRead = c.IsRead,  // Xử lý giá trị null
-                            Reaction = c.Reactions,
-                            IsDeleted = c.IsDeleted
+                            IsRead = c.IsRead,
+                            IsDeleted = c.IsDeleted,
+                            Reactions = c.Reactions.Select(r => new
+                            {
+                                r.ReactionType,
+                                ReactedByUser = new
+                                {
+                                    r.User.Id,
+                                    FullName = r.User.FirstName + " " + r.User.LastName,
+                                    r.User.Avatar
+                                },
+                                r.CreatedAt
+                            }).ToList(),
+                            RepliedToMessage = c.RepliedToMessageId.HasValue
+                                ? _context.Chats
+                                    .Where(r => r.Id == c.RepliedToMessageId.Value)
+                                    .Select(r => new
+                                    {
+                                        r.Id,
+                                        r.Message,
+                                        r.AttachmentUrl,
+                                        r.AttachmentOriginalName,
+                                        SenderFullName = r.User != null ? (r.User.FirstName + " " + r.User.LastName) : "Unknown",
+                                        SenderTagName = r.User != null ? r.User.TagName : string.Empty
+                                    })
+                                    .FirstOrDefault()
+                                : null
                         })
                         .ToListAsync(cancellationToken);
 
@@ -403,7 +426,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 }
                 else
                 {
-                    // Kiểm tra xem userId có phải là thành viên của group hay không
                     var isMember = await _context.GroupMembers
                         .AnyAsync(gm => gm.GroupId == recipientId && gm.UserId == authenticatedUserIdGuid, cancellationToken);
 
@@ -412,13 +434,11 @@ namespace ChatAppServer.WebAPI.Controllers
                         return Forbid("You are not authorized to view these group chats.");
                     }
 
-                    // Truy vấn để lấy theme của nhóm
                     var group = await _context.Groups
                         .FirstOrDefaultAsync(g => g.Id == recipientId, cancellationToken);
 
-                    var chatTheme = group?.ChatTheme ?? "default"; // Nếu không có theme, sử dụng mặc định
+                    var chatTheme = group?.ChatTheme ?? "default";
 
-                    // Lấy tin nhắn trong group, đồng thời bỏ qua tin nhắn đã bị xóa bởi userId
                     var groupChats = await _context.Chats
                         .Where(p => p.GroupId == recipientId &&
                                     !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == p.Id))
@@ -430,8 +450,8 @@ namespace ChatAppServer.WebAPI.Controllers
                             SenderFullName = p.User != null ? (p.User.FirstName + " " + p.User.LastName) : "Unknown",
                             SenderTagName = p.User != null ? p.User.TagName : string.Empty,
                             p.GroupId,
-                            Message = p.Message ?? string.Empty,  // Xử lý giá trị null
-                            AttachmentUrl = p.AttachmentUrl ?? string.Empty,  // Xử lý giá trị null
+                            Message = p.Message ?? string.Empty,
+                            AttachmentUrl = p.AttachmentUrl ?? string.Empty,
                             AttachmentOriginalName = p.AttachmentOriginalName ?? string.Empty,
                             p.Date,
                             IsRead = _context.MessageReadStatuses
@@ -439,14 +459,38 @@ namespace ChatAppServer.WebAPI.Controllers
                                 .Select(mrs => mrs.IsRead)
                                 .FirstOrDefault(),
                             IsDeleted = p.IsDeleted,
-                            p.Reactions
+                            Reactions = p.Reactions.Select(r => new
+                            {
+                                r.ReactionType,
+                                ReactedByUser = new
+                                {
+                                    r.User.Id,
+                                    FullName = r.User.FirstName + " " + r.User.LastName,
+                                    r.User.Avatar
+                                },
+                                r.CreatedAt
+                            }).ToList(),
+                            RepliedToMessage = p.RepliedToMessageId.HasValue
+                                ? _context.Chats
+                                    .Where(r => r.Id == p.RepliedToMessageId.Value)
+                                    .Select(r => new
+                                    {
+                                        r.Id,
+                                        r.Message,
+                                        r.AttachmentUrl,
+                                        r.AttachmentOriginalName,
+                                        SenderFullName = r.User != null ? (r.User.FirstName + " " + r.User.LastName) : "Unknown",
+                                        SenderTagName = r.User != null ? r.User.TagName : string.Empty
+                                    })
+                                    .FirstOrDefault()
+                                : null
                         })
                         .ToListAsync(cancellationToken);
 
                     return Ok(new
                     {
                         ChatTheme = chatTheme,
-                        GroupName = group.Name,  // Trả về tên của nhóm
+                        GroupName = group.Name,
                         Messages = groupChats
                     });
                 }
@@ -457,8 +501,6 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "Internal server error. Please try again later." });
             }
         }
-
-
 
         [HttpPost("send-message")]
         public async Task<IActionResult> SendMessage([FromForm] SendMessageDto request, CancellationToken cancellationToken)
@@ -520,11 +562,29 @@ namespace ChatAppServer.WebAPI.Controllers
                         Message = request.Message ?? string.Empty,
                         AttachmentUrl = attachmentUrl,
                         AttachmentOriginalName = originalFileName,
-                        Date = DateTime.UtcNow
+                        Date = DateTime.UtcNow,
+                        RepliedToMessageId = request.RepliedToMessageId // Gán ID của tin nhắn được reply
                     };
 
                     await _context.AddAsync(chat, cancellationToken);
                     await _context.SaveChangesAsync(cancellationToken);
+
+                    // Lấy chi tiết của tin nhắn được reply nếu có
+                    var repliedToMessage = chat.RepliedToMessageId.HasValue
+                        ? await _context.Chats
+                            .Where(r => r.Id == chat.RepliedToMessageId.Value)
+                            .Select(r => new
+                            {
+                                r.Id,
+                                r.Message,
+                                r.AttachmentUrl,
+                                r.AttachmentOriginalName,
+                                SenderFullName = r.User != null ? (r.User.FirstName + " " + r.User.LastName) : "Unknown",
+                                SenderTagName = r.User != null ? r.User.TagName : string.Empty
+                            })
+                            .FirstOrDefaultAsync(cancellationToken)
+                        : null;
+
                     // Tự động đánh dấu tin nhắn là đã đọc cho người gửi
                     var readStatus = new MessageReadStatus
                     {
@@ -537,7 +597,6 @@ namespace ChatAppServer.WebAPI.Controllers
                     _context.MessageReadStatuses.Add(readStatus);
                     await _context.SaveChangesAsync(cancellationToken);
 
-
                     await _hubContext.Clients.Group(request.RecipientId.ToString()).SendAsync("ReceiveGroupMessage", new
                     {
                         chat.Id,
@@ -547,9 +606,11 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
                         chat.Date,
-                        SenderFullName = senderFullName
+                        chat.RepliedToMessageId, // Truyền thêm ID của tin nhắn được reply
+                        SenderFullName = senderFullName,
+                        RepliedToMessage = repliedToMessage // Truyền chi tiết tin nhắn được reply
                     });
-                    Console.WriteLine("Message sent to user via SignalR:", request.RecipientId);
+
                     return Ok(new
                     {
                         chat.Id,
@@ -559,7 +620,9 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
                         chat.Date,
-                        SenderFullName = senderFullName
+                        chat.RepliedToMessageId, // Trả về ID của tin nhắn được reply
+                        SenderFullName = senderFullName,
+                        RepliedToMessage = repliedToMessage // Trả về chi tiết tin nhắn được reply
                     });
                 }
                 else
@@ -586,11 +649,28 @@ namespace ChatAppServer.WebAPI.Controllers
                         Message = request.Message ?? string.Empty,
                         AttachmentUrl = attachmentUrl,
                         AttachmentOriginalName = originalFileName,
-                        Date = DateTime.UtcNow
+                        Date = DateTime.UtcNow,
+                        RepliedToMessageId = request.RepliedToMessageId // Gán ID của tin nhắn được reply
                     };
 
                     await _context.AddAsync(chat, cancellationToken);
                     await _context.SaveChangesAsync(cancellationToken);
+
+                    // Lấy chi tiết của tin nhắn được reply nếu có
+                    var repliedToMessage = chat.RepliedToMessageId.HasValue
+                        ? await _context.Chats
+                            .Where(r => r.Id == chat.RepliedToMessageId.Value)
+                            .Select(r => new
+                            {
+                                r.Id,
+                                r.Message,
+                                r.AttachmentUrl,
+                                r.AttachmentOriginalName,
+                                SenderFullName = r.User != null ? (r.User.FirstName + " " + r.User.LastName) : "Unknown",
+                                SenderTagName = r.User != null ? r.User.TagName : string.Empty
+                            })
+                            .FirstOrDefaultAsync(cancellationToken)
+                        : null;
 
                     await _hubContext.Clients.User(request.RecipientId.ToString()).SendAsync("ReceivePrivateMessage", new
                     {
@@ -601,7 +681,9 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
                         chat.Date,
-                        SenderFullName = senderFullName
+                        chat.RepliedToMessageId, // Truyền thêm ID của tin nhắn được reply
+                        SenderFullName = senderFullName,
+                        RepliedToMessage = repliedToMessage // Truyền chi tiết tin nhắn được reply
                     });
 
                     return Ok(new
@@ -613,7 +695,9 @@ namespace ChatAppServer.WebAPI.Controllers
                         chat.AttachmentUrl,
                         chat.AttachmentOriginalName,
                         chat.Date,
-                        SenderFullName = senderFullName
+                        chat.RepliedToMessageId, // Trả về ID của tin nhắn được reply
+                        SenderFullName = senderFullName,
+                        RepliedToMessage = repliedToMessage // Trả về chi tiết tin nhắn được reply
                     });
                 }
             }
@@ -623,6 +707,8 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
+
         [HttpPost("{chatId}/delete-message")]
         [Authorize]
         public async Task<IActionResult> DeleteChatMessage(Guid chatId, CancellationToken cancellationToken)

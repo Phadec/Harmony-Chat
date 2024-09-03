@@ -27,6 +27,10 @@
         // Thuộc tính mới để theo dõi trạng thái xóa tin nhắn
         public bool IsDeleted { get; set; } = false; // Mặc định là chưa bị xóa
 
+        // Thuộc tính mới để hỗ trợ reply message
+        public Guid? RepliedToMessageId { get; set; } // ID của tin nhắn được reply
+        public Chat? RepliedToMessage { get; set; } // Tin nhắn được reply
+
         public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
     }
 }

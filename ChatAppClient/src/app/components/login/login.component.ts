@@ -37,9 +37,6 @@ export class LoginComponent {
         // Kết nối SignalR sau khi đăng nhập thành công
         await this.signalRService.startConnection();
 
-        // Khởi tạo Peer và đăng ký peerId sau khi đăng nhập thành công
-        this.peerService.initializePeer();
-
         // Điều hướng dựa trên role của người dùng
         if (response.role === 'Admin') {
           this.router.navigate(['/admin']);

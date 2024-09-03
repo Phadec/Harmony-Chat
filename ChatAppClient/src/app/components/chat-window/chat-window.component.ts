@@ -41,6 +41,8 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   recipientInfo: RecipientInfo | null = null; // Thông tin người nhận (bạn bè hoặc nhóm)
   attachmentFile: File | null = null; // Biến lưu trữ tệp đính kèm
   emojiPickerVisible: boolean = false;
+  repliedToMessage: any = null; // Store the message being replied to
+  repliedToMessageId: string | null = null;
   previewAttachmentUrl: string | ArrayBuffer | null = null;
   private notificationSound = new Audio('assets/newmessage.mp3');
 
@@ -369,6 +371,18 @@ export class ChatWindowComponent implements OnInit, OnChanges {
               } else {
                 msg.Reaction = { $values: [] };
               }
+
+              // If the message is a reply, retrieve the replied message's details
+              if (msg.repliedToMessageId) {
+                const repliedMessage = response.messages.$values.find((m: any) => m.id === msg.repliedToMessageId);
+                if (repliedMessage) {
+                  msg.repliedToMessage = {
+                    senderFullName: repliedMessage.senderFullName || 'Unknown',
+                    message: repliedMessage.message || 'Message has been deleted'
+                  };
+                }
+              }
+
               return msg;
             });
           } else {
@@ -425,7 +439,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
               userId: this.currentUserId
             });
           }
-
           this.cdr.detectChanges();
           this.activeReactionPickerIndex = null; // Đóng picker sau khi chọn
         },
@@ -504,6 +517,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     }
   }
 
+  // Updated method to handle incoming messages, considering reply logic
   handleReceivedMessage(message: any): void {
     const isForCurrentRecipient =
       (message.toUserId === this.recipientId && message.userId === this.currentUserId) ||
@@ -516,6 +530,14 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         if (message.isDeleted) {
           message.message = "Message has been deleted";
         }
+        // Kiểm tra và xử lý tin nhắn được trả lời
+        if (message.repliedToMessage) {
+          message.repliedToMessage = {
+            senderFullName: message.repliedToMessage.senderFullName || 'Unknown',
+            message: message.repliedToMessage.message || '',
+            attachmentUrl: message.repliedToMessage.attachmentUrl || null
+          };
+        }
         this.messages = [...this.messages, message];
         this.processMessages();
         this.cdr.detectChanges();
@@ -524,7 +546,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       }
     }
   }
-
 
 
   markMessageAsRead(chatId: string): void {
@@ -566,8 +587,40 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       reader.readAsDataURL(this.attachmentFile);
     }
   }
+  // New method to initiate reply
+  onReplyMessage(message: any): void {
+    // Set the message to be replied to
+    this.repliedToMessageId = message.id;
+    this.repliedToMessage = {
+      senderFullName: message.senderFullName || 'Unknown',
+      message: message.message || ''
+    };
+
+    // Focus the input field after setting the reply message
+    setTimeout(() => {
+      const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement;
+      if (inputElement) {
+        inputElement.focus();
+      }
+    }, 100);
+
+  }
+// Method to cancel the reply action
+  cancelReply(): void {
+    this.repliedToMessageId = null; // Clear the ID of the message being replied to
+    this.repliedToMessage = null; // Clear the reply message data
+
+    // Optionally, focus back to the input field
+    setTimeout(() => {
+      const inputElement = document.querySelector('input[type="text"]');
+      if (inputElement instanceof HTMLInputElement) {
+        inputElement.focus();
+      }
+    }, 100);
+  }
 
 
+  // Updated onSendMessage method
   onSendMessage(): void {
     if ((this.newMessage.trim() || this.attachmentFile) && this.recipientId) {
       const formData = new FormData();
@@ -579,10 +632,16 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         formData.append('Attachment', this.attachmentFile);
       }
 
+      if (this.repliedToMessageId) {
+        formData.append('RepliedToMessageId', this.repliedToMessageId);
+      }
+
       this.chatService.sendMessage(formData).subscribe(
         (response) => {
-          this.newMessage = ''; // Clear input after sending
-          this.attachmentFile = null; // Reset attachment file
+          this.newMessage = ''; // Clear the input
+          this.attachmentFile = null; // Reset the attachment
+          this.repliedToMessageId = null; // Reset the repliedToMessageId
+          this.repliedToMessage = null; // Reset the repliedToMessage
           this.handleReceivedMessage(response); // Add the new message to UI
           console.log(`Message sent by user ${this.currentUserId} to recipient ${this.recipientId}:`, response);
 
@@ -597,7 +656,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       );
     }
   }
-
   scrollToBottom(): void {
     try {
       setTimeout(() => {
