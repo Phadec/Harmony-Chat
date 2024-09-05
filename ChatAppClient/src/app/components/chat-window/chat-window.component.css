@@ -606,3 +606,46 @@ body, html {
   visibility: visible;
   opacity: 1;
 }
+.translate-button {
+  margin-left: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.message-translated {
+  font-style: italic;
+  color: gray;
+}
+.translate-button, .original-button {
+  background-color: #f0f0f0;
+  border: none;
+  color: #333;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.translate-button:hover, .original-button:hover {
+  background-color: #e0e0e0;
+}
+
+.original-button {
+  background-color: #ffe0b2; /* Màu nổi bật hơn cho nút Original */
+}
+
+.original-button:hover {
+  background-color: #ffcc80;
+}
+
+.actions-container {
+  display: flex;
+  gap: 10px;
+}

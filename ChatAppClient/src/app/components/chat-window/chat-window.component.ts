@@ -8,7 +8,7 @@ import {
   ViewChild,
   ChangeDetectorRef,
   EventEmitter,
-  Output
+  Output, SecurityContext
 } from '@angular/core';
 import { SignalRService } from '../../services/signalr.service';
 import { ChatService } from '../../services/chat.service';
@@ -23,6 +23,7 @@ import {EventService} from "../../services/event.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {AppConfigService} from "../../services/app-config.service";
 import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
+import {HttpClient} from "@angular/common/http";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 const vietnamTimezone = 'Asia/Ho_Chi_Minh';
@@ -54,7 +55,8 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     private eventService: EventService,
     private appConfig: AppConfigService,
     private snackBar: MatSnackBar,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private http: HttpClient
   ) {
   }
 
@@ -695,6 +697,59 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       panelClass: 'custom-dialog-container'
     });
   }
+  onTranslateMessage(message: any): void {
+    const targetLanguage = 'en'; // Dịch sang tiếng Anh
+
+    // Làm sạch nội dung trước khi dịch
+    const safeContent = this.sanitizer.sanitize(SecurityContext.HTML, message.message);
+
+    // Kiểm tra nếu nội dung đã được làm sạch là rỗng
+    if (!safeContent || typeof safeContent !== 'string' || safeContent.trim() === '') {
+      console.error('Invalid message content after sanitization:', safeContent);
+      return;
+    }
+
+    const libreTranslateUrl = 'https://trans.zillyhuhn.com/translate'; // Sử dụng LibreTranslate local
+
+    fetch(libreTranslateUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: safeContent,
+        source: 'auto', // Chỉ định mã ngôn ngữ tiếng Việt là "vi"
+        target: targetLanguage
+      })
+    })
+      .then(response => {
+        console.log('Response status:', response.status); // Log trạng thái HTTP
+        if (!response.ok) {
+          return response.text().then(text => {
+            console.error('Error response from API:', text); // Log chi tiết phản hồi lỗi
+            throw new Error(`HTTP error! status: ${response.status}`);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Translation response:', data);
+        if (data && data.translatedText) {
+          const translatedText = data.translatedText;
+          message.translatedMessage = translatedText; // Lưu bản dịch vào message
+        } else {
+          console.error('Translation failed or returned no result', data);
+        }
+        this.cdr.detectChanges(); // Cập nhật lại giao diện
+      })
+      .catch(error => {
+        console.error('Error translating message:', error);
+      });
+  }
+  onShowOriginalMessage(message: any): void {
+    message.translatedMessage = null; // Xóa bản dịch và hiển thị nội dung gốc
+  }
+
 
   onEmojiClick(): void {
     const dialogRef = this.dialog.open(EmojiPickerComponent, {
