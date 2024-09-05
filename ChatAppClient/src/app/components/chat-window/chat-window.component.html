@@ -96,15 +96,16 @@
               <i class="fas fa-smile"></i>
             </div>
 
-            <!-- Nút dịch tin nhắn (chỉ hiển thị nếu chưa bị xóa và chưa dịch) -->
-            <button *ngIf="!message.isDeleted && !message.translatedMessage" class="translate-button" (click)="onTranslateMessage(message)">
+            <!-- Nút dịch tin nhắn (chỉ hiển thị nếu chưa bị xóa, chưa dịch và không phải là tin nhắn đính kèm) -->
+            <button *ngIf="!message.isDeleted && !message.translatedMessage && !message.attachmentUrl" class="translate-button" (click)="onTranslateMessage(message)">
               <i class="fas fa-language" aria-label="Translate"></i>
             </button>
 
-            <!-- Nút quay lại nội dung gốc (chỉ hiển thị nếu đã dịch và chưa bị xóa) -->
-            <button *ngIf="!message.isDeleted && message.translatedMessage" class="original-button" (click)="onShowOriginalMessage(message)">
+            <!-- Nút quay lại nội dung gốc (chỉ hiển thị nếu đã dịch, chưa bị xóa và không phải là tin nhắn đính kèm) -->
+            <button *ngIf="!message.isDeleted && message.translatedMessage && !message.attachmentUrl" class="original-button" (click)="onShowOriginalMessage(message)">
               <i class="fas fa-undo" aria-label="Show original"></i>
             </button>
+
 
           </div>
         </div>
