@@ -3,11 +3,33 @@
   <app-chat-header *ngIf="recipientInfo" [recipientInfo]="recipientInfo"></app-chat-header>
 
   <div class="chat-window" *ngIf="recipientId; else selectChatMessage">
+    <!-- Hiển thị tin nhắn đã ghim (nếu có) -->
+    <div class="pinned-messages-container" *ngIf="pinnedMessages.length > 0" (mouseenter)="showPinnedMessages()" (mouseleave)="hidePinnedMessages()">
+      <div class="pinned-messages-header">
+        <i class="fas fa-thumbtack"></i>
+        <span>Pinned Messages</span>
+      </div>
+      <div class="pinned-messages-list" *ngIf="isPinnedMessagesVisible">
+        <div *ngFor="let pinnedMessage of pinnedMessages" class="pinned-message" (click)="onPinnedMessageClick(pinnedMessage.id)">
+        <span [innerHTML]="pinnedMessage.message"></span>
+          <button class="unpin-button" (click)="onUnpinMessage(pinnedMessage.id); $event.stopPropagation()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Khung hiển thị tin nhắn chính -->
     <div class="chat-messages" #chatMessages>
       <!-- Vòng lặp hiển thị tin nhắn -->
       <div *ngFor="let message of messages; let i = index"
            class="message-wrapper"
-           [ngClass]="{'sent': message.userId === currentUserId, 'received': message.userId !== currentUserId}">
+           [id]="'message-' + message.id"
+           [ngClass]="{
+             'sent': message.userId === currentUserId,
+             'received': message.userId !== currentUserId,
+             'pinned': message.isPinned
+           }">
 
         <!-- Hiển thị ngày/giờ nếu có -->
         <div *ngIf="message.displayDate" class="message-time">
@@ -20,15 +42,13 @@
         <!-- Hiển thị tin nhắn được reply -->
         <div *ngIf="message.repliedToMessage" class="replied-message">
           <p class="replied-message-content">
-            Replying to: <strong>{{ message.repliedToMessage.senderFullName }}</strong>
-            <br/>
+            Replying to: <strong>{{ message.repliedToMessage.senderFullName }}</strong><br/>
             <span [innerHTML]="message.repliedToMessage.message"></span>
           </p>
         </div>
 
-        <!-- Gộp tin nhắn, reaction, delete và reply button vào một thẻ div với display: flex -->
+        <!-- Hiển thị nội dung tin nhắn -->
         <div class="message-container">
-          <!-- Hiển thị nội dung tin nhắn nếu chưa bị xóa -->
           <div class="message-content" *ngIf="!message.isDeleted && message.message">
             <span [innerHTML]="message.translatedMessage ? message.translatedMessage : message.message"></span>
           </div>
@@ -38,7 +58,7 @@
             Message has been deleted
           </div>
 
-          <!-- Hiển thị đính kèm nếu có -->
+          <!-- Hiển thị đính kèm (nếu có) -->
           <div *ngIf="!message.isDeleted && message.attachmentUrl" class="attachment">
             <ng-container [ngSwitch]="getAttachmentType(message.attachmentUrl)">
               <!-- Đính kèm hình ảnh -->
@@ -50,8 +70,7 @@
                      (click)="openAttachmentPreview(message.attachmentUrl, 'video')" class="attachment-preview-video"></video>
 
               <!-- Đính kèm âm thanh -->
-              <audio *ngSwitchCase="'audio'" controls [src]="getAttachmentUrl(message.attachmentUrl)"
-                     class="attachment-preview-audio"></audio>
+              <audio *ngSwitchCase="'audio'" controls [src]="getAttachmentUrl(message.attachmentUrl)" class="attachment-preview-audio"></audio>
 
               <!-- Đính kèm PDF -->
               <div *ngSwitchCase="'pdf'" class="attachment-file">
@@ -79,47 +98,62 @@
             </ng-container>
           </div>
 
-          <!-- Nút xóa tin nhắn, reply và reaction -->
-          <div class="actions-container" [ngClass]="{'sent-actions': message.userId === currentUserId, 'received-actions': message.userId !== currentUserId}">
-            <!-- Nút xóa tin nhắn -->
-            <button *ngIf="!message.isDeleted && message.userId === currentUserId" class="delete-button" (click)="onDeleteMessage(message.id)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-
-            <!-- Nút reply message -->
-            <button *ngIf="!message.isDeleted" class="reply-button" (click)="onReplyMessage(message)">
+          <!-- Action Buttons -->
+          <div class="actions-container"
+               [ngClass]="{
+                 'sent-actions': message.userId === currentUserId,
+                 'received-actions': message.userId !== currentUserId
+               }">
+            <button *ngIf="!message.isDeleted" class="reply-button"
+                    (click)="onReplyMessage(message)">
               <i class="fas fa-reply"></i>
             </button>
-
-            <!-- Nút reaction -->
-            <div *ngIf="!message.isDeleted" class="add-reaction" (click)="toggleReactionPicker(i)">
+            <div *ngIf="!message.isDeleted" class="add-reaction"
+                 (click)="toggleReactionPicker(i)">
               <i class="fas fa-smile"></i>
             </div>
-
-            <!-- Nút dịch tin nhắn (chỉ hiển thị nếu chưa bị xóa, chưa dịch và không phải là tin nhắn đính kèm) -->
-            <button *ngIf="!message.isDeleted && !message.translatedMessage && !message.attachmentUrl" class="translate-button" (click)="onTranslateMessage(message)">
-              <i class="fas fa-language" aria-label="Translate"></i>
-            </button>
-
-            <!-- Nút quay lại nội dung gốc (chỉ hiển thị nếu đã dịch, chưa bị xóa và không phải là tin nhắn đính kèm) -->
-            <button *ngIf="!message.isDeleted && message.translatedMessage && !message.attachmentUrl" class="original-button" (click)="onShowOriginalMessage(message)">
-              <i class="fas fa-undo" aria-label="Show original"></i>
-            </button>
-
-
+            <div class="dropdown" *ngIf="!message.isDeleted">
+              <button class="action-button">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <div class="dropdown-menu">
+                <button *ngIf="!message.isPinned && !message.isDeleted" class="dropdown-item"
+                        (click)="onPinMessage(message.id)">
+                  <i class="fas fa-thumbtack"></i> Pin
+                </button>
+                <button *ngIf="message.isPinned && !message.isDeleted" class="dropdown-item"
+                        (click)="onUnpinMessage(message.id)">
+                  <i class="fas fa-times"></i> Unpin
+                </button>
+                <button *ngIf="!message.isDeleted && !message.translatedMessage && !message.attachmentUrl"
+                        class="dropdown-item"
+                        (click)="onTranslateMessage(message)">
+                  <i class="fas fa-language"></i> Translate
+                </button>
+                <button *ngIf="!message.isDeleted && message.translatedMessage && !message.attachmentUrl"
+                        class="dropdown-item"
+                        (click)="onShowOriginalMessage(message)">
+                  <i class="fas fa-undo"></i> Show Original
+                </button>
+                <button *ngIf="!message.isDeleted && message.userId === currentUserId"
+                        class="dropdown-item"
+                        (click)="onDeleteMessage(message.id)">
+                  <i class="fas fa-trash-alt"></i> Delete
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-
         <!-- Hiển thị reactions nếu có -->
         <div *ngIf="!message.isDeleted && message.Reaction?.$values?.length > 0" class="message-reactions">
-        <span class="reaction-group">
-            <span class="reaction" *ngFor="let reaction of message.Reaction.$values; let i = index" (click)="onRemoveReaction(message.id)">
-      {{ reaction.reactionType }} <!-- Hiển thị emoji tương ứng -->
+          <span class="reaction-group">
+            <span class="reaction" *ngFor="let reaction of message.Reaction.$values" (click)="onRemoveReaction(message.id)">
+              {{ reaction.reactionType }} <!-- Hiển thị emoji tương ứng -->
             </span>
-          <span class="reaction-count" *ngIf="message.Reaction.$values.length > 1">
-      +{{ message.Reaction.$values.length - 1 }}
+            <span class="reaction-count" *ngIf="message.Reaction.$values.length > 1">
+              +{{ message.Reaction.$values.length - 1 }}
+            </span>
           </span>
-         </span>
         </div>
 
         <!-- Picker reactions -->
@@ -131,7 +165,7 @@
           </ng-container>
         </div>
 
-        <!-- Hiển thị trạng thái "Đã đọc" nếu đây là tin nhắn đã đọc cuối cùng -->
+        <!-- Hiển thị trạng thái "Đã đọc" -->
         <div *ngIf="!message.isDeleted && message.isRead && message.userId === currentUserId && i === messages.length - 1" class="message-status">
           Seen
         </div>

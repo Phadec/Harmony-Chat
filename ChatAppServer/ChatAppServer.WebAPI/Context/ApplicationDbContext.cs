@@ -112,7 +112,6 @@ namespace ChatAppServer.WebAPI.Models
                 entity.Property(e => e.IsAdmin).HasDefaultValue(false);
             });
 
-            // Configure Chat entity
             modelBuilder.Entity<Chat>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -122,6 +121,9 @@ namespace ChatAppServer.WebAPI.Models
 
                 entity.Property(e => e.IsDeleted)
                     .HasDefaultValue(false);
+
+                entity.Property(e => e.IsPinned)
+                    .HasDefaultValue(false); // Đặt giá trị mặc định là chưa ghim
 
                 entity.HasOne(e => e.User)
                     .WithMany(u => u.SentChats)
@@ -138,13 +140,11 @@ namespace ChatAppServer.WebAPI.Models
                     .HasForeignKey(e => e.GroupId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                // Cấu hình mối quan hệ cho tin nhắn được reply đến
                 entity.HasOne(e => e.RepliedToMessage)
                     .WithMany()
                     .HasForeignKey(e => e.RepliedToMessageId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // Cấu hình các khóa ngoại không bắt buộc
                 entity.HasIndex(e => e.ToUserId)
                     .HasFilter(null)
                     .HasDatabaseName("IX_Chat_ToUserId");
@@ -158,26 +158,26 @@ namespace ChatAppServer.WebAPI.Models
                     .HasDatabaseName("IX_Chat_RepliedToMessageId");
             });
             modelBuilder.Entity<MessageReadStatus>(entity =>
-            {
-                entity.HasKey(e => e.Id);
+                {
+                    entity.HasKey(e => e.Id);
 
-                entity.HasOne(e => e.Chat)
-                    .WithMany()
-                    .HasForeignKey(e => e.MessageId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    entity.HasOne(e => e.Chat)
+                        .WithMany()
+                        .HasForeignKey(e => e.MessageId)
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.User)
-                    .WithMany()
-                    .HasForeignKey(e => e.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    entity.HasOne(e => e.User)
+                        .WithMany()
+                        .HasForeignKey(e => e.UserId)
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                entity.Property(e => e.IsRead)
-                    .IsRequired()
-                    .HasDefaultValue(false);
+                    entity.Property(e => e.IsRead)
+                        .IsRequired()
+                        .HasDefaultValue(false);
 
-                entity.Property(e => e.ReadAt)
-                    .IsRequired(false);
-            });
+                    entity.Property(e => e.ReadAt)
+                        .IsRequired(false);
+                });
 
             modelBuilder.Entity<Friendship>(entity =>
             {

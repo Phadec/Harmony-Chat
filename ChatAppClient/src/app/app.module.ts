@@ -46,6 +46,7 @@ import { IncomingCallPopupComponent } from './components/incoming-call-popup/inc
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
 import { NoAccessComponent } from './components/no-access/no-access.component';
 import { ThemeSelectorDialogComponent } from './components/theme-selector-dialog/theme-selector-dialog.component';
+import { OrderByPipe } from './order-by.pipe';
 @NgModule({
   declarations: [
     AppComponent,
@@ -77,6 +78,7 @@ import { ThemeSelectorDialogComponent } from './components/theme-selector-dialog
     AdminLayoutComponent,
     NoAccessComponent,
     ThemeSelectorDialogComponent,
+    OrderByPipe,
   ],
   imports: [
     BrowserModule,

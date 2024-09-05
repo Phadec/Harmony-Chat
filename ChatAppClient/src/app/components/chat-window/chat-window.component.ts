@@ -37,6 +37,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   @Output() messageSent = new EventEmitter<void>();
   @ViewChild('chatMessages', {static: false}) private chatMessagesContainer!: ElementRef;
   messages: any[] = [];
+  pinnedMessages: any[] = [];
   newMessage: string = '';
   currentUserId = localStorage.getItem('userId');
   recipientInfo: RecipientInfo | null = null; // Thông tin người nhận (bạn bè hoặc nhóm)
@@ -46,7 +47,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   repliedToMessageId: string | null = null;
   previewAttachmentUrl: string | ArrayBuffer | null = null;
   private notificationSound = new Audio('assets/newmessage.mp3');
-
+  isPinnedMessagesVisible = false;
   constructor(
     private chatService: ChatService,
     private signalRService: SignalRService,
@@ -166,6 +167,14 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       this.handleBlockedByOtherEvent(event);
       this.handleUserBlockedEvent(event);
     });
+    this.signalRService.hubConnection.on('MessagePinned', (messageId: string) => {
+      this.handleMessagePinned(messageId);
+    });
+
+    // Sự kiện nhận thông báo tin nhắn bị bỏ ghim
+    this.signalRService.hubConnection.on('MessageUnpinned', (messageId: string) => {
+      this.handleMessageUnpinned(messageId);
+    });
   }
 
   clearMessages(): void {
@@ -175,7 +184,25 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     // Đảm bảo cập nhật giao diện
     this.cdr.detectChanges(); // Buộc Angular cập nhật giao diện
     console.log("UI updated after clearing messages");
+
   }
+  handleMessagePinned(messageId: string): void {
+    const message = this.messages.find(msg => msg.id === messageId);
+    if (message) {
+      message.isPinned = true;  // Đánh dấu tin nhắn là đã ghim
+      this.pinnedMessages.push(message);  // Thêm tin nhắn vào danh sách pinnedMessages
+      this.cdr.detectChanges();  // Buộc Angular cập nhật UI
+    }
+  }
+  handleMessageUnpinned(messageId: string): void {
+    const message = this.messages.find(msg => msg.id === messageId);
+    if (message) {
+      message.isPinned = false;  // Đánh dấu tin nhắn là chưa ghim
+      this.pinnedMessages = this.pinnedMessages.filter(msg => msg.id !== messageId);  // Loại bỏ tin nhắn khỏi danh sách pinnedMessages
+      this.cdr.detectChanges();  // Buộc Angular cập nhật UI
+    }
+  }
+
 
   handleFriendEvent(event: { eventType: string, data: { friendId: string } }): void {
     console.log(`Handling event: ${event.eventType}, for friendId: ${event.data.friendId}, current recipientId: ${this.recipientId}`);
@@ -358,23 +385,21 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
   loadMessages(): void {
     if (this.recipientId) {
+      // Reset mảng pinnedMessages trước khi tải tin nhắn mới
+      this.pinnedMessages = [];
+
       this.chatService.getChats(this.recipientId).subscribe(
         (response: any) => {
           if (response.messages && response.messages.$values) {
             this.messages = response.messages.$values.map((msg: any) => {
-              // Kiểm tra và gán giá trị của isDeleted nếu có
               msg.isDeleted = msg.isDeleted || false;
+              msg.Reaction = msg.reactions || { $values: [] };
 
-              // Kiểm tra và gán reactions nếu tồn tại
-              if (msg.reactions) {
-                msg.Reaction = msg.reactions || { $values: [] };
-              } else if (msg.reaction) {
-                msg.Reaction = msg.reaction || { $values: [] };
-              } else {
-                msg.Reaction = { $values: [] };
+              // Kiểm tra và xử lý tin nhắn được ghim
+              if (msg.isPinned) {
+                this.pinnedMessages.push(msg); // Lưu vào mảng pinnedMessages nếu tin nhắn được ghim
               }
 
-              // If the message is a reply, retrieve the replied message's details
               if (msg.repliedToMessageId) {
                 const repliedMessage = response.messages.$values.find((m: any) => m.id === msg.repliedToMessageId);
                 if (repliedMessage) {
@@ -384,7 +409,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
                   };
                 }
               }
-
               return msg;
             });
           } else {
@@ -401,6 +425,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       );
     }
   }
+
 
   availableReactions: string[] = ['😊', '😂', '😍', '😢', '😡', '👍', '👎'];
   activeReactionPickerIndex: number | null = null;
@@ -749,7 +774,59 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   onShowOriginalMessage(message: any): void {
     message.translatedMessage = null; // Xóa bản dịch và hiển thị nội dung gốc
   }
+  onPinMessage(chatId: string): void {
+    this.chatService.pinMessage(chatId).subscribe(
+      () => {
+        const message = this.messages.find(msg => msg.id === chatId);
+        if (message) {
+          message.isPinned = true;  // Cập nhật UI để phản ánh trạng thái đã pin
+          this.cdr.detectChanges(); // Buộc Angular cập nhật UI
+        }
+      },
+      error => {
+        console.error('Error pinning message:', error);
+      }
+    );
+  }
 
+  onUnpinMessage(chatId: string): void {
+    this.chatService.unpinMessage(chatId).subscribe(
+      () => {
+        const message = this.messages.find(msg => msg.id === chatId);
+        if (message) {
+          message.isPinned = false;  // Cập nhật UI để phản ánh trạng thái đã bỏ ghim
+          this.pinnedMessages = this.pinnedMessages.filter(msg => msg.id !== chatId); // Loại bỏ tin nhắn khỏi mảng pinnedMessages
+          this.cdr.detectChanges(); // Buộc Angular cập nhật UI
+        }
+      },
+      error => {
+        console.error('Error unpinning message:', error);
+      }
+    );
+  }
+  showPinnedMessages() {
+    this.isPinnedMessagesVisible = true;
+  }
+
+  hidePinnedMessages() {
+    this.isPinnedMessagesVisible = false;
+  }
+
+// Cuộn đến tin nhắn khi nhấp vào pinned message
+  onPinnedMessageClick(messageId: string) {
+    const messageElement = document.getElementById('message-' + messageId);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Highlight tin nhắn sau khi cuộn tới
+      messageElement.classList.add('highlight-message');
+
+      // Xóa highlight sau 2 giây
+      setTimeout(() => {
+        messageElement.classList.remove('highlight-message');
+      }, 2000);
+    }
+  }
 
   onEmojiClick(): void {
     const dialogRef = this.dialog.open(EmojiPickerComponent, {
