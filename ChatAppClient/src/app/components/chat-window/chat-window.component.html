@@ -17,7 +17,7 @@
         <!-- Tên người gửi trong nhóm chat -->
         <p *ngIf="message.groupId" class="sender-name">{{ message.senderFullName }}</p>
 
-        <!-- Display the replied message if it exists -->
+        <!-- Hiển thị tin nhắn được reply -->
         <div *ngIf="message.repliedToMessage" class="replied-message">
           <p class="replied-message-content">
             Replying to: <strong>{{ message.repliedToMessage.senderFullName }}</strong>
@@ -26,11 +26,11 @@
           </p>
         </div>
 
-        <!-- Gộp tin nhắn, reaction và delete button vào một thẻ div với display: flex -->
+        <!-- Gộp tin nhắn, reaction, delete và reply button vào một thẻ div với display: flex -->
         <div class="message-container">
           <!-- Hiển thị nội dung tin nhắn nếu chưa bị xóa -->
           <div class="message-content" *ngIf="!message.isDeleted && message.message">
-            <span [innerHTML]="message.message"></span>
+            <span [innerHTML]="message.translatedMessage ? message.translatedMessage : message.message"></span>
           </div>
 
           <!-- Hiển thị thông báo tin nhắn đã bị xóa -->
@@ -81,7 +81,6 @@
 
           <!-- Nút xóa tin nhắn, reply và reaction -->
           <div class="actions-container" [ngClass]="{'sent-actions': message.userId === currentUserId, 'received-actions': message.userId !== currentUserId}">
-
             <!-- Nút xóa tin nhắn -->
             <button *ngIf="!message.isDeleted && message.userId === currentUserId" class="delete-button" (click)="onDeleteMessage(message.id)">
               <i class="fas fa-trash-alt"></i>
@@ -97,6 +96,16 @@
               <i class="fas fa-smile"></i>
             </div>
 
+            <!-- Nút dịch tin nhắn (chỉ hiển thị nếu chưa bị xóa và chưa dịch) -->
+            <button *ngIf="!message.isDeleted && !message.translatedMessage" class="translate-button" (click)="onTranslateMessage(message)">
+              <i class="fas fa-language" aria-label="Translate"></i>
+            </button>
+
+            <!-- Nút quay lại nội dung gốc (chỉ hiển thị nếu đã dịch và chưa bị xóa) -->
+            <button *ngIf="!message.isDeleted && message.translatedMessage" class="original-button" (click)="onShowOriginalMessage(message)">
+              <i class="fas fa-undo" aria-label="Show original"></i>
+            </button>
+
           </div>
         </div>
 
@@ -111,6 +120,7 @@
           </span>
          </span>
         </div>
+
         <!-- Picker reactions -->
         <div *ngIf="activeReactionPickerIndex === i && !message.isDeleted" class="reaction-picker">
           <ng-container *ngFor="let reaction of availableReactions">
@@ -176,7 +186,6 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-
 
       <div class="emoji-picker">
         <i class="fas fa-smile" (click)="onEmojiClick()" title="Insert emoji"></i>
