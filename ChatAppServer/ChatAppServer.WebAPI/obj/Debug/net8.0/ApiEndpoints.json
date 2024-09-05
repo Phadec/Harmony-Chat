@@ -308,6 +308,22 @@
   },
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.ChatsController",
+    "Method": "PinMessage",
+    "RelativePath": "api/Chats/{chatId}/pin",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "chatId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ChatAppServer.WebAPI.Controllers.ChatsController",
     "Method": "AddReaction",
     "RelativePath": "api/Chats/{chatId}/react",
     "HttpMethod": "POST",
@@ -348,6 +364,22 @@
     "Method": "RemoveReaction",
     "RelativePath": "api/Chats/{chatId}/remove-reaction",
     "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "chatId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ChatAppServer.WebAPI.Controllers.ChatsController",
+    "Method": "UnpinMessage",
+    "RelativePath": "api/Chats/{chatId}/unpin",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [

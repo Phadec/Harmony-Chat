@@ -59,12 +59,14 @@ body, html {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end; /* Đảm bảo nội dung được đẩy xuống cuối */
+  justify-content: flex-start; /* Đẩy nội dung lên trên */
   padding: 0;
   margin: 0;
   overflow: hidden;
   border-radius: 10px;
+  position: relative; /* Để pinned messages nằm trong khung chat */
 }
+
 
 /* Khung hiển thị tin nhắn */
 .chat-messages {
@@ -430,7 +432,7 @@ body, html {
 .actions-container .delete-button i,
 .actions-container .reply-button i,
 .actions-container .add-reaction i {
-  font-size: 18px; /* Kích thước của icon */
+  font-size: 16px; /* Kích thước của icon */
 }
 
 /* Căn chỉnh các nút cho tin nhắn gửi và nhận */
@@ -647,5 +649,180 @@ body, html {
 
 .actions-container {
   display: flex;
-  gap: 10px;
+  gap: 5px;
+}
+.pinned-messages-container {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  max-height: 50px; /* Chiều cao mặc định khi chưa mở */
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  position: absolute; /* Đặt vị trí tuyệt đối bên trong khung chat */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10; /* Đè lên nội dung chat */
+}
+
+
+.pinned-messages-container:hover {
+  max-height: 400px; /* Tăng chiều cao khi hover để xem thêm pinned messages */
+  overflow-y: auto; /* Hiển thị scroll khi vượt quá chiều cao */
+}
+
+/* Style for individual pinned messages */
+.pinned-messages-header {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: #007bff;
+  cursor: pointer;
+  padding-bottom: 10px;
+}
+
+.pinned-messages-header i {
+  margin-right: 5px;
+}
+
+.pinned-messages-list {
+  max-height: 220px; /* Tăng chiều cao của danh sách để phù hợp với container */
+  padding-right: 10px; /* Thêm padding cho scroll bar */
+}
+
+/* Style for individual pinned messages */
+.pinned-message {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  background-color: #ffffff;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.pinned-message:hover {
+  background-color: #e9ecef; /* Highlight when hovering */
+}
+
+.pinned-message span {
+  flex-grow: 1;
+  font-size: 14px;
+  margin-right: 10px;
+  color: #495057;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Nút Pin và Unpin */
+.pin-button {
+  background: none;
+  border: none;
+  color: #007bff; /* Màu xanh đặc trưng */
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.pin-button i {
+  font-size: 16px;
+}
+
+.pin-button:hover {
+  color: #0056b3; /* Màu xanh đậm hơn khi hover */
+}
+
+
+.unpin-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.unpin-button i {
+  font-size: 16px;
+}
+
+.unpin-button:hover {
+  color: #d9534f; /* Màu đỏ khi hover để tạo cảm giác cảnh báo */
+}
+
+/* Custom scrollbar for pinned messages */
+.pinned-messages-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pinned-messages-list::-webkit-scrollbar-thumb {
+  background-color: #007bff;
+  border-radius: 5px;
+}
+
+.pinned-messages-list::-webkit-scrollbar-track {
+  background-color: #f1f3f5;
+}
+
+/* Hiệu ứng cuộn đến tin nhắn khi nhấp vào pinned message */
+.highlight-message {
+  background-color: #adb5bd; /* Màu vàng nhạt để nổi bật */
+  transition: background-color 0.5s ease;
+}
+
+.highlight-message.fade {
+  background-color: #ffffff; /* Trở lại màu ban đầu sau khi highlight */
+}
+/* CSS cho nút ba chấm */
+.action-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #007bff;
+}
+
+.action-button i {
+  font-size: 20px;
+}
+
+/* Dropdown menu ẩn theo mặc định */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  border-radius: 5px;
+}
+
+.dropdown-menu .dropdown-item {
+  padding: 10px 15px;
+  display: block;
+  color: #007bff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #f1f3f5;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
 }

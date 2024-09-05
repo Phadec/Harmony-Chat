@@ -344,7 +344,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
             return Ok();
         }
-
         [HttpGet("get-chats")]
         public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
         {
@@ -390,6 +389,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             c.Date,
                             IsRead = c.IsRead,
                             IsDeleted = c.IsDeleted,
+                            IsPinned = c.IsPinned, // Thêm trường IsPinned
                             Reactions = c.Reactions.Select(r => new
                             {
                                 r.ReactionType,
@@ -459,6 +459,7 @@ namespace ChatAppServer.WebAPI.Controllers
                                 .Select(mrs => mrs.IsRead)
                                 .FirstOrDefault(),
                             IsDeleted = p.IsDeleted,
+                            IsPinned = p.IsPinned, // Thêm trường IsPinned
                             Reactions = p.Reactions.Select(r => new
                             {
                                 r.ReactionType,
@@ -501,6 +502,7 @@ namespace ChatAppServer.WebAPI.Controllers
                 return StatusCode(500, new { Message = "Internal server error. Please try again later." });
             }
         }
+
 
         [HttpPost("send-message")]
         public async Task<IActionResult> SendMessage([FromForm] SendMessageDto request, CancellationToken cancellationToken)
@@ -1026,6 +1028,76 @@ namespace ChatAppServer.WebAPI.Controllers
             }
 
             return Ok(new { Message = "Reaction removed successfully." });
+        }
+        [HttpPost("{chatId}/pin")]
+        [Authorize]
+        public async Task<IActionResult> PinMessage(Guid chatId, CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var userGuid = Guid.Parse(userId);
+
+            var chatMessage = await _context.Chats.FirstOrDefaultAsync(c => c.Id == chatId, cancellationToken);
+            if (chatMessage == null) return NotFound(new { Message = "Chat not found." });
+
+            // Kiểm tra người dùng có quyền ghim tin nhắn không (người gửi hoặc thành viên nhóm)
+            if (chatMessage.UserId != userGuid &&
+                (chatMessage.GroupId.HasValue && !await _context.GroupMembers.AnyAsync(gm => gm.GroupId == chatMessage.GroupId && gm.UserId == userGuid, cancellationToken)))
+            {
+                return Forbid("You are not authorized to pin this message.");
+            }
+
+            // Ghim tin nhắn
+            chatMessage.IsPinned = true;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Gửi thông báo qua SignalR cho người dùng
+            if (chatMessage.GroupId.HasValue)
+            {
+                await _hubContext.Clients.Group(chatMessage.GroupId.ToString()).SendAsync("MessagePinned", chatMessage.Id);
+            }
+            else if (chatMessage.ToUserId.HasValue)
+            {
+                await _hubContext.Clients.User(chatMessage.ToUserId.ToString()).SendAsync("MessagePinned", chatMessage.Id);
+            }
+
+            return Ok(new { Message = "Message pinned successfully." });
+        }
+        [HttpPost("{chatId}/unpin")]
+        [Authorize]
+        public async Task<IActionResult> UnpinMessage(Guid chatId, CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var userGuid = Guid.Parse(userId);
+
+            var chatMessage = await _context.Chats.FirstOrDefaultAsync(c => c.Id == chatId, cancellationToken);
+            if (chatMessage == null) return NotFound(new { Message = "Chat not found." });
+
+            // Kiểm tra người dùng có quyền bỏ ghim tin nhắn không (người gửi hoặc thành viên nhóm)
+            if (chatMessage.UserId != userGuid &&
+                (chatMessage.GroupId.HasValue && !await _context.GroupMembers.AnyAsync(gm => gm.GroupId == chatMessage.GroupId && gm.UserId == userGuid, cancellationToken)))
+            {
+                return Forbid("You are not authorized to unpin this message.");
+            }
+
+            // Bỏ ghim tin nhắn
+            chatMessage.IsPinned = false;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Gửi thông báo qua SignalR cho người dùng
+            if (chatMessage.GroupId.HasValue)
+            {
+                await _hubContext.Clients.Group(chatMessage.GroupId.ToString()).SendAsync("MessageUnpinned", chatMessage.Id);
+            }
+            else if (chatMessage.ToUserId.HasValue)
+            {
+                await _hubContext.Clients.User(chatMessage.ToUserId.ToString()).SendAsync("MessageUnpinned", chatMessage.Id);
+            }
+
+            return Ok(new { Message = "Message unpinned successfully." });
         }
 
 

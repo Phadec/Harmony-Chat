@@ -12,25 +12,25 @@
         public Guid UserId { get; set; }
         public User User { get; set; }
         public Guid? ToUserId { get; set; }
-        public User? ToUser { get; set; } // Cho phép null
+        public User? ToUser { get; set; }
         public Guid? GroupId { get; set; }
-        public Group? Group { get; set; } // Cho phép null
-        public string? Message { get; set; } // Cho phép null
-        public string? AttachmentUrl { get; set; } // Cho phép null
-        public string? AttachmentOriginalName { get; set; } // Cho phép null
+        public Group? Group { get; set; }
+        public string? Message { get; set; }
+        public string? AttachmentUrl { get; set; }
+        public string? AttachmentOriginalName { get; set; }
         public DateTime Date { get; set; }
 
-        // Thuộc tính mới để lưu trạng thái đã đọc
-        public bool IsRead { get; set; } = false; // Mặc định là chưa đọc
-        public DateTime? ReadAt { get; set; } // Thời gian đã đọc (nullable)
+        public bool IsRead { get; set; } = false;
+        public DateTime? ReadAt { get; set; }
 
-        // Thuộc tính mới để theo dõi trạng thái xóa tin nhắn
-        public bool IsDeleted { get; set; } = false; // Mặc định là chưa bị xóa
+        public bool IsDeleted { get; set; } = false;
 
-        // Thuộc tính mới để hỗ trợ reply message
-        public Guid? RepliedToMessageId { get; set; } // ID của tin nhắn được reply
-        public Chat? RepliedToMessage { get; set; } // Tin nhắn được reply
+        public Guid? RepliedToMessageId { get; set; }
+        public Chat? RepliedToMessage { get; set; }
 
         public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
+
+        // Thuộc tính mới để lưu trạng thái ghim tin nhắn
+        public bool IsPinned { get; set; } = false; // Mặc định là chưa ghim
     }
 }
