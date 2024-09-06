@@ -431,3 +431,5 @@ D:\Harmony-Chat\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\refint\ChatA
 D:\Harmony-Chat\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ChatAppServer.WebAPI.pdb
 D:\Harmony-Chat\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ChatAppServer.WebAPI.genruntimeconfig.cache
 D:\Harmony-Chat\ChatAppServer\ChatAppServer.WebAPI\obj\Debug\net8.0\ref\ChatAppServer.WebAPI.dll
+D:\Harmony-Chat\ChatAppServer\ChatAppServer.WebAPI\bin\Debug\net8.0\MySqlConnector.dll
+D:\Harmony-Chat\ChatAppServer\ChatAppServer.WebAPI\bin\Debug\net8.0\Pomelo.EntityFrameworkCore.MySql.dll

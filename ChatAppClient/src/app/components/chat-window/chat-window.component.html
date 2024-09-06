@@ -166,9 +166,11 @@
         </div>
 
         <!-- Hiển thị trạng thái "Đã đọc" -->
-        <div *ngIf="!message.isDeleted && message.isRead && message.userId === currentUserId && i === messages.length - 1" class="message-status">
-          Seen
+        <div *ngIf="!message.isDeleted && message.userId === currentUserId && i === messages.length - 1" class="message-status">
+          <span *ngIf="message.isRead">Seen</span>
+          <span *ngIf="!message.isRead">Sent</span>
         </div>
+
       </div>
       <!-- Hiển thị trạng thái "đang nhập" -->
       <div class="typing-indicator" *ngIf="isTyping">

@@ -132,6 +132,9 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         this.loadRecipientInfo(); // Tải lại thông tin khi có thay đổi từ nhóm
       }
     });
+    this.signalRService.hubConnection.on('UserStatusChanged', () => {
+      this.loadRecipientInfo();
+    });
 
     // Nhận tin nhắn
     this.signalRService.messageReceived$.subscribe((message: any) => {
@@ -443,6 +446,14 @@ export class ChatWindowComponent implements OnInit, OnChanges {
               }
               return msg;
             });
+
+            // Sau khi tải tin nhắn, đánh dấu tin nhắn cuối cùng là đã đọc
+            const lastMessage = this.messages[this.messages.length - 1];
+            if (lastMessage && !lastMessage.isDeleted && lastMessage.userId !== this.currentUserId && !lastMessage.isRead) {
+              // Đánh dấu tin nhắn cuối cùng là đã đọc
+              this.markMessageAsRead(lastMessage.id);
+            }
+
           } else {
             this.messages = [];
           }
@@ -457,7 +468,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       );
     }
   }
-
 
   availableReactions: string[] = ['😊', '😂', '😍', '😢', '😡', '👍', '👎'];
   activeReactionPickerIndex: number | null = null;
@@ -707,6 +717,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
           // Notify about the new message
           this.signalRService.sendNewMessageNotification(response);
           this.signalRService.notifyMessageSent();
+          this.onStopTyping();
           this.scrollToBottom(); // Scroll to bottom after sending a message
         },
         (error) => {
