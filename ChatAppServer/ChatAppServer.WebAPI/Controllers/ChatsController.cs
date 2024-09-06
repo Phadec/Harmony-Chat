@@ -362,16 +362,23 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
-                bool isGroup = await _context.Groups.AnyAsync(g => g.Id == recipientId, cancellationToken);
+                // Kiểm tra nếu là nhóm chat
+                bool isGroup = await _context.Groups
+                    .AsNoTracking()
+                    .AnyAsync(g => g.Id == recipientId, cancellationToken);
 
                 if (!isGroup)
                 {
+                    // Truy vấn lấy thông tin bạn bè và chủ đề chat
                     var friendship = await _context.Friendships
+                        .AsNoTracking()
                         .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == recipientId, cancellationToken);
 
                     var chatTheme = friendship?.ChatTheme ?? "default";
 
+                    // Truy vấn lấy danh sách tin nhắn cá nhân
                     var privateChats = await _context.Chats
+                        .AsNoTracking()
                         .Where(c =>
                             ((c.UserId == userId && c.ToUserId == recipientId) ||
                              (c.UserId == recipientId && c.ToUserId == userId)) &&
@@ -389,7 +396,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             c.Date,
                             IsRead = c.IsRead,
                             IsDeleted = c.IsDeleted,
-                            IsPinned = c.IsPinned, // Thêm trường IsPinned
+                            IsPinned = c.IsPinned,
                             Reactions = c.Reactions.Select(r => new
                             {
                                 r.ReactionType,
@@ -403,6 +410,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             }).ToList(),
                             RepliedToMessage = c.RepliedToMessageId.HasValue
                                 ? _context.Chats
+                                    .AsNoTracking()
                                     .Where(r => r.Id == c.RepliedToMessageId.Value)
                                     .Select(r => new
                                     {
@@ -426,7 +434,9 @@ namespace ChatAppServer.WebAPI.Controllers
                 }
                 else
                 {
+                    // Kiểm tra nếu người dùng là thành viên của nhóm
                     var isMember = await _context.GroupMembers
+                        .AsNoTracking()
                         .AnyAsync(gm => gm.GroupId == recipientId && gm.UserId == authenticatedUserIdGuid, cancellationToken);
 
                     if (!isMember)
@@ -434,12 +444,16 @@ namespace ChatAppServer.WebAPI.Controllers
                         return Forbid("You are not authorized to view these group chats.");
                     }
 
+                    // Lấy thông tin nhóm
                     var group = await _context.Groups
+                        .AsNoTracking()
                         .FirstOrDefaultAsync(g => g.Id == recipientId, cancellationToken);
 
                     var chatTheme = group?.ChatTheme ?? "default";
 
+                    // Truy vấn lấy danh sách tin nhắn nhóm
                     var groupChats = await _context.Chats
+                        .AsNoTracking()
                         .Where(p => p.GroupId == recipientId &&
                                     !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == p.Id))
                         .OrderBy(p => p.Date)
@@ -455,11 +469,12 @@ namespace ChatAppServer.WebAPI.Controllers
                             AttachmentOriginalName = p.AttachmentOriginalName ?? string.Empty,
                             p.Date,
                             IsRead = _context.MessageReadStatuses
+                                .AsNoTracking()
                                 .Where(mrs => mrs.MessageId == p.Id && mrs.UserId == userId)
                                 .Select(mrs => mrs.IsRead)
                                 .FirstOrDefault(),
                             IsDeleted = p.IsDeleted,
-                            IsPinned = p.IsPinned, // Thêm trường IsPinned
+                            IsPinned = p.IsPinned,
                             Reactions = p.Reactions.Select(r => new
                             {
                                 r.ReactionType,
@@ -473,6 +488,7 @@ namespace ChatAppServer.WebAPI.Controllers
                             }).ToList(),
                             RepliedToMessage = p.RepliedToMessageId.HasValue
                                 ? _context.Chats
+                                    .AsNoTracking()
                                     .Where(r => r.Id == p.RepliedToMessageId.Value)
                                     .Select(r => new
                                     {
@@ -791,8 +807,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
                     foreach (var chat in privateChats)
                     {
-                        // Cập nhật trạng thái IsDeleted của tin nhắn
-                        chat.IsDeleted = true;
 
                         // Xóa các Reaction liên quan đến Chat
                         var reactions = await _context.Reactions.Where(r => r.ChatId == chat.Id).ToListAsync(cancellationToken);
@@ -824,8 +838,6 @@ namespace ChatAppServer.WebAPI.Controllers
 
                     foreach (var chat in groupChats)
                     {
-                        // Cập nhật trạng thái IsDeleted của tin nhắn
-                        chat.IsDeleted = true;
 
                         // Xóa các Reaction liên quan đến Chat
                         var reactions = await _context.Reactions.Where(r => r.ChatId == chat.Id).ToListAsync(cancellationToken);

@@ -19,6 +19,8 @@ export class SignalRService implements OnDestroy {
   private connectedUsers = new BehaviorSubject<any[]>([]);
   private groupNotificationReceived = new BehaviorSubject<any>(null);
   public messageSent = new Subject<void>();
+  private typingSubject = new Subject<any>();
+  private stopTypingSubject = new Subject<any>();
   // Friend-related observables
   private friendEventNotification = new Subject<any>();
 
@@ -28,7 +30,8 @@ export class SignalRService implements OnDestroy {
   public groupNotificationReceived$: Observable<any> = this.groupNotificationReceived.asObservable();
   public friendEventNotification$: Observable<any> = this.friendEventNotification.asObservable();
   private ringingAudio: HTMLAudioElement | null = null;
-
+  public typing$ = this.typingSubject.asObservable();
+  public stopTyping$ = this.stopTypingSubject.asObservable();
   constructor(private router: Router, private dialog: MatDialog, private appConfig: AppConfigService) {
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${this.appConfig.getBaseUrl()}/chat-hub`, {
@@ -170,6 +173,28 @@ export class SignalRService implements OnDestroy {
       console.log(`PeerId ${peerId} registered successfully.`);
       // Thực hiện các hành động khác nếu cần thiết
     });
+    this.hubConnection.on('TypingIndicator', (recipientId, isTyping) => {
+      if (isTyping) {
+        this.typingSubject.next(recipientId);
+      }
+    });
+
+    this.hubConnection.on('StopTypingIndicator', (recipientId) => {
+      this.stopTypingSubject.next(recipientId);
+    });
+  }
+  // Phương thức để gửi thông báo "đang nhập"
+  public notifyTyping(recipientId: string): void {
+    this.hubConnection.invoke('NotifyTyping', recipientId, true)
+      .then(() => console.log(`Notified typing for recipientId ${recipientId}`))
+      .catch(err => console.error('Error notifying typing:', err));
+  }
+
+  // Phương thức để gửi thông báo "dừng nhập"
+  public notifyStopTyping(recipientId: string): void {
+    this.hubConnection.invoke('NotifyStopTyping', recipientId)
+      .then(() => console.log(`Notified stop typing for recipientId ${recipientId}`))
+      .catch(err => console.error('Error notifying stop typing:', err));
   }
 
   public notifyMessageRead(chatId: string): void {
@@ -196,6 +221,7 @@ export class SignalRService implements OnDestroy {
       console.warn('Hub connection is not established. Cannot send new message notification.');
     }
   }
+
 
   public stopConnection(): void {
     if (this.hubConnection.state !== signalR.HubConnectionState.Disconnected) {

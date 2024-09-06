@@ -48,6 +48,8 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   previewAttachmentUrl: string | ArrayBuffer | null = null;
   private notificationSound = new Audio('assets/newmessage.mp3');
   isPinnedMessagesVisible = false;
+  typingTimeout: any;
+  isTyping: boolean = false;
   constructor(
     private chatService: ChatService,
     private signalRService: SignalRService,
@@ -67,6 +69,19 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       this.loadMessages();
       this.loadRecipientInfo();
     }
+
+// Lắng nghe sự kiện "TypingIndicator" từ SignalR
+    this.signalRService.typing$.subscribe(() => {
+      this.isTyping = true;
+      this.cdr.detectChanges(); // Cập nhật UI
+    });
+
+// Lắng nghe sự kiện "StopTypingIndicator" từ SignalR
+    this.signalRService.stopTyping$.subscribe(() => {
+      this.isTyping = false;
+      this.cdr.detectChanges(); // Cập nhật UI
+    });
+
 
     // Lắng nghe sự kiện xóa chat từ EventService
     this.eventService.chatDeleted$.subscribe(() => {
@@ -175,6 +190,23 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     this.signalRService.hubConnection.on('MessageUnpinned', (messageId: string) => {
       this.handleMessageUnpinned(messageId);
     });
+  }
+  checkTypingStatus(): void {
+    if (this.newMessage && this.newMessage.trim().length > 0) {
+      this.onTyping();
+    } else {
+      this.onStopTyping();
+    }
+  }
+
+  onTyping(): void {
+    // Gọi phương thức thông báo đang nhập (typing)
+    this.signalRService.notifyTyping(this.recipientId!);
+  }
+
+  onStopTyping(): void {
+    // Gọi phương thức thông báo dừng nhập (stop typing)
+    this.signalRService.notifyStopTyping(this.recipientId!);
   }
 
   clearMessages(): void {

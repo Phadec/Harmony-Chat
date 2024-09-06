@@ -439,7 +439,92 @@ public sealed class ChatHub : Hub
         }
     }
 
+    public async Task NotifyTyping(Guid recipientId, bool isTyping)
+    {
+        var senderUserId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(senderUserId, out var senderGuid))
+        {
+            _logger.LogWarning("Unable to parse senderUserId.");
+            return;
+        }
 
+        // Xác định xem recipientId là GroupId hay ToUserId (Private Chat)
+        var isGroup = await _context.Groups.AnyAsync(g => g.Id == recipientId);
 
+        if (isGroup)
+        {
+            // Nếu là group chat, phát sự kiện "đang nhập" tới tất cả các thành viên trong nhóm, ngoại trừ người gửi
+            var groupMembers = await _context.GroupMembers
+                .Where(gm => gm.GroupId == recipientId && gm.UserId != senderGuid)
+                .Select(gm => gm.UserId)
+                .ToListAsync();
+
+            foreach (var memberId in groupMembers)
+            {
+                if (UserConnections.TryGetValue(memberId, out var connections))
+                {
+                    foreach (var connectionId in connections)
+                    {
+                        await Clients.Client(connectionId).SendAsync("TypingIndicator", senderGuid, isTyping);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Nếu là private chat, phát sự kiện "đang nhập" tới người nhận, không phải người gửi
+            if (UserConnections.TryGetValue(recipientId, out var connections))
+            {
+                foreach (var connectionId in connections)
+                {
+                    await Clients.Client(connectionId).SendAsync("TypingIndicator", senderGuid, isTyping);
+                }
+            }
+        }
+    }
+
+    public async Task NotifyStopTyping(Guid recipientId)
+    {
+        var senderUserId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(senderUserId, out var senderGuid))
+        {
+            _logger.LogWarning("Unable to parse senderUserId.");
+            return;
+        }
+
+        // Xác định xem recipientId là GroupId hay ToUserId (Private Chat)
+        var isGroup = await _context.Groups.AnyAsync(g => g.Id == recipientId);
+
+        if (isGroup)
+        {
+            // Nếu là group chat, phát sự kiện "ngừng nhập" tới tất cả các thành viên trong nhóm, ngoại trừ người gửi
+            var groupMembers = await _context.GroupMembers
+                .Where(gm => gm.GroupId == recipientId && gm.UserId != senderGuid)
+                .Select(gm => gm.UserId)
+                .ToListAsync();
+
+            foreach (var memberId in groupMembers)
+            {
+                if (UserConnections.TryGetValue(memberId, out var connections))
+                {
+                    foreach (var connectionId in connections)
+                    {
+                        await Clients.Client(connectionId).SendAsync("StopTypingIndicator", senderGuid);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Nếu là private chat, phát sự kiện "ngừng nhập" tới người nhận, không phải người gửi
+            if (UserConnections.TryGetValue(recipientId, out var connections))
+            {
+                foreach (var connectionId in connections)
+                {
+                    await Clients.Client(connectionId).SendAsync("StopTypingIndicator", senderGuid);
+                }
+            }
+        }
+    }
 
 }
