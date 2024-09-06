@@ -5,6 +5,10 @@
       "PackagePath": "staticwebassets\\avatars\\example.jpg"
     },
     {
+      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\9507911d-b168-4a53-9b5c-68f0b2fd0cf8.zip",
+      "PackagePath": "staticwebassets\\uploads\\9507911d-b168-4a53-9b5c-68f0b2fd0cf8.zip"
+    },
+    {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.ChatAppServer.WebAPI.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },

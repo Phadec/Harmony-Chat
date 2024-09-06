@@ -145,6 +145,9 @@ body, html {
   overflow-wrap: break-word;
   text-decoration: none;
 }
+.message-container {
+  position: relative; /* Đảm bảo các phần tử bên trong có thể định vị tuyệt đối */
+}
 
 .sent .message-container {
   display: flex;
@@ -198,20 +201,14 @@ body, html {
   text-decoration: underline;
 }
 
-/* Khung hiển thị tệp đính kèm đã chọn */
 .attachment-preview {
-  position: absolute;
-  bottom: 60px;
-  right: 330px;
-  background-color: #f9f9f9;
   border-radius: 5px;
   border: 1px solid #ddd;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 710px;
   padding: 10px;
 }
 
@@ -460,26 +457,21 @@ body, html {
 }
 
 .reply-preview {
-  position: absolute;
-  bottom: 60px;
-  right: 330px;
-  background-color: #f9f9f9;
   border-radius: 5px;
   border: 1px solid #ddd;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* max-width: 100%; */
-  width: 710px;
   padding: 10px;
 }
+
 
 .reply-preview-header {
   font-weight: bold;
   margin-bottom: 5px;
-  color: #555; /* Consistent color with attachment preview */
+  color: #555; /* Màu văn bản tương đồng */
 }
 
 .reply-preview-content {
@@ -668,7 +660,7 @@ body, html {
 
 
 .pinned-messages-container:hover {
-  max-height: 400px; /* Tăng chiều cao khi hover để xem thêm pinned messages */
+  max-height: 700px; /* Tăng chiều cao khi hover để xem thêm pinned messages */
   overflow-y: auto; /* Hiển thị scroll khi vượt quá chiều cao */
 }
 
@@ -692,11 +684,10 @@ body, html {
   padding-right: 10px; /* Thêm padding cho scroll bar */
 }
 
-/* Style for individual pinned messages */
 .pinned-message {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column; /* Sắp xếp các phần tử theo chiều dọc */
+  align-items: flex-start; /* Căn trái tất cả các phần tử */
   padding: 5px 0;
   background-color: #ffffff;
   border-bottom: 1px solid #ddd;
@@ -799,13 +790,13 @@ body, html {
 }
 
 .dropdown-menu {
-  display: none;
   position: absolute;
+  top: -10px; /* Điều chỉnh vị trí dọc, khoảng cách trên so với tin nhắn */
+  width: 150px; /* Kích thước menu tùy ý */
   background-color: white;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
-  z-index: 1;
-  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: none; /* Ẩn menu mặc định */
 }
 
 .dropdown-menu .dropdown-item {
@@ -826,3 +817,122 @@ body, html {
 .dropdown:hover .dropdown-menu {
   display: block;
 }
+.message-container:hover .dropdown-menu {
+  display: block; /* Hiển thị menu khi hover vào tin nhắn */
+}
+
+/* Định vị menu cho tin nhắn đã gửi */
+.sent .dropdown-menu {
+  right: 0;
+  transform: translateY(-100%); /* Đảm bảo menu xuất hiện phía trên */
+}
+
+/* Định vị menu cho tin nhắn đã nhận */
+.received .dropdown-menu {
+  left: 0;
+  transform: translateY(-100%); /* Đảm bảo menu xuất hiện phía trên */
+}
+
+
+.pinned-message:hover {
+  background-color: #e9ecef; /* Highlight khi hover */
+}
+
+.pinned-message span {
+  width: 100%; /* Đảm bảo phần nội dung span chiếm hết chiều ngang */
+  font-size: 14px;
+  margin-right: 10px;
+  color: #495057;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left; /* Căn trái nội dung văn bản */
+}
+
+.pinned-attachment {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Căn trái các phần tử */
+}
+
+.pinned-attachment-image, .pinned-attachment-video {
+  max-width: 50px; /* Kích thước thu nhỏ cho hình ảnh và video */
+  max-height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.pinned-attachment-file {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  text-align: left; /* Căn trái nội dung tệp */
+}
+
+.pinned-attachment-file i {
+  margin-right: 5px;
+}
+
+.pinned-attachment-audio {
+  width: 50px; /* Kích thước nhỏ cho audio */
+}
+
+.unpin-button {
+  margin-left: 10px;
+  align-self: flex-end; /* Đẩy nút unpin sang bên phải */
+}
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 15px 16px; /* Tăng padding để làm khung cao hơn */
+  background-color: #f1f3f5; /* Nền giống với tin nhắn nhận */
+  border-radius: 20px; /* Bo tròn khung giống tin nhắn */
+  max-width: fit-content; /* Chỉ rộng bằng nội dung bên trong */
+  line-height: 1.5;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.typing-indicator p {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.typing-indicator p::before,
+.typing-indicator p::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #555; /* Màu tương tự như các chấm trong tin nhắn */
+  animation: typingDots 1s infinite;
+  margin-right: 4px;
+}
+
+.typing-indicator p span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #555;
+  animation: typingDots 1s infinite 0.4s;
+}
+
+@keyframes typingDots {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+

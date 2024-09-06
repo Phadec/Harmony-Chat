@@ -170,7 +170,12 @@
           Seen
         </div>
       </div>
+      <!-- Hiển thị trạng thái "đang nhập" -->
+      <div class="typing-indicator" *ngIf="isTyping">
+        <p><span></span></p>
+      </div>
     </div>
+
 
     <!-- Khung hiển thị tệp đính kèm (phía trên khung nhập tin nhắn) -->
     <div *ngIf="attachmentFile" class="attachment-preview">
@@ -206,28 +211,31 @@
         <i class="fas fa-trash-alt"></i>
       </button>
     </div>
-
+    <div *ngIf="repliedToMessage" class="reply-preview">
+      <p class="reply-preview-header">Replying to:</p>
+      <div class="reply-preview-content">
+        <span>{{ repliedToMessage.senderFullName }}:</span>
+        <span [innerHTML]="repliedToMessage.message"></span>
+      </div>
+      <!-- Replace text with an icon -->
+      <button class="cancel-reply" (click)="cancelReply()" aria-label="Cancel reply">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
     <!-- Vùng nhập tin nhắn -->
     <div class="message-input" *ngIf="recipientId">
       <!-- Reply Preview Section -->
-      <div *ngIf="repliedToMessage" class="reply-preview">
-        <p class="reply-preview-header">Replying to:</p>
-        <div class="reply-preview-content">
-          <span>{{ repliedToMessage.senderFullName }}:</span>
-          <span [innerHTML]="repliedToMessage.message"></span>
-        </div>
-        <!-- Replace text with an icon -->
-        <button class="cancel-reply" (click)="cancelReply()" aria-label="Cancel reply">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
+
 
       <div class="emoji-picker">
         <i class="fas fa-smile" (click)="onEmojiClick()" title="Insert emoji"></i>
       </div>
 
       <input type="text" [(ngModel)]="newMessage" placeholder="Type a message..."
-             (keydown.enter)="onSendMessage()" aria-label="Type a message" />
+             (keydown.enter)="onSendMessage()"
+             (input)="checkTypingStatus()"
+             aria-label="Type a message" />
+
 
       <label for="fileInput" class="icon-button">
         <i class="fas fa-paperclip"></i>

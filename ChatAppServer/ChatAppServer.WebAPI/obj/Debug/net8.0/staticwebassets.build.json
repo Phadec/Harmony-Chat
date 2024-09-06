@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "suVgN5uMcHZ2YgC+h979+X1a124RdvEOcPLRnv77kJ8=",
+  "Hash": "apWouMp8LFZFQ4o10DAgUHhaC+Xk/YWsPQIn4zNV3K8=",
   "Source": "ChatAppServer.WebAPI",
   "BasePath": "_content/ChatAppServer.WebAPI",
   "Mode": "Default",
@@ -34,6 +34,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\avatars\\example.jpg"
+    },
+    {
+      "Identity": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\9507911d-b168-4a53-9b5c-68f0b2fd0cf8.zip",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "uploads/9507911d-b168-4a53-9b5c-68f0b2fd0cf8.zip",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\9507911d-b168-4a53-9b5c-68f0b2fd0cf8.zip"
     }
   ]
 }
