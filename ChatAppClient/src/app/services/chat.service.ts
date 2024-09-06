@@ -21,9 +21,16 @@ export class ChatService {
   }
 
   // Lấy các tin nhắn giữa người dùng và người nhận
-  getChats(recipientId: string): Observable<any> {
+  getChats(recipientId: string, pageNumber: number = 1, pageSize: number = 20): Observable<any> {
     const userId = localStorage.getItem('userId');
-    return this.http.get<any>(`${this.apiUrl}/get-chats?userId=${userId}&recipientId=${recipientId}`);
+    return this.http.get<any>(`${this.apiUrl}/get-chats`, {
+      params: {
+        userId: userId || '',           // Lấy userId từ localStorage
+        recipientId: recipientId,       // Người nhận
+        pageNumber: pageNumber.toString(),  // Số trang
+        pageSize: pageSize.toString()      // Kích thước trang
+      }
+    });
   }
 
   // Gửi tin nhắn

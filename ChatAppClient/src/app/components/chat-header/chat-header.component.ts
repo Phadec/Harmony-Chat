@@ -12,7 +12,8 @@ import { AppConfigService } from "../../services/app-config.service";
   styleUrls: ['./chat-header.component.css']
 })
 export class ChatHeaderComponent implements OnInit {
-  @Input() recipientInfo: any; // Nhận thông tin người nhận từ component cha
+  @Input() recipientInfo: any;  // Nhận recipientInfo từ ChatWindowComponent
+  @Input() chatTheme: string = 'default'; // Nhận chatTheme từ ChatWindowComponent
 
   constructor(
     private peerService: PeerService,

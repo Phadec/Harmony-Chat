@@ -39,6 +39,8 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   messages: any[] = [];
   pinnedMessages: any[] = [];
   newMessage: string = '';
+  availableReactions: string[] = ['😊', '😂', '😍', '😢', '😡', '👍', '👎'];
+  activeReactionPickerIndex: number | null = null;
   currentUserId = localStorage.getItem('userId');
   recipientInfo: RecipientInfo | null = null; // Thông tin người nhận (bạn bè hoặc nhóm)
   attachmentFile: File | null = null; // Biến lưu trữ tệp đính kèm
@@ -50,6 +52,12 @@ export class ChatWindowComponent implements OnInit, OnChanges {
   isPinnedMessagesVisible = false;
   typingTimeout: any;
   isTyping: boolean = false;
+  pageNumber: number = 1;  // Trang hiện tại
+  pageSize: number = 20;   // Số lượng tin nhắn mỗi trang
+  isLoading: boolean = false;  // Biến kiểm soát trạng thái tải dữ liệu
+  hasMoreMessages: boolean = true;  // Kiểm tra còn tin nhắn cũ để tải không
+  chatTheme: string = 'default';  // Thêm biến lưu trữ ChatTheme
+  previousScrollHeight: number = 0;
   constructor(
     private chatService: ChatService,
     private signalRService: SignalRService,
@@ -280,16 +288,6 @@ export class ChatWindowComponent implements OnInit, OnChanges {
     }
   }
 
-  handleMessageDeleted(deletedMessageId: string): void {
-    const message = this.messages.find(msg => msg.id === deletedMessageId);
-    if (message) {
-      message.isDeleted = true;
-      message.message = 'Message has been deleted';
-      message.attachmentUrl = null; // Optionally remove attachment
-      this.cdr.detectChanges(); // Update the UI
-    }
-  }
-
   handleReactionAdded(reactionData: any): void {
     const message = this.messages.find(msg => msg.id === reactionData.chatId);
     if (message) {
@@ -411,30 +409,44 @@ export class ChatWindowComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['recipientId'] && !changes['recipientId'].isFirstChange()) {
+      // Reset dữ liệu khi recipientId thay đổi
+      this.pageNumber = 1; // Đặt lại số trang về 1
+      this.hasMoreMessages = true; // Cho phép tải thêm tin nhắn
+      this.messages = []; // Reset danh sách tin nhắn
+      this.pinnedMessages = []; // Reset danh sách tin nhắn được ghim nếu có
+      this.isLoading = false; // Đảm bảo trạng thái tải về false trước khi tải mới
+
+      // Gọi lại phương thức loadMessages và loadRecipientInfo
       this.loadMessages();
       this.loadRecipientInfo();
     }
   }
 
-  chatTheme: string = 'default';  // Thêm biến lưu trữ ChatTheme
+  loadMessages(loadMore: boolean = false): void {
+    if (this.recipientId && !this.isLoading) {
+      this.isLoading = true;
 
-  loadMessages(): void {
-    if (this.recipientId) {
-      // Reset mảng pinnedMessages trước khi tải tin nhắn mới
-      this.pinnedMessages = [];
+      if (!loadMore) {
+        this.messages = [];
+      }
 
-      this.chatService.getChats(this.recipientId).subscribe(
+      // Bắt đầu gọi API để lấy tin nhắn
+      this.chatService.getChats(this.recipientId, this.pageNumber, this.pageSize).subscribe(
         (response: any) => {
-          if (response.messages && response.messages.$values) {
-            this.messages = response.messages.$values.map((msg: any) => {
-              msg.isDeleted = msg.isDeleted || false;
-              msg.Reaction = msg.reactions || { $values: [] };
+          console.log('Received theme:', response.chatTheme);
 
-              // Kiểm tra và xử lý tin nhắn được ghim
+          if (response.messages && response.messages.$values) {
+            const existingMessageIds = new Set(this.messages.map((msg: any) => msg.id));
+            const newMessages = response.messages.$values.map((msg: any) => {
+              msg.isDeleted = msg.isDeleted || false;  // Đánh dấu tin nhắn bị xóa
+              msg.Reaction = msg.reactions || { $values: [] };  // Đảm bảo phản ứng tồn tại
+
+              // Xử lý tin nhắn ghim
               if (msg.isPinned) {
-                this.pinnedMessages.push(msg); // Lưu vào mảng pinnedMessages nếu tin nhắn được ghim
+                this.pinnedMessages.push(msg);
               }
 
+              // Xử lý tin nhắn trả lời
               if (msg.repliedToMessageId) {
                 const repliedMessage = response.messages.$values.find((m: any) => m.id === msg.repliedToMessageId);
                 if (repliedMessage) {
@@ -444,33 +456,77 @@ export class ChatWindowComponent implements OnInit, OnChanges {
                   };
                 }
               }
-              return msg;
-            });
 
-            // Sau khi tải tin nhắn, đánh dấu tin nhắn cuối cùng là đã đọc
-            const lastMessage = this.messages[this.messages.length - 1];
-            if (lastMessage && !lastMessage.isDeleted && lastMessage.userId !== this.currentUserId && !lastMessage.isRead) {
-              // Đánh dấu tin nhắn cuối cùng là đã đọc
-              this.markMessageAsRead(lastMessage.id);
+              return msg;
+            }).filter((msg: any) => !existingMessageIds.has(msg.id));  // Lọc tin nhắn trùng lặp
+
+            // Nếu tải thêm, thêm tin nhắn vào đầu danh sách, nếu không thì tải mới
+            if (loadMore) {
+              this.messages = [...newMessages, ...this.messages];
+            } else {
+              this.messages = newMessages;
             }
 
+            // Kiểm tra còn tin nhắn để tải thêm không
+            if (newMessages.length < this.pageSize) {
+              this.hasMoreMessages = false;
+            } else {
+              this.pageNumber++;
+            }
+
+            // Xử lý hiển thị tin nhắn (ngày, giờ, phản hồi, v.v.)
+            this.processMessages();
+            this.cdr.detectChanges();
+
+            // Xử lý cuộn tin nhắn
+            if (loadMore) {
+              const newScrollHeight = this.chatMessagesContainer.nativeElement.scrollHeight;
+              const scrollOffset = newScrollHeight - this.previousScrollHeight;
+              this.chatMessagesContainer.nativeElement.scrollTop = scrollOffset;
+            } else {
+              this.scrollToBottom();
+            }
+
+            // Đánh dấu tin nhắn cuối là đã đọc
+            if (this.messages.length > 0) {
+              const lastMessageId = this.messages[this.messages.length - 1].id;
+              this.markMessageAsRead(lastMessageId);
+            }
+            // Áp dụng theme từ response (nếu có)
+            if (response.chatTheme) {
+              this.chatTheme = response.chatTheme;
+            } else {
+              this.chatTheme = 'default';  // Nếu không có theme, áp dụng theme mặc định
+            }
+
+            // Cập nhật trạng thái tải xong
+            this.isLoading = false;
           } else {
             this.messages = [];
+            this.isLoading = false;
           }
-
-          this.processMessages();
-          this.cdr.detectChanges(); // Buộc UI cập nhật
-          this.scrollToBottom(); // Cuộn xuống cuối sau khi tải tin nhắn
         },
         (error) => {
           console.error('Error loading messages:', error);
+          this.isLoading = false;
         }
       );
     }
   }
 
-  availableReactions: string[] = ['😊', '😂', '😍', '😢', '😡', '👍', '👎'];
-  activeReactionPickerIndex: number | null = null;
+
+
+  onScroll(): void {
+    const element = this.chatMessagesContainer.nativeElement;
+
+    // Kiểm tra nếu người dùng kéo lên đầu khung tin nhắn và vẫn còn tin nhắn để tải
+    if (element.scrollTop === 0 && this.hasMoreMessages && !this.isLoading) {
+      // Lưu vị trí cuộn hiện tại
+      this.previousScrollHeight = element.scrollHeight;
+      this.loadMessages(true); // Gọi để tải thêm tin nhắn cũ
+    }
+  }
+
 
   toggleReactionPicker(index: number): void {
     this.activeReactionPickerIndex = this.activeReactionPickerIndex === index ? null : index;
@@ -823,6 +879,14 @@ export class ChatWindowComponent implements OnInit, OnChanges {
         const message = this.messages.find(msg => msg.id === chatId);
         if (message) {
           message.isPinned = true;  // Cập nhật UI để phản ánh trạng thái đã pin
+
+          // Kiểm tra xem tin nhắn đã tồn tại trong pinnedMessages hay chưa
+          const isAlreadyPinned = this.pinnedMessages.some(msg => msg.id === chatId);
+
+          if (!isAlreadyPinned) {
+            this.pinnedMessages.push(message); // Thêm tin nhắn vào mảng pinnedMessages nếu chưa tồn tại
+          }
+
           this.cdr.detectChanges(); // Buộc Angular cập nhật UI
         }
       },
@@ -831,6 +895,7 @@ export class ChatWindowComponent implements OnInit, OnChanges {
       }
     );
   }
+
 
   onUnpinMessage(chatId: string): void {
     this.chatService.unpinMessage(chatId).subscribe(

@@ -416,3 +416,16 @@ button:hover {
 .user-avatar:hover {
   transform: scale(1.1); /* Slightly enlarge the avatar on hover */
 }
+/* CSS cho phần hiển thị user tagName */
+.user-details span {
+  color: gray; /* Màu xám cho tagName */
+  font-size: 0.9rem; /* Điều chỉnh kích thước chữ nếu cần */
+  font-weight: normal; /* Điều chỉnh độ đậm của chữ */
+}
+
+/* CSS cho phần Request Date */
+.sent-request-list .request-details p {
+  color: gray; /* Màu xám cho Request Date */
+  font-size: 0.9rem; /* Điều chỉnh kích thước chữ nếu cần */
+  margin-top: 4px; /* Điều chỉnh khoảng cách phía trên (tùy chọn) */
+}

@@ -1,4 +1,4 @@
-<div class="chat-header" *ngIf="recipientInfo">
+<div class="chat-header" *ngIf="recipientInfo"[ngClass]="'theme-' + chatTheme">
   <div class="chat-info">
     <img [src]="getAvatarUrl(recipientInfo.avatar)" alt="Avatar" class="avatar" (click)="openImagePreview()">
     <div class="chat-details">
@@ -22,5 +22,3 @@
     </button>
   </div>
 </div>
-
-<div id="video-container"></div> <!-- Container này sẽ hiển thị video -->

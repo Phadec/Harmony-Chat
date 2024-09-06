@@ -7,7 +7,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
   styleUrls: ['./theme-selector-dialog.component.css']
 })
 export class ThemeSelectorDialogComponent {
-  themes = ['light', 'dark', 'blue', 'green', 'red'];
+  themes = ['default', 'green', 'star','love'];
 
   constructor(
     public dialogRef: MatDialogRef<ThemeSelectorDialogComponent>,

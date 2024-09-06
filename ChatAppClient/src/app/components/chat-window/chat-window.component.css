@@ -185,7 +185,7 @@ body, html {
 
 .attachment img, .attachment video {
   max-width: 100%;
-  max-height: 250px;
+  max-height: 140px;
   border-radius: 5px;
   object-fit: cover;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -643,6 +643,7 @@ body, html {
   display: flex;
   gap: 5px;
 }
+/* Container cho pinned messages */
 .pinned-messages-container {
   background-color: #f8f9fa;
   padding: 15px;
@@ -651,13 +652,12 @@ body, html {
   max-height: 50px; /* Chiều cao mặc định khi chưa mở */
   overflow: hidden;
   transition: max-height 0.3s ease;
-  position: absolute; /* Đặt vị trí tuyệt đối bên trong khung chat */
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   z-index: 10; /* Đè lên nội dung chat */
 }
-
 
 .pinned-messages-container:hover {
   max-height: 700px; /* Tăng chiều cao khi hover để xem thêm pinned messages */
@@ -680,14 +680,15 @@ body, html {
 }
 
 .pinned-messages-list {
-  max-height: 220px; /* Tăng chiều cao của danh sách để phù hợp với container */
-  padding-right: 10px; /* Thêm padding cho scroll bar */
+  max-height: 220px; /* Chiều cao của danh sách */
+  padding-right: 10px; /* Padding cho scroll bar */
+  overflow-y: auto;
 }
 
 .pinned-message {
   display: flex;
   flex-direction: column; /* Sắp xếp các phần tử theo chiều dọc */
-  align-items: flex-start; /* Căn trái tất cả các phần tử */
+  align-items: flex-start;
   padding: 5px 0;
   background-color: #ffffff;
   border-bottom: 1px solid #ddd;
@@ -708,6 +709,7 @@ body, html {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 /* Nút Pin và Unpin */
 .pin-button {
   background: none;
@@ -727,6 +729,59 @@ body, html {
   color: #0056b3; /* Màu xanh đậm hơn khi hover */
 }
 
+/* Hiển thị tệp đính kèm trong pinned messages */
+.pinned-attachment {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Căn trái các phần tử */
+}
+
+/* Tệp đính kèm dạng hình ảnh */
+.pinned-attachment-image {
+  max-width: 50px; /* Kích thước thu nhỏ cho hình ảnh */
+  max-height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+/* Tệp đính kèm dạng video */
+.pinned-attachment-video {
+  max-width: 50px;
+  max-height: 50px;
+  border-radius: 5px;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+/* Tệp đính kèm dạng âm thanh */
+.pinned-attachment-audio {
+  width: 50px; /* Kích thước nhỏ cho audio */
+  margin-right: 10px;
+}
+
+/* Tệp đính kèm dạng tài liệu (PDF, DOCX, etc.) */
+.pinned-attachment-file {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #007bff;
+}
+
+.pinned-attachment-file i {
+  margin-right: 5px;
+}
+
+/* Tệp tài liệu có liên kết (PDF, DOCX) */
+.pinned-attachment-file a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.pinned-attachment-file a:hover {
+  text-decoration: underline;
+}
 
 .unpin-button {
   background: none;
@@ -935,4 +990,609 @@ body, html {
     opacity: 0;
   }
 }
+/* Theme Green - Điều chỉnh màu sắc cho chủ đề xanh lá cây */
+.theme-green {
+  background-color: #e0f7e9; /* Màu nền chính nhạt */
+  color: #2c7d59; /* Màu văn bản chính */
+}
 
+.theme-green .chat-header {
+  background-color: #2c7d59; /* Màu nền header */
+  color: #ffffff; /* Màu chữ trong header */
+  border-bottom: 1px solid #1b563c; /* Đường viền dưới header */
+}
+
+.theme-green .chat-name {
+  color: #ffffff; /* Màu tên người dùng trong header */
+}
+
+.theme-green .chat-tag {
+  color: #e0f7e9; /* Màu phụ trong header */
+}
+
+/* Khung hiển thị tin nhắn */
+.theme-green .chat-messages {
+  background-color: #e0f7e9; /* Nền xanh lá cây nhạt */
+}
+
+.theme-green .message-content {
+  background-color: #e0ffe6; /* Nền tin nhắn nhạt */
+  color: #2c7d59; /* Màu chữ chính */
+}
+
+/* Tin nhắn gửi và nhận */
+.theme-green .sent .message-content {
+  background-color: #2c7d59; /* Màu nền tin nhắn gửi (xanh đậm) */
+  color: #ffffff; /* Màu chữ của tin nhắn gửi */
+}
+
+.theme-green .received .message-content {
+  background-color: #cfe9d8; /* Màu nền tin nhắn nhận */
+  color: #2c7d59; /* Màu chữ của tin nhắn nhận */
+}
+
+/* Liên kết trong tin nhắn */
+.theme-green .sent .message-content a {
+  color: #ffffff; /* Màu chữ của liên kết trong tin nhắn gửi */
+}
+
+.theme-green .received .message-content a {
+  color: #2c7d59; /* Màu chữ của liên kết trong tin nhắn nhận */
+}
+
+/* Phần pinned messages */
+.theme-green .pinned-messages-container {
+  background-color: #e0ffe6; /* Nền pinned messages */
+  border: 1px solid #2c7d59; /* Viền pinned messages */
+}
+
+.theme-green .pinned-messages-header {
+  color: #2c7d59; /* Màu tiêu đề pinned messages */
+}
+
+.theme-green .pinned-message {
+  background-color: #e0ffe6; /* Nền tin nhắn đã ghim */
+  color: #2c7d59; /* Màu chữ của tin nhắn ghim */
+}
+
+/* Nút Pin và Unpin */
+.theme-green .pin-button, .theme-green .unpin-button {
+  color: #2c7d59; /* Màu xanh lá cho nút pin */
+}
+
+.theme-green .pin-button:hover, .theme-green .unpin-button:hover {
+  color: #1b563c; /* Màu xanh đậm khi hover */
+}
+
+/* Nút và biểu tượng hành động */
+.theme-green .action-button {
+  color: #2c7d59; /* Màu biểu tượng */
+}
+
+.theme-green .action-button i {
+  color: #2c7d59; /* Màu icon */
+}
+
+.theme-green .dropdown-menu .dropdown-item {
+  color: #2c7d59; /* Màu của dropdown */
+}
+
+.theme-green .dropdown-menu .dropdown-item:hover {
+  background-color: #cfe9d8; /* Màu nền khi hover */
+}
+
+/* Vùng nhập tin nhắn */
+.theme-green .message-input {
+  background-color: #e0f7e9; /* Nền của vùng nhập tin nhắn */
+  border-top: 1px solid #2c7d59; /* Viền trên của khung nhập */
+}
+
+.theme-green .message-input input[type="text"] {
+  border: 1px solid #2c7d59; /* Viền cho vùng nhập */
+}
+
+.theme-green .message-input input[type="text"]:focus {
+  border-color: #1b563c; /* Viền khi nhập */
+}
+
+.theme-green .message-input button {
+  background-color: #2c7d59; /* Nền cho nút gửi */
+  color: #ffffff; /* Màu chữ cho nút gửi */
+}
+
+.theme-green .message-input button:hover {
+  background-color: #1b563c; /* Nền khi hover */
+}
+
+/* Hiển thị reactions */
+.theme-green .reaction-group {
+  background-color: #e0ffe6; /* Nền của reactions */
+}
+
+.theme-green .reaction-option:hover {
+  background-color: #cfe9d8; /* Nền khi hover reactions */
+}
+
+/* Theme Star - Điều chỉnh màu sắc cho chủ đề "Sao" */
+.theme-star {
+  background-color: #0b0c10; /* Màu nền đen tối như bầu trời đêm */
+  color: #c5c6c7; /* Màu văn bản chính (xám nhạt) */
+}
+
+.theme-star .chat-header {
+  background-color: #1f2833; /* Nền header màu xám đậm */
+  color: #66fcf1; /* Màu chữ header xanh dương nhạt */
+  border-bottom: 1px solid #45a29e; /* Viền header */
+}
+
+.theme-star .chat-name {
+  color: #ffffff; /* Màu tên người dùng trong header */
+}
+
+.theme-star .chat-tag {
+  color: #c5c6c7; /* Màu phụ trong header */
+}
+
+/* Khung hiển thị tin nhắn */
+.theme-star .chat-messages {
+  background-color: #0b0c10; /* Nền tối */
+}
+
+.theme-star .message-content {
+  background-color: #1f2833; /* Nền tin nhắn xám đậm */
+  color: #c5c6c7; /* Màu chữ chính xám nhạt */
+}
+
+/* Tin nhắn gửi và nhận */
+.theme-star .sent .message-content {
+  background-color: #45a29e; /* Nền tin nhắn gửi màu xanh ngọc */
+  color: #ffffff; /* Màu chữ trắng cho tin nhắn gửi */
+}
+
+.theme-star .received .message-content {
+  background-color: #1f2833; /* Nền tin nhắn nhận xám đậm */
+  color: #c5c6c7; /* Màu chữ xám nhạt cho tin nhắn nhận */
+}
+
+/* Liên kết trong tin nhắn */
+.theme-star .sent .message-content a {
+  color: #ffffff; /* Màu chữ cho liên kết trong tin nhắn gửi */
+}
+
+.theme-star .received .message-content a {
+  color: #66fcf1; /* Màu chữ cho liên kết trong tin nhắn nhận */
+}
+
+/* Phần pinned messages */
+.theme-star .pinned-messages-container {
+  background-color: #1f2833; /* Nền pinned messages */
+  border: 1px solid #45a29e; /* Viền pinned messages */
+}
+
+.theme-star .pinned-messages-header {
+  color: #66fcf1; /* Màu tiêu đề pinned messages */
+}
+
+.theme-star .pinned-message {
+  background-color: #1f2833; /* Nền tin nhắn đã ghim */
+  color: #c5c6c7; /* Màu chữ của tin nhắn ghim */
+}
+
+/* Nút Pin và Unpin */
+.theme-star .pin-button, .theme-star .unpin-button {
+  color: #66fcf1; /* Màu xanh dương nhạt cho nút pin */
+}
+
+.theme-star .pin-button:hover, .theme-star .unpin-button:hover {
+  color: #45a29e; /* Màu xanh ngọc khi hover */
+}
+
+/* Nút và biểu tượng hành động */
+.theme-star .action-button {
+  color: #66fcf1; /* Màu biểu tượng */
+}
+
+.theme-star .action-button i {
+  color: #66fcf1; /* Màu icon */
+}
+
+.theme-star .dropdown-menu .dropdown-item {
+  color: #66fcf1; /* Màu của dropdown */
+}
+
+.theme-star .dropdown-menu .dropdown-item:hover {
+  background-color: #1f2833; /* Màu nền khi hover */
+}
+
+/* Vùng nhập tin nhắn */
+.theme-star .message-input {
+  background-color: #0b0c10; /* Nền của vùng nhập tin nhắn */
+  border-top: 1px solid #45a29e; /* Viền trên của khung nhập */
+}
+
+.theme-star .message-input input[type="text"] {
+  border: 1px solid #45a29e; /* Viền cho vùng nhập */
+}
+
+.theme-star .message-input input[type="text"]:focus {
+  border-color: #66fcf1; /* Viền khi nhập */
+}
+
+.theme-star .message-input button {
+  background-color: #66fcf1; /* Nền cho nút gửi */
+  color: #0b0c10; /* Màu chữ cho nút gửi */
+}
+
+.theme-star .message-input button:hover {
+  background-color: #45a29e; /* Nền khi hover */
+}
+
+/* Hiển thị reactions */
+.theme-star .reaction-group {
+  background-color: #1f2833; /* Nền của reactions */
+}
+
+.theme-star .reaction-option:hover {
+  background-color: #45a29e; /* Nền khi hover reactions */
+}
+
+/* Custom scrollbar */
+.theme-star .chat-messages::-webkit-scrollbar-thumb {
+  background-color: #66fcf1; /* Màu cho thanh cuộn */
+}
+/* Theme Love - Điều chỉnh màu sắc cho chủ đề "Tình yêu" */
+.theme-love {
+  background-color: #ffe6e9; /* Nền hồng nhạt */
+  color: #d6336c; /* Màu văn bản chính (hồng đậm) */
+}
+
+.theme-love .chat-header {
+  background-color: #f78fb3; /* Nền header màu hồng đậm */
+  color: #ffffff; /* Màu chữ header */
+  border-bottom: 1px solid #e83e8c; /* Viền header */
+}
+
+.theme-love .chat-name {
+  color: #ffffff; /* Màu tên người dùng trong header */
+}
+
+.theme-love .chat-tag {
+  color: #ffd6e0; /* Màu phụ trong header */
+}
+
+/* Khung hiển thị tin nhắn */
+.theme-love .chat-messages {
+  background-color: #ffe6e9; /* Nền hồng nhạt */
+}
+
+.theme-love .message-content {
+  background-color: #ffd6e0; /* Nền tin nhắn hồng nhạt */
+  color: #d6336c; /* Màu chữ chính hồng đậm */
+}
+
+/* Tin nhắn gửi và nhận */
+.theme-love .sent .message-content {
+  background-color: #e83e8c; /* Nền tin nhắn gửi (hồng đậm) */
+  color: #ffffff; /* Màu chữ trắng cho tin nhắn gửi */
+}
+
+.theme-love .received .message-content {
+  background-color: #ffc0cb; /* Nền tin nhắn nhận hồng nhạt */
+  color: #d6336c; /* Màu chữ hồng đậm cho tin nhắn nhận */
+}
+
+/* Liên kết trong tin nhắn */
+.theme-love .sent .message-content a {
+  color: #ffffff; /* Màu chữ cho liên kết trong tin nhắn gửi */
+}
+
+.theme-love .received .message-content a {
+  color: #d6336c; /* Màu chữ cho liên kết trong tin nhắn nhận */
+}
+
+/* Phần pinned messages */
+.theme-love .pinned-messages-container {
+  background-color: #ffc0cb; /* Nền pinned messages */
+  border: 1px solid #e83e8c; /* Viền pinned messages */
+}
+
+.theme-love .pinned-messages-header {
+  color: #d6336c; /* Màu tiêu đề pinned messages */
+}
+
+.theme-love .pinned-message {
+  background-color: #ffd6e0; /* Nền tin nhắn đã ghim */
+  color: #d6336c; /* Màu chữ của tin nhắn ghim */
+}
+
+/* Nút Pin và Unpin */
+.theme-love .pin-button, .theme-love .unpin-button {
+  color: #e83e8c; /* Màu hồng đậm cho nút pin */
+}
+
+.theme-love .pin-button:hover, .theme-love .unpin-button:hover {
+  color: #d6336c; /* Màu hồng đậm hơn khi hover */
+}
+
+/* Nút và biểu tượng hành động */
+.theme-love .action-button {
+  color: #e83e8c; /* Màu biểu tượng */
+}
+
+.theme-love .action-button i {
+  color: #e83e8c; /* Màu icon */
+}
+
+.theme-love .dropdown-menu .dropdown-item {
+  color: #d6336c; /* Màu của dropdown */
+}
+
+.theme-love .dropdown-menu .dropdown-item:hover {
+  background-color: #ffc0cb; /* Màu nền khi hover */
+}
+
+/* Vùng nhập tin nhắn */
+.theme-love .message-input {
+  background-color: #ffe6e9; /* Nền của vùng nhập tin nhắn */
+  border-top: 1px solid #e83e8c; /* Viền trên của khung nhập */
+}
+
+.theme-love .message-input input[type="text"] {
+  border: 1px solid #e83e8c; /* Viền cho vùng nhập */
+}
+
+.theme-love .message-input input[type="text"]:focus {
+  border-color: #d6336c; /* Viền khi nhập */
+}
+
+.theme-love .message-input button {
+  background-color: #e83e8c; /* Nền cho nút gửi */
+  color: #ffffff; /* Màu chữ cho nút gửi */
+}
+
+.theme-love .message-input button:hover {
+  background-color: #d6336c; /* Nền khi hover */
+}
+
+/* Hiển thị reactions */
+.theme-love .reaction-group {
+  background-color: #ffc0cb; /* Nền của reactions */
+}
+
+.theme-love .reaction-option:hover {
+  background-color: #ffd6e0; /* Nền khi hover reactions */
+}
+
+/* Custom scrollbar */
+.theme-love .chat-messages::-webkit-scrollbar-thumb {
+  background-color: #e83e8c; /* Màu cho thanh cuộn */
+}
+
+/* Hiệu ứng đặc biệt: Icon trái tim cho pinned messages */
+.theme-love .pinned-messages-header i {
+  color: #e83e8c; /* Màu hồng cho icon ghim */
+}
+
+.theme-love .unpin-button i {
+  color: #d6336c; /* Màu hồng cho icon unpin */
+}
+
+/* Nút trái tim cho các nút hành động */
+.theme-love .actions-container .reply-button i,
+.theme-love .actions-container .add-reaction i,
+.theme-love .actions-container .delete-button i {
+  color: #e83e8c; /* Màu hồng cho icon */
+}
+
+/* Reactions có icon trái tim */
+.theme-love .reaction {
+  font-size: 16px;
+  color: #d6336c; /* Màu hồng đậm cho icon reaction */
+}
+
+/* Reply message cho theme love */
+.theme-love .replied-message {
+  background-color: #ffd6e0; /* Nền hồng nhạt */
+  border-left: 3px solid #e83e8c; /* Viền hồng đậm */
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border-radius: 10px; /* Bo tròn các góc */
+  position: relative;
+  color: #d6336c; /* Màu chữ hồng đậm */
+}
+
+.theme-love .replied-message-content {
+  font-size: 13px;
+  color: #d6336c; /* Màu chữ cho tin nhắn trả lời */
+  line-height: 1.4;
+}
+
+.theme-love .sent .replied-message {
+  background-color: #f78fb3; /* Màu nền cho tin nhắn trả lời đã gửi (hồng đậm hơn) */
+  border-left: 3px solid #e83e8c; /* Viền hồng đậm cho tin nhắn gửi */
+  color: #ffffff; /* Màu chữ trắng cho tin nhắn đã gửi */
+}
+
+.theme-love .received .replied-message {
+  background-color: #ffe6e9; /* Màu nền hồng nhạt hơn cho tin nhắn nhận */
+  border-left: 3px solid #e83e8c; /* Viền hồng đậm */
+  color: #d6336c; /* Màu chữ hồng đậm cho tin nhắn nhận */
+}
+
+.theme-love .reply-preview {
+  background-color: #ffd6e0; /* Nền preview của tin nhắn trả lời */
+  border-left: 3px solid #e83e8c; /* Viền trái hồng đậm */
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.theme-love .reply-preview-header {
+  font-weight: bold;
+  color: #d6336c; /* Màu hồng đậm cho tiêu đề reply */
+}
+
+.theme-love .reply-preview-content {
+  font-size: 13px;
+  color: #d6336c; /* Màu hồng cho nội dung trả lời */
+  line-height: 1.4;
+}
+
+.theme-love .cancel-reply {
+  background: none;
+  border: none;
+  color: #d6336c; /* Màu hồng đậm cho nút hủy trả lời */
+  cursor: pointer;
+  font-size: 18px;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.theme-love .cancel-reply i {
+  font-size: 18px; /* Kích thước icon */
+}
+
+.theme-love .cancel-reply:hover {
+  color: #e83e8c; /* Màu hồng khi hover */
+  text-decoration: none; /* Không có gạch chân */
+}
+
+.theme-love .sent .replied-message-content,
+.theme-love .received .replied-message-content {
+  font-size: 12px; /* Kích thước chữ nhỏ hơn cho phần trả lời */
+  color: #d6336c; /* Màu hồng đậm cho văn bản trả lời */
+}
+
+.theme-love .replied-message-content strong {
+  color: #e83e8c; /* Màu đậm cho tên người được trả lời */
+}
+/* Emoji Picker cho theme love */
+.theme-love .emoji-picker {
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 24px; /* Kích thước lớn hơn để dễ nhấn */
+  color: #e83e8c; /* Màu hồng đậm cho icon emoji */
+  display: flex;
+  align-items: center;
+}
+
+.theme-love .emoji-picker:hover {
+  color: #d6336c; /* Màu hồng đậm hơn khi hover */
+}
+
+.theme-love .emoji-picker-modal {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background-color: #ffe6e9; /* Nền hồng nhạt cho bảng chọn emoji */
+  padding: 15px;
+  border: 1px solid #e83e8c; /* Viền hồng đậm */
+}
+
+.theme-love .emoji-picker-modal span {
+  font-size: 20px; /* Kích thước emoji */
+  cursor: pointer;
+  padding: 5px;
+  margin: 3px;
+  transition: transform 0.2s;
+}
+
+.theme-love .emoji-picker-modal span:hover {
+  transform: scale(1.3); /* Hiệu ứng phóng to khi hover */
+}
+/* File Input cho theme love */
+.theme-love #fileInput {
+  display: none; /* Ẩn input thực sự */
+}
+
+.theme-love .icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  margin-left: 10px;
+  color: #e83e8c; /* Màu hồng đậm cho icon đính kèm file */
+  display: flex;
+  align-items: center;
+}
+
+.theme-love .icon-button:hover {
+  color: #d6336c; /* Màu hồng đậm hơn khi hover */
+}
+
+/* File preview khi chọn file */
+.theme-love .attachment-preview {
+  border-radius: 5px;
+  border: 1px solid #e83e8c; /* Viền hồng đậm */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background: #ffd6e0; /* Nền hồng nhạt */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.theme-love .attachment-preview p {
+  margin: 0;
+  font-size: 12px; /* Kích thước font chữ nhỏ */
+  color: #d6336c; /* Màu chữ hồng đậm */
+}
+
+.theme-love .remove-attachment-button {
+  background-color: transparent;
+  border: none;
+  color: #e83e8c; /* Màu hồng đậm cho nút xóa */
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.theme-love .remove-attachment-button:hover {
+  color: #d6336c; /* Màu đậm hơn khi hover */
+}
+
+/* File preview image */
+.theme-love .attachment-preview-image,
+.theme-love .attachment-preview-video {
+  max-width: 120px; /* Giới hạn kích thước tối đa */
+  max-height: 80px;
+  border-radius: 5px;
+  object-fit: cover;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-right: 10px;
+}
+
+/* File preview cho tài liệu PDF, DOCX */
+.theme-love .attachment-file-preview {
+  display: flex;
+  align-items: center;
+  background-color: #ffe6e9; /* Nền hồng nhạt */
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #e83e8c; /* Viền hồng đậm */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.theme-love .attachment-file-preview i {
+  font-size: 20px; /* Kích thước icon */
+  margin-right: 10px;
+  color: #e83e8c; /* Màu hồng cho icon file */
+}
+
+.theme-love .attachment-file-preview span {
+  color: #d6336c; /* Màu hồng đậm cho tên file */
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.theme-love .attachment-file-preview:hover span {
+  text-decoration: underline; /* Gạch chân khi hover */
+  cursor: pointer;
+}
