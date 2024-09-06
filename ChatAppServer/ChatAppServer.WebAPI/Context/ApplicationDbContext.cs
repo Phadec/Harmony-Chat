@@ -31,6 +31,8 @@ namespace ChatAppServer.WebAPI.Models
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+               .HasColumnType("char(36)"); // Sử dụng char(36) cho GUID
 
                 entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
@@ -87,6 +89,11 @@ namespace ChatAppServer.WebAPI.Models
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired();
+                entity.Property(e => e.Id)
+                 .HasColumnType("char(36)"); // Sử dụng char(36) cho GUID
+                entity.Property(e => e.Name)
+                                .IsRequired()
+                                .HasColumnType("varchar(255)"); // Thay nvarchar(max) bằng varchar(255)
 
                 // Set default value for ChatTheme to "default"
                 entity.Property(e => e.ChatTheme)
@@ -108,6 +115,11 @@ namespace ChatAppServer.WebAPI.Models
             // Configure GroupMember entity
             modelBuilder.Entity<GroupMember>(entity =>
             {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id)
+                      .HasColumnType("char(36)"); // Sử dụng char(36) cho GUID
+
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.IsAdmin).HasDefaultValue(false);
             });
@@ -206,6 +218,9 @@ namespace ChatAppServer.WebAPI.Models
             modelBuilder.Entity<Reaction>(entity =>
             {
                 entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id)
+                   .HasColumnType("char(36)"); // Sử dụng char(36) cho GUID
 
                 entity.HasOne(r => r.Chat)
                     .WithMany(c => c.Reactions)

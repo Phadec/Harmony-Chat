@@ -398,7 +398,9 @@ export class RecipientInfoComponent implements OnInit, OnChanges {
           () => {
             console.log('Successfully left the group');
             // Phát sự kiện thành viên rời khỏi nhóm
+            this.resetRecipientData();
             this.eventService.emitMemberRemoved(); // Không truyền tham số
+
           },
           error => {
             console.error('Failed to leave the group:', error);

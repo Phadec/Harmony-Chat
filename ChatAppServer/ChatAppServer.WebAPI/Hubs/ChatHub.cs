@@ -61,6 +61,17 @@ public sealed class ChatHub : Hub
                 UserConnections[guidUserId].Add(Context.ConnectionId);
                 _logger.LogInformation($"ConnectionId {Context.ConnectionId} added for user {guidUserId}. Total connections: {UserConnections[guidUserId].Count}.");
 
+                // Cập nhật trạng thái người dùng thành "online"
+                var user = await _context.Users.FindAsync(guidUserId);
+                if (user != null)
+                {
+                    user.Status = "online"; // Thay đổi trạng thái thành "online"
+                    await _context.SaveChangesAsync();
+
+                    // Phát sự kiện tới các client khác để cập nhật trạng thái người dùng
+                    await Clients.All.SendAsync("UserStatusChanged", guidUserId, "online");
+                }
+
                 // Thêm người dùng vào các group mà họ là thành viên
                 var userGroups = await _context.GroupMembers
                     .Where(gm => gm.UserId == guidUserId)
@@ -85,6 +96,7 @@ public sealed class ChatHub : Hub
             {
                 _logger.LogWarning($"Failed to parse user ID for ConnectionId {Context.ConnectionId}. Claims: {Context.User?.Claims}");
             }
+
             await UpdateConnectedUsersList();
         }
         catch (Exception ex)
@@ -261,6 +273,19 @@ public sealed class ChatHub : Hub
                     if (!connectionList.Any())
                     {
                         UserConnections.TryRemove(guidUserId, out _);
+
+                        // Cập nhật trạng thái người dùng thành "offline"
+                        var user = await _context.Users.FindAsync(guidUserId);
+                        if (user != null)
+                        {
+                            user.Status = "offline"; // Hoặc giá trị tương ứng trong hệ thống của bạn
+                            await _context.SaveChangesAsync();
+
+                            // Phát sự kiện cập nhật trạng thái tới các client khác
+                            await Clients.All.SendAsync("UserStatusChanged", guidUserId, "offline");
+                        }
+
+                        _logger.LogInformation($"User {guidUserId} is now offline.");
                     }
                     _logger.LogInformation($"User {guidUserId} disconnected with ConnectionId {Context.ConnectionId}.");
                 }

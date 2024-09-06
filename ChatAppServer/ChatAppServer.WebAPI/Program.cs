@@ -25,9 +25,12 @@ builder.Services.AddCors(options =>
 // Dependency Injection for Email Service
 builder.Services.AddTransient<IEmailService, EmailService>();
 
-// Register DbContext with SQL Server
+// Register DbContext with MySQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("MySqlConnection"),
+        new MySqlServerVersion(new Version(8, 0, 39))  // Thay phiên bản MySQL bạn đang dùng
+    ));
 
 // Register Background Task Queue
 builder.Services.AddSingleton<IBackgroundTaskQueue>(_ => new BackgroundTaskQueue(100));

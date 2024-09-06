@@ -68,6 +68,7 @@ export class SidebarComponent implements OnInit {
     this.subscribeToSignalREvents();
     this.loadCurrentUserAvatar();
 
+
     this.signalRService.messageSent.subscribe(() => {
       this.loadRelationships(); // Cập nhật danh sách quan hệ khi có tin nhắn mới
     });
@@ -101,13 +102,6 @@ export class SidebarComponent implements OnInit {
     this.signalRService.hubConnection.on('MessageDeleted', (chatId: string) => {
       this.loadRelationships();
     });
-
-// Lắng nghe sự kiện tin nhắn đã được đọc
-    this.signalRService.messageRead$.subscribe((chatId) => {
-      console.log(`Message ${chatId} has been read.`);
-      this.loadRelationships();
-    });
-
 
 // Lắng nghe sự kiện cập nhật người dùng đang kết nối
     this.signalRService.connectedUsers$.subscribe((users) => {

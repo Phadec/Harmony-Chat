@@ -345,7 +345,7 @@ namespace ChatAppServer.WebAPI.Controllers
             return Ok();
         }
         [HttpGet("get-chats")]
-        public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetChats(Guid userId, Guid recipientId, int pageNumber = 1, int pageSize = 20, CancellationToken cancellationToken = default)
         {
             if (userId == Guid.Empty || recipientId == Guid.Empty)
             {
@@ -362,97 +362,134 @@ namespace ChatAppServer.WebAPI.Controllers
 
             try
             {
-                // Kiểm tra nếu là nhóm chat
+                // Kiểm tra nếu là nhóm chat hoặc là chat cá nhân
                 bool isGroup = await _context.Groups
                     .AsNoTracking()
                     .AnyAsync(g => g.Id == recipientId, cancellationToken);
 
-                if (!isGroup)
+                if (isGroup)
                 {
-                    // Truy vấn lấy thông tin bạn bè và chủ đề chat
-                    var friendship = await _context.Friendships
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == recipientId, cancellationToken);
-
-                    var chatTheme = friendship?.ChatTheme ?? "default";
-
-                    // Truy vấn lấy danh sách tin nhắn cá nhân
-                    var privateChats = await _context.Chats
-                        .AsNoTracking()
-                        .Where(c =>
-                            ((c.UserId == userId && c.ToUserId == recipientId) ||
-                             (c.UserId == recipientId && c.ToUserId == userId)) &&
-                            !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == c.Id))
-                        .OrderBy(c => c.Date)
-                        .Select(c => new
-                        {
-                            c.Id,
-                            c.UserId,
-                            c.ToUserId,
-                            SenderFullName = c.User != null ? (c.User.FirstName + " " + c.User.LastName) : "Unknown",
-                            Message = c.Message ?? string.Empty,
-                            AttachmentUrl = c.AttachmentUrl ?? string.Empty,
-                            AttachmentOriginalName = c.AttachmentOriginalName ?? string.Empty,
-                            c.Date,
-                            IsRead = c.IsRead,
-                            IsDeleted = c.IsDeleted,
-                            IsPinned = c.IsPinned,
-                            Reactions = c.Reactions.Select(r => new
-                            {
-                                r.ReactionType,
-                                ReactedByUser = new
-                                {
-                                    r.User.Id,
-                                    FullName = r.User.FirstName + " " + r.User.LastName,
-                                    r.User.Avatar
-                                },
-                                r.CreatedAt
-                            }).ToList(),
-                            RepliedToMessage = c.RepliedToMessageId.HasValue
-                                ? _context.Chats
-                                    .AsNoTracking()
-                                    .Where(r => r.Id == c.RepliedToMessageId.Value)
-                                    .Select(r => new
-                                    {
-                                        r.Id,
-                                        r.Message,
-                                        r.AttachmentUrl,
-                                        r.AttachmentOriginalName,
-                                        SenderFullName = r.User != null ? (r.User.FirstName + " " + r.User.LastName) : "Unknown",
-                                        SenderTagName = r.User != null ? r.User.TagName : string.Empty
-                                    })
-                                    .FirstOrDefault()
-                                : null
-                        })
-                        .ToListAsync(cancellationToken);
-
-                    return Ok(new
-                    {
-                        ChatTheme = chatTheme,
-                        Messages = privateChats
-                    });
+                    return await GetGroupChats(userId, recipientId, authenticatedUserIdGuid, pageNumber, pageSize, cancellationToken);
                 }
                 else
                 {
-                    // Kiểm tra nếu người dùng là thành viên của nhóm
-                    var isMember = await _context.GroupMembers
-                        .AsNoTracking()
-                        .AnyAsync(gm => gm.GroupId == recipientId && gm.UserId == authenticatedUserIdGuid, cancellationToken);
+                    return await GetPrivateChats(userId, recipientId, pageNumber, pageSize, cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetChats for user {UserId} and recipient {RecipientId}", userId, recipientId);
+                return StatusCode(500, new { Message = "Internal server error. Please try again later." });
+            }
+        }
 
-                    if (!isMember)
-                    {
-                        return Forbid("You are not authorized to view these group chats.");
-                    }
+        // Tách xử lý chat cá nhân với phân trang
+        private async Task<IActionResult> GetPrivateChats(Guid userId, Guid recipientId, int pageNumber, int pageSize, CancellationToken cancellationToken)
+        {
+            var friendship = await _context.Friendships
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.FriendId == recipientId, cancellationToken);
 
-                    // Lấy thông tin nhóm
-                    var group = await _context.Groups
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(g => g.Id == recipientId, cancellationToken);
+            var chatTheme = friendship?.ChatTheme ?? "default";
 
-                    var chatTheme = group?.ChatTheme ?? "default";
+            // Tổng số tin nhắn cá nhân
+            var totalMessages = await _context.Chats
+         .AsNoTracking()
+         .Where(c =>
+             ((c.UserId == userId && c.ToUserId == recipientId) ||
+              (c.UserId == recipientId && c.ToUserId == userId)) &&
+             !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == c.Id))
+         .CountAsync(cancellationToken);
 
-                    // Truy vấn lấy danh sách tin nhắn nhóm
-                    var groupChats = await _context.Chats
+            // Tính toán skip và take cho phân trang
+            var privateChats = await _context.Chats
+                       .AsNoTracking()
+                       .Where(c =>
+                           ((c.UserId == userId && c.ToUserId == recipientId) ||
+                            (c.UserId == recipientId && c.ToUserId == userId)) &&
+                           !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == c.Id))
+                       .OrderBy(c => c.Date)
+                       .Select(c => new
+                       {
+                           c.Id,
+                           c.UserId,
+                           c.ToUserId,
+                           SenderFullName = c.User != null ? (c.User.FirstName + " " + c.User.LastName) : "Unknown",
+                           Message = c.Message ?? string.Empty,
+                           AttachmentUrl = c.AttachmentUrl ?? string.Empty,
+                           AttachmentOriginalName = c.AttachmentOriginalName ?? string.Empty,
+                           c.Date,
+                           IsRead = c.IsRead,
+                           IsDeleted = c.IsDeleted,
+                           IsPinned = c.IsPinned,
+                           Reactions = c.Reactions.Select(r => new
+                           {
+                               r.ReactionType,
+                               ReactedByUser = new
+                               {
+                                   r.User.Id,
+                                   FullName = r.User.FirstName + " " + r.User.LastName,
+                                   r.User.Avatar
+                               },
+                               r.CreatedAt
+                           }).ToList(),
+                           RepliedToMessage = c.RepliedToMessageId.HasValue
+                               ? _context.Chats
+                                   .AsNoTracking()
+                                   .Where(r => r.Id == c.RepliedToMessageId.Value)
+                                   .Select(r => new
+                                   {
+                                       r.Id,
+                                       r.Message,
+                                       r.AttachmentUrl,
+                                       r.AttachmentOriginalName,
+                                       SenderFullName = r.User != null ? (r.User.FirstName + " " + r.User.LastName) : "Unknown",
+                                       SenderTagName = r.User != null ? r.User.TagName : string.Empty
+                                   })
+                                   .FirstOrDefault()
+                               : null
+                       })
+                       .ToListAsync(cancellationToken);
+            return Ok(new
+            {
+                ChatTheme = chatTheme,
+                Messages = privateChats,
+                TotalMessages = totalMessages,
+                TotalPages = (int)Math.Ceiling((double)totalMessages / pageSize),
+                CurrentPage = pageNumber,
+                PageSize = pageSize
+            });
+        }
+
+        // Tách xử lý chat nhóm với phân trang
+        private async Task<IActionResult> GetGroupChats(Guid userId, Guid recipientId, Guid authenticatedUserId, int pageNumber, int pageSize, CancellationToken cancellationToken)
+        {
+            // Kiểm tra nếu người dùng là thành viên của nhóm
+            var isMember = await _context.GroupMembers
+                .AsNoTracking()
+                .AnyAsync(gm => gm.GroupId == recipientId && gm.UserId == authenticatedUserId, cancellationToken);
+
+            if (!isMember)
+            {
+                return Forbid("You are not authorized to view these group chats.");
+            }
+
+            // Lấy thông tin nhóm
+            var group = await _context.Groups
+                .AsNoTracking()
+                .FirstOrDefaultAsync(g => g.Id == recipientId, cancellationToken);
+
+            var chatTheme = group?.ChatTheme ?? "default";
+
+            // Tổng số tin nhắn nhóm
+            var totalMessages = await _context.Chats
+       .AsNoTracking()
+       .Where(p => p.GroupId == recipientId &&
+                   !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == p.Id))
+       .CountAsync(cancellationToken);
+
+            // Tính toán skip và take cho phân trang
+            var groupChats = await _context.Chats
                         .AsNoTracking()
                         .Where(p => p.GroupId == recipientId &&
                                     !_context.UserDeletedMessages.Any(udm => udm.UserId == userId && udm.MessageId == p.Id))
@@ -504,19 +541,16 @@ namespace ChatAppServer.WebAPI.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-                    return Ok(new
-                    {
-                        ChatTheme = chatTheme,
-                        GroupName = group.Name,
-                        Messages = groupChats
-                    });
-                }
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                _logger.LogError(ex, "Error in GetChats for user {UserId} and recipient {RecipientId}", userId, recipientId);
-                return StatusCode(500, new { Message = "Internal server error. Please try again later." });
-            }
+                ChatTheme = chatTheme,
+                GroupName = group.Name,
+                Messages = groupChats,
+                TotalMessages = totalMessages,
+                TotalPages = (int)Math.Ceiling((double)totalMessages / pageSize),
+                CurrentPage = pageNumber,
+                PageSize = pageSize
+            });
         }
 
 
