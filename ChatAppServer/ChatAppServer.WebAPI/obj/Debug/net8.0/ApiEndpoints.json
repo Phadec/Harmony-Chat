@@ -115,7 +115,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AuthController",
     "Method": "ChangePassword",
-    "RelativePath": "api/Auth/change-user-password",
+    "RelativePath": "api/Auth/change-password",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -251,7 +251,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AuthController",
     "Method": "ResetPassword",
-    "RelativePath": "api/Auth/reset-user-password",
+    "RelativePath": "api/Auth/reset-password",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
