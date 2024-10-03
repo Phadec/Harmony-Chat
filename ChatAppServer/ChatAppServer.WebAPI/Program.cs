@@ -148,6 +148,8 @@ builder.Services.AddSwaggerGen(c =>
     }});
 });
 
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 // Add SignalR for real-time communication
 builder.Services.AddSignalR();
 
