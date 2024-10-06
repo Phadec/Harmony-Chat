@@ -1,36 +1,8 @@
 {
   "Files": [
     {
-      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\1997f809-22d1-403a-aa6b-b26e9dc46599.jpg",
-      "PackagePath": "staticwebassets\\avatars\\1997f809-22d1-403a-aa6b-b26e9dc46599.jpg"
-    },
-    {
-      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\2c751417-c316-443e-befa-9d21ef00de02.jpg",
-      "PackagePath": "staticwebassets\\avatars\\2c751417-c316-443e-befa-9d21ef00de02.jpg"
-    },
-    {
-      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\710ba473-5a2b-4960-95b5-bc341480b286.jpg",
-      "PackagePath": "staticwebassets\\avatars\\710ba473-5a2b-4960-95b5-bc341480b286.jpg"
-    },
-    {
-      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\cbfecb42-8836-452b-bc1a-b9a3be03539e.jpg",
-      "PackagePath": "staticwebassets\\avatars\\cbfecb42-8836-452b-bc1a-b9a3be03539e.jpg"
-    },
-    {
-      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\dc23e5e5-26f3-4a59-9ef2-36f42572b516.jpg",
-      "PackagePath": "staticwebassets\\avatars\\dc23e5e5-26f3-4a59-9ef2-36f42572b516.jpg"
-    },
-    {
-      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\avatars\\example.jpg",
-      "PackagePath": "staticwebassets\\avatars\\example.jpg"
-    },
-    {
-      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\206d38bd-6598-42b4-9399-3d432dc6ddb2.txt",
-      "PackagePath": "staticwebassets\\uploads\\206d38bd-6598-42b4-9399-3d432dc6ddb2.txt"
-    },
-    {
-      "Id": "D:\\Harmony-Chat\\ChatAppServer\\ChatAppServer.WebAPI\\wwwroot\\uploads\\e0f69ceb-ec5a-4a1f-8a6b-34696b17bc48.pdf",
-      "PackagePath": "staticwebassets\\uploads\\e0f69ceb-ec5a-4a1f-8a6b-34696b17bc48.pdf"
+      "Id": "D:\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\default.jpg",
+      "PackagePath": "staticwebassets\\avatars\\default.jpg"
     },
     {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.ChatAppServer.WebAPI.Microsoft.AspNetCore.StaticWebAssets.props",
