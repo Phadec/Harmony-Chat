@@ -1,34 +1,37 @@
-import { StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { useState } from "react";
+import { Button, StyleSheet,Text, TextInput, View } from "react-native";
 
-export default function Page() {
+export default function App() {
+  const [text, setText] = useState('')   // Quản lý nội dung nhập
+  const [data, setData] = useState<string[]>([])   // Dữ liệu todo lưu trữ dưới dạng mảng chuỗi
+
+  const pressBtn = () => {
+    if (text.trim()) {   // Kiểm tra nếu có nội dung hợp lệ trong input
+      setData([...data, text])   // Cập nhật dữ liệu todo
+      setText('')   // Xóa nội dung input sau khi thêm
+    }
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.main}>
-        <Text style={styles.title}>Hello World</Text>
-        <Text style={styles.subtitle}>This is the first page of your app.</Text>
+    <View>
+      <View>
+        <TextInput
+          value={text}   // Liên kết giá trị của input với trạng thái `text`
+          onChangeText={setText}   // Cập nhật `text` khi có sự thay đổi trong input
+          placeholder="Enter todo"   // Gợi ý nội dung nhập
+        />
+        <Button title="Add" onPress={pressBtn} />   // Gọi hàm pressBtn khi nhấn nút
+      </View>
+      <View>
+        {
+          data.map((item, index) => (   // Hiển thị từng todo trong mảng
+            <Text key={index}>{item}</Text>   // Sử dụng `index` làm key
+          ))
+        }
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    padding: 24,
-  },
-  main: {
-    flex: 1,
-    justifyContent: "center",
-    maxWidth: 960,
-    marginHorizontal: "auto",
-  },
-  title: {
-    fontSize: 64,
-    fontWeight: "bold",
-  },
-  subtitle: {
-    fontSize: 36,
-    color: "#38434D",
-  },
-});
+const styles = StyleSheet.create({});
