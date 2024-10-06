@@ -1,36 +1,27 @@
-# Harmony Chat
+# ChatAppClient
 
-**Harmony Chat - Ứng Dụng Chat Thời Gian Thực**
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.1.3.
 
-## Mô Tả Dự Án
+## Development server
 
-**Harmony Chat - ChatRealtime** là một ứng dụng chat thời gian thực được xây dựng trên nền tảng ASP.NET Core. Ứng dụng cho phép người dùng gửi và nhận tin nhắn trong thời gian thực, tạo ra trải nghiệm chat trực quan và mượt mà. Ứng dụng này cũng tích hợp các hàng đợi nền (background queue) để xử lý các tác vụ quan trọng, nhằm cải thiện hiệu suất và khả năng mở rộng.
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
 
-## Công Nghệ Sử Dụng
+## Code scaffolding
 
-- **ASP.NET Core**: 
-   - ASP.NET Core là một framework phát triển web mã nguồn mở và đa nền tảng của Microsoft, được sử dụng để xây dựng và chạy các ứng dụng web hiện đại với khả năng mở rộng cao.
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-- **Entity Framework Core**:
-   - Entity Framework Core (EF Core) là một Object-Relational Mapper (ORM) cho .NET, cho phép các nhà phát triển làm việc với cơ sở dữ liệu bằng cách sử dụng các đối tượng .NET. Nó hỗ trợ truy vấn LINQ, theo dõi thay đổi, cập nhật, và di chuyển dữ liệu.
+## Build
 
-- **SignalR**:
-   - SignalR là một thư viện dành cho ASP.NET giúp việc thêm chức năng thời gian thực vào các ứng dụng dễ dàng hơn. SignalR hỗ trợ các chức năng như cập nhật nội dung thời gian thực, thông báo, và các tính năng chat.
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
-- **SQL Server**:
-   - SQL Server là hệ quản trị cơ sở dữ liệu quan hệ của Microsoft, được sử dụng để lưu trữ và quản lý dữ liệu của ứng dụng.
+## Running unit tests
 
-- **JWT (JSON Web Tokens)**:
-   - JWT là một tiêu chuẩn mở (RFC 7519) định dạng token JSON sử dụng để truyền thông tin giữa các bên một cách an toàn dưới dạng đối tượng JSON. Trong ứng dụng này, JWT được sử dụng để quản lý xác thực và phân quyền người dùng.
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
-- **Bootstrap**:
-   - Bootstrap là một framework front-end mã nguồn mở để phát triển giao diện web nhanh chóng và hiệu quả. Nó cung cấp các mẫu thiết kế sẵn, các thành phần giao diện, và các plugin JavaScript.
+## Running end-to-end tests
 
-- **Swagger UI**:
-   - Swagger UI là một công cụ mã nguồn mở để xây dựng tài liệu API và UI tương tác. Nó cho phép các nhà phát triển và người dùng thử nghiệm các API một cách dễ dàng.
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
 
-- **Angular**:
-   - Angular là một framework phát triển ứng dụng web front-end mạnh mẽ, được sử dụng để xây dựng giao diện người dùng (UI) hiện đại và phản ứng nhanh. Trong dự án này, Angular được sử dụng để xây dựng các thành phần giao diện người dùng động, cải thiện trải nghiệm người dùng.
+## Further help
 
-- **Background Queue**:
-   - Background Queue là một mô hình xử lý tác vụ không đồng bộ, giúp giảm tải cho máy chủ bằng cách xử lý các tác vụ phức tạp hoặc không yêu cầu phản hồi ngay lập tức ở nền. Điều này giúp cải thiện hiệu suất và khả năng mở rộng của ứng dụng.
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
