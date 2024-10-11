@@ -1199,26 +1199,5 @@
       }
     ],
     "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ChatAppServer.WebAPI.Controllers.UsersController",
-    "Method": "UpdateGroupAvatar",
-    "RelativePath": "api/Users/update-avatar",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "GroupId",
-        "Type": "System.Guid",
-        "IsRequired": false
-      },
-      {
-        "Name": "AvatarFile",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
   }
 ]
