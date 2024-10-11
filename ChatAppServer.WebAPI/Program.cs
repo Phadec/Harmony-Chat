@@ -152,6 +152,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IGroupsService, GroupsService>();
 builder.Services.AddScoped<IFriendsService, FriendsService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 // Add SignalR for real-time communication
 builder.Services.AddSignalR();
 
