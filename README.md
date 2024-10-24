@@ -11,5 +11,4 @@ Lưu ý: Mọi người cần chuẩn bị máy ảo, hoặc có thể chạy b�
 ## Các vấn đề khác
 - Các thư viện đã sử dụng:
     + styled-components: Styled-components là một thư viện CSS-in-JS cho phép viết CSS thực sự để style các thành phần React Native.
-    + NativeBase: Một thư viện UI component cho phép xây dựng các ứng dụng React Native với các thành phần giao diện người dùng có sẵn và có thể tùy chỉnh.
-    + react-navigation: Điều hướng, chuyển trang trong react
+    + react-native-svg react-native-svg-transformer: Hỗ trợ svg trong react native 

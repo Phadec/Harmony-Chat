@@ -7,7 +7,8 @@ class SlashScreen extends React.Component {
         return (
             <View style={{
                 alignItems: 'center',
-                margin: 'auto'
+                margin: 'auto',
+                backgroundColor: '#fff'
             }}>
                 <Text style={{
                     fontWeight: 'bold'
