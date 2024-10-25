@@ -11,4 +11,5 @@ Lưu ý: Mọi người cần chuẩn bị máy ảo, hoặc có thể chạy b�
 ## Các vấn đề khác
 - Các thư viện đã sử dụng:
     + styled-components: Styled-components là một thư viện CSS-in-JS cho phép viết CSS thực sự để style các thành phần React Native.
-    + react-native-svg react-native-svg-transformer: Hỗ trợ svg trong react native 
+    + react-native-svg react-native-svg-transformer: Hỗ trợ svg trong react native
+    + @fortawesome/react-native-fontawesome @fortawesome/fontawesome-svg-core react-native-svg: Bộ icon có sẵn của fontawesome được hỗ trợ trong RN
