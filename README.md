@@ -8,6 +8,12 @@ Lưu ý: Vui lòng kiểm tra các cổng xung đột
 - B2: Mở một terminal khác (terminal thứ 2) chạy lệnh ***npm run android*** để chạy dự án trên máy ảo android
 Lưu ý: Mọi người cần chuẩn bị máy ảo, hoặc có thể chạy bằng Android Studio
 
+### Cấu trúc dự án
+- Sử dụng expo
+- Trỏ thư mục:
+    + @: Dành cho việc chỉ định tới các thư mục được lib
+    + ~: Trỏ tới /src 
+
 ## Các vấn đề khác
 - Các thư viện đã sử dụng:
     + styled-components: Styled-components là một thư viện CSS-in-JS cho phép viết CSS thực sự để style các thành phần React Native.
