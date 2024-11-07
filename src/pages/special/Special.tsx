@@ -1,7 +1,7 @@
 import Footer from "~/common/Footer";
 import { Background } from "~/common/Svg";
 import { BlurView } from "expo-blur";
-import React from "react";
+
 import { View } from "react-native";
 import Header from "~/common/Header";
 import Nav from "~/common/Nav";

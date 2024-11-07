@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
+
 import { Text, View } from "react-native";
 import { headerStyles } from "./Styles";
 import { Icons } from "./Svg";

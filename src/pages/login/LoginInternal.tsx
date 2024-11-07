@@ -1,4 +1,4 @@
-import React from "react";
+
 import { TouchableOpacity, Text, View, TextInput, Button } from "react-native";
 import styled from "styled-components/native";
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';

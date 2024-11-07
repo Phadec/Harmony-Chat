@@ -1,6 +1,6 @@
 import { CallItem } from "~/common/model";
 import { Icons } from "~/common/Svg";
-import React from "react";
+
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { ListCallItems } from "~/common/Styles";
 

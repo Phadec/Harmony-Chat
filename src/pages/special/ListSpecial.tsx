@@ -1,5 +1,5 @@
 import { specials } from "~/common/Data";
-import React from "react";
+
 import { FlatList, Text, View } from "react-native";
 import { flatStyle } from "~/common/Styles";
 import SpecialItem from "./SpecialItem";

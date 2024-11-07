@@ -2,7 +2,7 @@ import Carousel from "~/common/Carousel";
 import Footer from "~/common/Footer";
 import Header from "~/common/Header";
 import { Background } from "~/common/Svg";
-import React from "react";
+
 import { View } from "react-native";
 import Nav from "~/common/Nav";
 import { screenStyles } from "~/common/Styles";

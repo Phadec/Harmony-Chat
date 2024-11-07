@@ -1,7 +1,7 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
+
 import {
   Image,
   Text,

@@ -1,6 +1,6 @@
 import { Background } from "~/common/Svg";
 import { BlurView } from "expo-blur";
-import React from "react";
+
 import { View } from "react-native";
 import Footer from "~/common/Footer";
 import Header from "~/common/Header";

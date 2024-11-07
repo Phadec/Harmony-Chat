@@ -1,4 +1,4 @@
-import React from "react";
+
 import { View, Text } from "react-native";
 
 class SlashScreen extends React.Component {

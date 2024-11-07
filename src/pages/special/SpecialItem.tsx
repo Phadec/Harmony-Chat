@@ -1,5 +1,5 @@
 import { Special } from "~/common/model";
-import React from "react";
+
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SpecialItems } from "~/common/Styles";
 

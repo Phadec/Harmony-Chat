@@ -1,7 +1,5 @@
-import Login from "~/pages/login/Login";
-import React from "react";
-import Forget from '~/pages/register/Register'
-import Register from "~/pages/register/Register";
+import OngoingCallScreen from "~/pages/call/OngoingCallScreen";
+
 export default function App() {
-   return <Register />
+   return <OngoingCallScreen />
 }

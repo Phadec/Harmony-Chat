@@ -1,6 +1,6 @@
 import { cameraPreviewStyles } from "~/common/Styles";
 import { Icons } from "~/common/Svg";
-import React from "react";
+
 import {
   ImageBackground,
   TouchableOpacity,
