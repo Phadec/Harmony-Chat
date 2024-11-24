@@ -1,7 +1,7 @@
 import Login from "~/pages/login/Login";
 import React from "react";
-import Forget from '~/pages/register/Register'
-import Register from "~/pages/register/Register";
+import authService from "~/services/auth.service";
 export default function App() {
-   return <Register />
+   authService.login('khainam', 'Nam@12102003')
+   return <Login />
 }
