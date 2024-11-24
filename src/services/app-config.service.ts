@@ -2,7 +2,7 @@
 
 class AppConfigService {
   // Declare the base URL
-  baseUrl = 'https://10.0.2.2:7267';
+  baseUrl = 'https://192.168.1.30:7267';
 
   constructor() {}
 

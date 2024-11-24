@@ -89,7 +89,7 @@ class AuthService {
     formData.append('Username', username);
     formData.append('Password', password);
 
-    await axios.post('https://10.0.2.2:7267/api/Auth/login', formData, {
+    await axios.post('http://192.168.1.30:5250/api/Auth/login', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
