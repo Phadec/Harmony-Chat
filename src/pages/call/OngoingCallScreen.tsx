@@ -71,7 +71,7 @@ const OngoingCallScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={require("@/assets/images/call-page/image-hide.png")}
+        source={require("~/assets/images/call-page/image-hide.png")}
         style={styles.backgroundImage}
       />
       <View style={styles.overlay}>

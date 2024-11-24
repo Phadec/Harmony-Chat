@@ -22,6 +22,7 @@
     "@fortawesome/react-native-fontawesome": "^0.3.2",
     "@config-plugins/react-native-webrtc": "^9.0.0",
     "@react-navigation/native": "^6.0.2",
+    "@react-native-async-storage/async-storage": "^2.0.0",
     "@stream-io/react-native-webrtc": "^118.1.2",
     "@stream-io/video-react-native-sdk": "^1.1.4",
     "expo": "~51.0.28",
