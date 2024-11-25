@@ -2,7 +2,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "GetAllChats",
-    "RelativePath": "api/Admin/GetAllChats/get-all-chats",
+    "RelativePath": "api/Admin/GetAllChats",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -12,7 +12,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "GetFriendRequests",
-    "RelativePath": "api/Admin/GetFriendRequests/get-friend-requests",
+    "RelativePath": "api/Admin/GetFriendRequests",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -22,7 +22,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "GetGroups",
-    "RelativePath": "api/Admin/GetGroups/get-groups",
+    "RelativePath": "api/Admin/GetGroups",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -32,7 +32,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "GetPendingUsers",
-    "RelativePath": "api/Admin/GetPendingUsers/get-pending-users",
+    "RelativePath": "api/Admin/GetPendingUsers",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -42,7 +42,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "GetUserBlocks",
-    "RelativePath": "api/Admin/GetUserBlocks/get-user-blocks",
+    "RelativePath": "api/Admin/GetUserBlocks",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -52,7 +52,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "GetUsers",
-    "RelativePath": "api/Admin/GetUsers/get-users",
+    "RelativePath": "api/Admin/GetUsers",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -62,7 +62,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "LockUser",
-    "RelativePath": "api/Admin/LockUser/lock-user",
+    "RelativePath": "api/Admin/LockUser",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -78,7 +78,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "UnlockUser",
-    "RelativePath": "api/Admin/UnlockUser/unlock-user",
+    "RelativePath": "api/Admin/UnlockUser",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -94,7 +94,7 @@
   {
     "ContainingType": "ChatAppServer.WebAPI.Controllers.AdminController",
     "Method": "UpdateUserRole",
-    "RelativePath": "api/Admin/UpdateUserRole/update-user-role",
+    "RelativePath": "api/Admin/UpdateUserRole",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -1195,27 +1195,6 @@
       {
         "Name": "tagName",
         "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ChatAppServer.WebAPI.Controllers.UsersController",
-    "Method": "UpdateGroupAvatar",
-    "RelativePath": "api/Users/update-avatar",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "GroupId",
-        "Type": "System.Guid",
-        "IsRequired": false
-      },
-      {
-        "Name": "AvatarFile",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
         "IsRequired": false
       }
     ],

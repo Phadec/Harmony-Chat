@@ -1,213 +1,177 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
-using ChatAppServer.WebAPI.Models;
+using ChatAppServer.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace ChatAppServer.WebAPI.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    [Authorize(Roles = "Admin")] // Chỉ cho phép admin truy cập các phương thức trong controller này
+    [Authorize(Roles = "Admin")]
     public sealed class AdminController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAdminService _adminService;
         private readonly ILogger<AdminController> _logger;
 
-        public AdminController(ApplicationDbContext context, ILogger<AdminController> logger)
+        public AdminController(IAdminService adminService, ILogger<AdminController> logger)
         {
-            _context = context;
+            _adminService = adminService;
             _logger = logger;
         }
 
-        [HttpGet("get-users")]
+        [HttpGet]
         public async Task<IActionResult> GetUsers(CancellationToken cancellationToken)
         {
-            var users = await _context.Users
-                .OrderBy(p => p.Username)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Username,
-                    p.FirstName,
-                    p.LastName,
-                    p.Birthday,
-                    p.Email,
-                    p.Avatar,
-                    p.Status
-                })
-                .ToListAsync(cancellationToken);
-
-            return Ok(users);
+            try
+            {
+                var users = await _adminService.GetUsersAsync(cancellationToken);
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching users.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
-        [HttpPost("update-user-role")]
+        [HttpPost]
         public async Task<IActionResult> UpdateUserRole([FromForm] UpdateRoleDto request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(request.UserId);
-            if (user == null)
+            try
             {
-                return NotFound(new { Message = "User not found" });
+                await _adminService.UpdateUserRoleAsync(request, cancellationToken);
+                return Ok(new { Message = "User role updated successfully" });
             }
-
-            if (string.IsNullOrWhiteSpace(request.NewRole))
+            catch (KeyNotFoundException ex)
             {
-                return BadRequest(new { Message = "New role is required" });
+                _logger.LogWarning(ex.Message);
+                return NotFound(new { message = ex.Message });
             }
-
-            user.Role = request.NewRole;
-            await _context.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation($"User {user.Username} role updated to {request.NewRole}");
-
-            return Ok(new { Message = "User role updated successfully" });
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating user role.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
-        [HttpPost("lock-user")]
+        [HttpPost]
         public async Task<IActionResult> LockUser([FromForm] Guid userId, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
+            try
             {
-                return NotFound(new { Message = "User not found" });
+                await _adminService.LockUserAsync(userId, cancellationToken);
+                return Ok(new { Message = "User has been locked successfully." });
             }
-
-            user.IsLocked = true;
-            await _context.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation($"User {user.Username} has been locked.");
-
-            return Ok(new { Message = "User has been locked successfully." });
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while locking user.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
-        [HttpPost("unlock-user")]
+        [HttpPost]
         public async Task<IActionResult> UnlockUser([FromForm] Guid userId, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
+            try
             {
-                return NotFound(new { Message = "User not found" });
+                await _adminService.UnlockUserAsync(userId, cancellationToken);
+                return Ok(new { Message = "User has been unlocked successfully." });
             }
-
-            user.IsLocked = false;
-            await _context.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation($"User {user.Username} has been unlocked.");
-
-            return Ok(new { Message = "User has been unlocked successfully." });
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while unlocking user.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
-        [HttpGet("get-friend-requests")]
+        [HttpGet]
         public async Task<IActionResult> GetFriendRequests(CancellationToken cancellationToken)
         {
-            var friendRequests = await _context.FriendRequests
-                .Include(fr => fr.Sender)
-                .Include(fr => fr.Receiver)
-                .Select(fr => new
-                {
-                    fr.Id,
-                    Sender = fr.Sender.Username,
-                    Receiver = fr.Receiver.Username,
-                    fr.RequestDate,
-                    fr.Status
-                })
-                .OrderBy(fr => fr.RequestDate)
-                .ToListAsync(cancellationToken);
-
-            return Ok(friendRequests);
+            try
+            {
+                var friendRequests = await _adminService.GetFriendRequestsAsync(cancellationToken);
+                return Ok(friendRequests);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching friend requests.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
-        [HttpGet("get-all-chats")]
+        [HttpGet]
         public async Task<IActionResult> GetAllChats(CancellationToken cancellationToken)
         {
-            var chats = await _context.Chats
-                .Include(c => c.User)
-                .Include(c => c.ToUser)
-                .Include(c => c.Group)
-                .OrderBy(c => c.Date) // Sắp xếp theo thời gian gửi tin nhắn
-                .Select(c => new
-                {
-                    c.Id,
-                    UserId = c.User.Id,
-                    Username = c.User.Username,
-                    ToUserId = c.ToUserId,
-                    ToUsername = c.ToUser != null ? c.ToUser.Username : null,
-                    GroupId = c.GroupId,
-                    GroupName = c.Group != null ? c.Group.Name : null,
-                    Message = c.Message ?? string.Empty,
-                    AttachmentUrl = c.AttachmentUrl ?? string.Empty,
-                    Date = c.Date
-                })
-                .ToListAsync(cancellationToken);
-
-            return Ok(chats);
+            try
+            {
+                var chats = await _adminService.GetAllChatsAsync(cancellationToken);
+                return Ok(chats);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching chats.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
-
-
-        [HttpGet("get-groups")]
+        [HttpGet]
         public async Task<IActionResult> GetGroups(CancellationToken cancellationToken)
         {
-            var groups = await _context.Groups
-                .Include(g => g.Members)
-                .ThenInclude(m => m.User)
-                .Include(g => g.Chats)
-                .ThenInclude(c => c.User)
-                .OrderBy(g => g.Name)
-                .Select(g => new
-                {
-                    g.Id,
-                    g.Name,
-                    Members = g.Members.Select(m => new
-                    {
-                        m.User.Id,
-                        m.User.Username
-                    }),
-                    Chats = g.Chats.Select(c => new
-                    {
-                        c.Id,
-                        c.Message,
-                        c.AttachmentUrl,
-                        c.AttachmentOriginalName,
-                        c.Date,
-                        UserId = c.User.Id,
-                        Username = c.User.Username
-                    })
-                })
-                .ToListAsync(cancellationToken);
-
-            return Ok(groups);
+            try
+            {
+                var groups = await _adminService.GetGroupsAsync(cancellationToken);
+                return Ok(groups);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching groups.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
-
-        [HttpGet("get-user-blocks")]
+        [HttpGet]
         public async Task<IActionResult> GetUserBlocks(CancellationToken cancellationToken)
         {
-            var userBlocks = await _context.UserBlocks
-                .Include(ub => ub.User)
-                .Include(ub => ub.BlockedUser)
-                .Select(ub => new
-                {
-                    UserId = ub.User.Id,
-                    UserUsername = ub.User.Username,
-                    BlockedUserId = ub.BlockedUser.Id,
-                    BlockedUserUsername = ub.BlockedUser.Username,
-                    ub.BlockedDate
-                })
-                .OrderBy(ub => ub.BlockedDate)
-                .ToListAsync(cancellationToken);
-
-            return Ok(userBlocks);
+            try
+            {
+                var userBlocks = await _adminService.GetUserBlocksAsync(cancellationToken);
+                return Ok(userBlocks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching user blocks.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
-        [HttpGet("get-pending-users")]
+        [HttpGet]
         public async Task<IActionResult> GetPendingUsers(CancellationToken cancellationToken)
         {
-            var pendingUsers = await _context.PendingUsers
-                .OrderBy(pu => pu.Email)
-                .ToListAsync(cancellationToken);
-
-            return Ok(pendingUsers);
+            try
+            {
+                var pendingUsers = await _adminService.GetPendingUsersAsync(cancellationToken);
+                return Ok(pendingUsers);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching pending users.");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
     }
 }
