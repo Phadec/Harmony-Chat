@@ -1,4 +1,4 @@
-import React from "react";
+
 import styled from 'styled-components/native';
 import {BackgroundLogin, Facebook, Google, Zalo} from '~/assets/imgs/Images'
 import { ImageBackground, View, Text, TouchableOpacity } from "react-native";
