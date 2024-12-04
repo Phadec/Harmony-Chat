@@ -1,7 +1,9 @@
-import Login from "~/pages/login/Login";
-import React from "react";
-import authService from "~/services/auth.service";
-export default function App() {
-   authService.login('khainam', 'Nam@12102003')
-   return <Login />
-}
+// App.tsx
+import React from 'react';
+import AppNavigator from '../AppNavigator';  // Đảm bảo rằng đường dẫn này đúng
+
+const App = () => {
+    return <AppNavigator />;
+};
+
+export default App;
