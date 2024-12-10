@@ -49,7 +49,9 @@ function BottomTabNavigator() {
 	return (
 		<View className="flex-1">
 			<Tab.Navigator tabBar={props => <TabBar {...props} />} initialRouteName="Messages">
-				<Tab.Screen
+
+{/*
+			<Tab.Screen
 					name="Root:Stories"
 					component={Stories}
 					icon="Stories"
@@ -58,7 +60,7 @@ function BottomTabNavigator() {
 						headerShown: false,
 					}}
 				/>
-
+*/}
 				<Tab.Screen
 					name="Root:Messages"
 					component={Messages}
