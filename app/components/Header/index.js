@@ -49,9 +49,9 @@ function Header({title, stories, messages, search, goBack, navigation}) {
 				)}
 
 				<Button className="w-12 h-12 rounded-full relative ml-6">
-					<View className="w-3 h-3 rounded-full bg-orange border-2 border-white absolute left-0 top-0 z-10" />
+					<View className="w-3 h-3 absolute left-0 top-0 z-10" />
 
-					<Image source={require('@/assets/images/person-1.webp')} className="w-12 h-12 rounded-full" />
+					<Image source={require('@/assets/images/story-4.png')} className="w-12 h-12 rounded-full" />
 				</Button>
 			</View>
 		</View>

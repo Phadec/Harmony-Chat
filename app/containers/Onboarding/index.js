@@ -92,12 +92,21 @@ function NextButton({dataLength, flatListIndex, flatListRef, navigation}) {
 	};
 
 	return (
-		<AnimatedPressable onPress={handleNextScreen} className="rounded-full items-center justify-center overflow-hidden bg-white mx-auto mb-4" style={[buttonAnimationStyle]}>
-			<Animated.Text className="font-rubik font-medium text-sm text-black" style={[textAnimationStyle]}>
+		<AnimatedPressable 
+			onPress={handleNextScreen} 
+			className="rounded-full items-center justify-center overflow-hidden bg-white mx-auto mb-4" 
+			style={[buttonAnimationStyle]}>
+			<Animated.Text 
+				className="font-rubik font-medium text-sm text-black" 
+				style={[textAnimationStyle]}>
 				Start Chat
 			</Animated.Text>
 
-			<AnimatedAntDesign name="arrowright" size={16} color={Colors.main} style={[{position: 'absolute'}, arrowAnimationStyle]} />
+			<AnimatedAntDesign 
+				name="arrowright" 
+				size={16} 
+				color={Colors.main} 
+				style={[{position: 'absolute'}, arrowAnimationStyle]} />
 		</AnimatedPressable>
 	);
 }
@@ -173,7 +182,11 @@ function OnboardingContainer({navigation}) {
 				<Pagination data={onboarding} screenWidth={SCREEN_WIDTH} x={x} />
 			</View>
 
-			<NextButton flatListRef={flatListRef} flatListIndex={flatListIndex} dataLength={onboarding.length} navigation={navigation} />
+			<NextButton 
+				flatListRef={flatListRef}
+				flatListIndex={flatListIndex} 
+				dataLength={onboarding.length} 
+				navigation={navigation} />
 		</View>
 	);
 }

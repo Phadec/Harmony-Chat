@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {View, FlatList} from 'react-native';
 
 // Components
@@ -6,6 +6,9 @@ import {Header, BubbleStory, MessageCard} from '@/components';
 
 // Layout
 import Layout from '@/Layout';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {ChatService} from "../../services/Chat";
+import {useFocusEffect} from "@react-navigation/native";
 
 const stories = [
 	{id: 1, photo: require('@/assets/images/story-1.png'), color: 'blue'},
@@ -16,29 +19,51 @@ const stories = [
 	{id: 6, photo: require('@/assets/images/story-2.png'), color: 'red'},
 ];
 
-const messages = [
-	{id: 1, color: 'black', name: 'Mayke Schuurs', time: '16:30', photo: require('@/assets/images/story-1.png')},
-	{id: 2, color: 'orange', name: 'Xenie Doleželová', time: '17:20', photo: require('@/assets/images/story-2.png')},
-	{id: 3, color: 'green', name: 'Farrokh Rastegar', time: '18:12', photo: require('@/assets/images/story-3.png')},
-	{id: 4, color: 'black', name: 'Victoria Pacheco', time: '16:30', photo: require('@/assets/images/story-4.png')},
-	{id: 5, color: 'black', name: 'Edward Lindgren', time: '16:30', photo: require('@/assets/images/story-5.png')},
-	{id: 6, color: 'black', name: 'Loni Bowcher', time: '16:30', photo: require('@/assets/images/story-3.png')},
-	{id: 7, color: 'black', name: 'Sebastian Westergren', time: '16:30', photo: require('@/assets/images/story-1.png')},
-	{id: 8, color: 'black', name: 'Victoria Pacheco', time: '16:30', photo: require('@/assets/images/story-4.png')},
-	{id: 9, color: 'black', name: 'Edward Lindgren', time: '16:30', photo: require('@/assets/images/story-5.png')},
-	{id: 10, color: 'black', name: 'Loni Bowcher', time: '16:30', photo: require('@/assets/images/story-3.png')},
-];
-
 function MessagesContainer({navigation}) {
+
+	const chatService = new ChatService();
+	const [relationships, setRelationships] = useState([]);
+
+	// Hàm gọi API lấy danh sách tin nhắn
+	const fetchAndSetRelationships = async () => {
+		try {
+			const relations = await chatService.getRelationships();
+			if (relations?.$values?.length > 0) {
+				setRelationships(relations.$values);
+			} else {
+				console.warn('No relationships found.');
+			}
+		} catch (error) {
+			console.error('Error fetching relationships:', error);
+		}
+	};
+
+	// Gọi lại API khi màn hình được focus
+	useFocusEffect(
+		React.useCallback(() => {
+			fetchAndSetRelationships();
+		}, [])
+	);
+
 	return (
 		<Layout>
 			<Header title="Messages" messages search navigation={navigation} />
 
 			<View className="my-6 -mx-6">
-				<FlatList data={stories} keyExtractor={item => item.id} renderItem={({item}) => <BubbleStory {...item} navigation={navigation} />} horizontal showsHorizontalScrollIndicator={false} className="pl-6" />
+				<FlatList
+					data={relationships}
+					keyExtractor={item => item.contactId}
+					renderItem={({item}) => <BubbleStory item={item} navigation={navigation} />}
+					horizontal showsHorizontalScrollIndicator={false} className="pl-6" />
 			</View>
 
-			<FlatList data={messages} key={item => item.id} renderItem={({item}) => <MessageCard {...item} navigation={navigation} />} showsVerticalScrollIndicator={false} />
+			<FlatList
+				data={relationships}
+				key={item => item.contactId}
+				renderItem={
+					({item}) => <MessageCard item={item} navigation={navigation} />
+				}
+				showsVerticalScrollIndicator={false} />
 		</Layout>
 	);
 }

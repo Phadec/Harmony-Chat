@@ -45,7 +45,7 @@ function SignupContainer({navigation}) {
 							<Text className="font-rubik text-sm text-white">Sign up</Text>
 						</Button>
 
-						<Button className="flex-row items-center justify-center mt-8" onPress={() => navigation.navigate('Login')}>
+						<Button className="flex-row items-center justify-center mt-3" onPress={() => navigation.navigate('Login')}>
 							<Text className="font-rubik text-sm text-black">
 								Do you have an account? <Text className="text-main">Sign in</Text>
 							</Text>
