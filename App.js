@@ -1,6 +1,6 @@
 import React from 'react';
 import {Provider} from 'react-redux';
-
+import 'react-native-url-polyfill/auto'; // Tự động polyfill URL
 // Store
 import store from '@/redux/store';
 

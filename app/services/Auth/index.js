@@ -4,7 +4,7 @@ import axios from 'axios';
 import { baseURL } from '../axiosInstance';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = baseURL + '/api/auth';
+const API_URL = baseURL + '/api/Auth';
 
 export class AuthService {
 
