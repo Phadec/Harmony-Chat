@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Provider} from 'react-redux';
 
 // Store
@@ -6,6 +6,9 @@ import store from '@/redux/store';
 
 // Navigations
 import Navigator from '@/navigator';
+import {initializeSignalR} from "./app/services/SignalR";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import 'react-native-url-polyfill/auto';
 
 if (__DEV__) {
 	const ignoreWarns = ['VirtualizedLists should never be nested inside plain ScrollViews'];

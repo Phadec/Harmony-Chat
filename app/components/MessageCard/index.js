@@ -9,26 +9,23 @@ import {Button} from '@/components';
 // Common
 import {Constants, Colors} from '@/common';
 import {ChatService} from "../../services/Chat";
+import moment from "moment-timezone";
 
 function Status({color}) {
 	return <View className="w-3 h-3 rounded-full border-2 border-white absolute -left-[1px] -top-[1px] "
 				 style={{backgroundColor: Colors[color]}}/>;
 }
 
-function formatChatDate(chatDate) {
-	const timeZone = 'Asia/Ho_Chi_Minh';
-	return formatInTimeZone(new Date(chatDate), timeZone, "dd/MM HH:mm");
-}
+const formatChatDate = (chatDate, format = "YYYY-MM-DD HH:mm:ss") => {
+	return moment.utc(chatDate).tz("Asia/Ho_Chi_Minh").format(format);
+};
 
 function MessageCard({item, navigation}) {
 	// Check if the user has read the message
-	const [hasRead, setHasRead] = React.useState(false);
+	const [hasRead, setHasRead] = React.useState(
+
+	);
 	const chatService = new ChatService();
-
-	const markAsRead = async () => {
-		// Call the API to mark the message as read
-
-	}
 
 	return (
 		<Button className="flex-row items-center bg-light rounded-2xl py-4 px-14 mb-3"
@@ -71,7 +68,8 @@ function MessageCard({item, navigation}) {
 			<View className="ml-2">
 				<Text
 					className={`font-rubik ${item.hasNewMessage ? 'font-bold' : 'font-medium text-black/40'}  text-xs text-black`}>
-					{formatChatDate(item.chatDate)}
+					{formatChatDate(item.chatDate,
+						moment(item.chatDate).isSame(moment(), 'day') ? 'HH:mm' : 'DD/MM')}
 				</Text>
 
 				{/*thay đổi ở đây một chấm đỏ ở đây để thông báo khi hasNewMessage === true*/}

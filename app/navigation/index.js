@@ -14,6 +14,8 @@ import Groups from './Groups';
 import Settings from './Settings';
 import Calls from './Calls';
 import Auth from './Auth';
+import Invitation from "./ Invitation";
+
 import {OnboardingContainer} from '../containers';
 
 // Components
@@ -73,6 +75,14 @@ function BottomTabNavigator() {
 				<Tab.Screen
 					name="Root:Groups"
 					component={Groups}
+					options={{
+						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Groups" />,
+						headerShown: false,
+					}}
+				/>
+				<Tab.Screen
+					name="Root:Invitation"
+					component={Invitation}
 					options={{
 						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Groups" />,
 						headerShown: false,

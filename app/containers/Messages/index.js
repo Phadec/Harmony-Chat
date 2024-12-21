@@ -6,9 +6,9 @@ import {Header, BubbleStory, MessageCard} from '@/components';
 
 // Layout
 import Layout from '@/Layout';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {ChatService} from "../../services/Chat";
 import {useFocusEffect} from "@react-navigation/native";
+import SignalR, {useSignalr} from "../../services/SignalR/signalR";
 
 const stories = [
 	{id: 1, photo: require('@/assets/images/story-1.png'), color: 'blue'},
