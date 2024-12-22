@@ -4,7 +4,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {enableScreens} from 'react-native-screens';
 
 // Containers
-import {SettingsContainer, AccountSettingsContainer, ChatSettingsContainer, SecuritySettingsContainer, AboutContainer, FAQsContainer, InviteFriendsContainer, StorageSettingsContainer} from '@/containers';
+import {SettingsContainer, AccountSettingsContainer, ChatSettingsContainer, SecuritySettingsContainer, AboutContainer, FAQsContainer, InviteFriendsContainer, StorageSettingsContainer, InvitationsContainer} from '@/containers';
 
 enableScreens();
 
@@ -36,6 +36,7 @@ function Settings() {
 			<Stack.Screen name="FAQs" component={FAQsContainer} options={() => options} />
 			<Stack.Screen name="InviteFriends" component={InviteFriendsContainer} options={() => options} />
 			<Stack.Screen name="StorageSettings" component={StorageSettingsContainer} options={() => options} />
+			<Stack.Screen name="Invitations" component={InvitationsContainer} options={() => options} />
 		</Stack.Navigator>
 	);
 }

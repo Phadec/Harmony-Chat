@@ -33,6 +33,9 @@ import ForgotPasswordContainer from './ForgotPassword';
 // Onboarding
 import OnboardingContainer from './Onboarding';
 
+//Invitations
+import InvitationsContainer from './Invitations';
+
 export {
 	MessagesContainer,
 	StoriesContainer,
@@ -56,4 +59,5 @@ export {
 	SignupContainer,
 	ForgotPasswordContainer,
 	OnboardingContainer,
+	InvitationsContainer,
 };
