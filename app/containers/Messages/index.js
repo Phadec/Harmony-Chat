@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 // Components
 import { Header, BubbleStory, MessageCard } from '@/components';
@@ -58,6 +59,13 @@ function MessagesContainer({ navigation }) {
       signalRService.stopConnection(); // Ngừng kết nối khi component unmount
     };
   }, [signalRService]); // Chỉ chạy khi signalRService thay đổi (singleton instance)
+
+  // Reload messages when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchAndSetRelationships();
+    }, [])
+  );
 
   return (
     <Layout>
