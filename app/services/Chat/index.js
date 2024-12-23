@@ -51,20 +51,11 @@ export class ChatService {
   }
 
   // Gửi tin nhắn
-  async sendMessage(recipientId, message, file, repliedToMessageId) {
+  async sendMessage(recipientId, message, formData) {
     const userId = await AsyncStorage.getItem('userId');
-    const formData = new FormData();
     formData.append('UserId', userId || '');
     formData.append('RecipientId', recipientId || '');
     formData.append('Message', message || '');
-    if (file) {
-      formData.append('Attachment', {
-        uri: file.uri,
-        type: file.type,
-        name: file.name,
-      });
-    }
-    if (repliedToMessageId) formData.append('RepliedToMessageId', repliedToMessageId);
 
     try {
       console.log('Sending message with formData:', formData);
@@ -84,6 +75,7 @@ export class ChatService {
       return null;
     } catch (error) {
       console.error('Send message failed:', error.response ? error.response.data : error.message);
+      throw error;
     }
   }
 

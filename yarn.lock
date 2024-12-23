@@ -1794,6 +1794,11 @@
     metro-react-native-babel-transformer "^0.76.9"
     metro-runtime "^0.76.9"
 
+"@react-native/normalize-color@*":
+  version "2.1.0"
+  resolved "https://registry.npmjs.org/@react-native/normalize-color/-/normalize-color-2.1.0.tgz"
+  integrity sha512-Z1jQI2NpdFJCVgpY+8Dq/Bt3d+YUi1928Q+/CZm/oh66fzM0RUl54vvuXlPJKybH4pdCZey1eDTPaLHkMPNgWA==
+
 "@react-native/normalize-colors@*", "@react-native/normalize-colors@^0.72.0":
   version "0.72.0"
   resolved "https://registry.npmjs.org/@react-native/normalize-colors/-/normalize-colors-0.72.0.tgz"
@@ -3293,6 +3298,15 @@ depd@2.0.0:
   resolved "https://registry.npmjs.org/depd/-/depd-2.0.0.tgz"
   integrity sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==
 
+deprecated-react-native-prop-types@^2.2.0:
+  version "2.3.0"
+  resolved "https://registry.npmjs.org/deprecated-react-native-prop-types/-/deprecated-react-native-prop-types-2.3.0.tgz"
+  integrity sha512-pWD0voFtNYxrVqvBMYf5gq3NA2GCpfodS1yNynTPc93AYA/KEMGeWDqqeUB6R2Z9ZofVhks2aeJXiuQqKNpesA==
+  dependencies:
+    "@react-native/normalize-color" "*"
+    invariant "*"
+    prop-types "*"
+
 deprecated-react-native-prop-types@4.1.0:
   version "4.1.0"
   resolved "https://registry.npmjs.org/deprecated-react-native-prop-types/-/deprecated-react-native-prop-types-4.1.0.tgz"
@@ -3409,6 +3423,11 @@ electron-to-chromium@^1.5.41:
   version "1.5.71"
   resolved "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.71.tgz"
   integrity sha512-dB68l59BI75W1BUGVTAEJy45CEVuEGy9qPVVQ8pnHyHMn36PLPPoE1mjLH+lo9rKulO3HC2OhbACI/8tCqJBcA==
+
+eme-encryption-scheme-polyfill@^2.0.1:
+  version "2.1.6"
+  resolved "https://registry.npmjs.org/eme-encryption-scheme-polyfill/-/eme-encryption-scheme-polyfill-2.1.6.tgz"
+  integrity sha512-SmQ8UxDkH/8hrjLo6ASo452hIe4dSJzqKmJyrNsvUciEJNxf4z9hewIwF1k/c7A5uRk4GApavPZ6dgqXqfvegw==
 
 emittery@^0.13.1:
   version "0.13.1"
@@ -4360,6 +4379,11 @@ human-signals@^2.1.0:
   version "2.1.0"
   resolved "https://registry.npmjs.org/human-signals/-/human-signals-2.1.0.tgz"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
+
+hyochan-welcome@^1.0.0:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/hyochan-welcome/-/hyochan-welcome-1.0.1.tgz"
+  integrity sha512-WRZNH5grESkOXP/r7xc7TMhO9cUqxaJIuZcQDAjzHWs6viGP+sWtVbiBigxc9YVRrw3hnkESQWwzqg+oOga65A==
 
 ieee754@^1.1.13:
   version "1.2.1"
@@ -5321,6 +5345,11 @@ jsonify@^0.0.1:
     array.prototype.flat "^1.3.1"
     object.assign "^4.1.4"
     object.values "^1.1.6"
+
+keymirror@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.npmjs.org/keymirror/-/keymirror-0.1.1.tgz"
+  integrity sha512-vIkZAFWoDijgQT/Nvl2AHCMmnegN2ehgTPYuyy2hWQkQSntI0S7ESYqdLkoSe1HyEBFHHkCgSIvVdSEiWwKvCg==
 
 keyv@^4.5.3:
   version "4.5.4"
@@ -6900,6 +6929,13 @@ react-native-animatable@1.3.3:
   dependencies:
     prop-types "^15.7.2"
 
+react-native-audio-recorder-player@^3.6.12:
+  version "3.6.12"
+  resolved "https://registry.npmjs.org/react-native-audio-recorder-player/-/react-native-audio-recorder-player-3.6.12.tgz"
+  integrity sha512-/pnZxPA2jvQ9K7oDtrjcAjc/hn124swi451Q/i1Z6yesDVqupE38moNm12HgY1IVupdUCjeiZVqPoShcE0N8mw==
+  dependencies:
+    hyochan-welcome "^1.0.0"
+
 react-native-collapsible@^1.6.1:
   version "1.6.2"
   resolved "https://registry.npmjs.org/react-native-collapsible/-/react-native-collapsible-1.6.2.tgz"
@@ -7018,6 +7054,16 @@ react-native-vector-icons@^10.2.0:
   dependencies:
     prop-types "^15.7.2"
     yargs "^16.1.1"
+
+react-native-video@^5.0.2:
+  version "5.2.1"
+  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-5.2.1.tgz"
+  integrity sha512-aJlr9MeTuQ0LpZ4n+EC9RvhoKeiPbLtI2Rxy8u7zo/wzGevbRpWHSBj9xZ5YDBXnAVXzuqyNIkGhdw7bfdIBZw==
+  dependencies:
+    deprecated-react-native-prop-types "^2.2.0"
+    keymirror "^0.1.1"
+    prop-types "^15.7.2"
+    shaka-player "^2.5.9"
 
 react-native-webview@^13.12.5:
   version "13.12.5"
@@ -7501,6 +7547,13 @@ setprototypeof@1.2.0:
   version "1.2.0"
   resolved "https://registry.npmjs.org/setprototypeof/-/setprototypeof-1.2.0.tgz"
   integrity sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==
+
+shaka-player@^2.5.9:
+  version "2.5.23"
+  resolved "https://registry.npmjs.org/shaka-player/-/shaka-player-2.5.23.tgz"
+  integrity sha512-3MC9k0OXJGw8AZ4n/ZNCZS2yDxx+3as5KgH6Tx4Q5TRboTBBCu6dYPI5vp1DxKeyU12MBN1Zcbs7AKzXv2EnCg==
+  dependencies:
+    eme-encryption-scheme-polyfill "^2.0.1"
 
 shallow-clone@^3.0.0:
   version "3.0.1"
