@@ -12,4 +12,6 @@ import StoryCard from './StoryCard';
 import GroupCard from './GroupCard';
 import SettingItem from './SettingItem';
 
-export {TabBar, TabBarIcon, Button, Input, Header, BubbleStory, MessageCard, StoryCard, GroupCard, SettingItem, CustomBackdrop};
+import ActionSheet from './ActionSheet';
+
+export {TabBar, TabBarIcon, Button, Input, Header, BubbleStory, MessageCard, StoryCard, GroupCard, SettingItem, CustomBackdrop, ActionSheet};
