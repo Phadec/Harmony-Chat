@@ -53,6 +53,21 @@ class SignalRService {
       console.log('Connected users updated:', status);
     });
 
+    this.hubConnection.on('ReactionAdded', (reaction) => {
+      console.log('Reaction added:', reaction);
+      this.messageReceived$.next({ type: 'ReactionAdded', reaction });
+    });
+
+    this.hubConnection.on('ReactionRemoved', (reaction) => {
+      console.log('Reaction removed:', reaction);
+      this.messageReceived$.next({ type: 'ReactionRemoved', reaction });
+    });
+
+    this.hubConnection.on('MessageDeleted', (messageId) => {
+      console.log('Message deleted:', messageId);
+      this.messageReceived$.next({ type: 'MessageDeleted', messageId });
+    });
+
     this.hubConnection.onclose((error) => {
       console.error('SignalR connection closed:', error);
       this.isConnected = false;

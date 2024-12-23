@@ -2,6 +2,7 @@ import React from 'react';
 import {View, Image, Text} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {formatInTimeZone} from "date-fns-tz"; // Import date-fns-tz for timezone formatting
+import { baseURL } from '../../services/axiosInstance'; // Import baseURL
 
 // Components
 import {Button} from '@/components';
@@ -17,7 +18,9 @@ function Status({color}) {
 
 function formatChatDate(chatDate) {
 	const timeZone = 'Asia/Ho_Chi_Minh';
-	return formatInTimeZone(new Date(chatDate), timeZone, "dd/MM HH:mm");
+	const date = new Date(chatDate);
+	date.setHours(date.getHours() + 7); // Adjust the date by adding 7 hours
+	return formatInTimeZone(date, timeZone, "dd/MM HH:mm");
 }
 
 function MessageCard({item, navigation}) {
@@ -30,6 +33,8 @@ function MessageCard({item, navigation}) {
 
 	}
 
+	const avatarUrl = `${baseURL}/${item.avatar}`;
+
 	return (
 		<Button className="flex-row items-center bg-light rounded-2xl py-4 px-14 mb-3"
 				onPress={() => navigation.navigate('Chat', {
@@ -37,10 +42,11 @@ function MessageCard({item, navigation}) {
 					contactFullName: item.contactFullName,
 					contactNickname: item.contactNickname,
 					status: item.status,
-					avatar: item.avatar,
+					avatar: { uri: avatarUrl },
+					online: item.online,
 				})}>
 			<View className="relative w-11 h-11 rounded-full">
-				<Image source={require('@/assets/images/story-1.png')}
+				<Image source={{ uri: avatarUrl }}
 					   className="rounded-full w-11 h-11"/>
 
 				{/*Kiểm tra trạng thái nếu online thì hiện ko thì tắt*/}
