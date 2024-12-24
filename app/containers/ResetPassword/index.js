@@ -20,29 +20,18 @@ import {Colors, Constants} from '@/common';
 // Services
 import {AuthService} from '@/services/Auth';
 
-function ForgotPasswordContainer({navigation}) {
-	const [username, setUsername] = useState('');
+function ResetPasswordContainer({navigation}) {
+	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
 	const authService = new AuthService();
 
-	const onResetPassword = async () => {
+	const onSubmit = async () => {
 		const data = {
-			username,
+			password,
+			confirmPassword,
 		};
 
-		// Kiểm tra các fileds có rỗng không
-		if (!data.username) {
-			Alert.alert('Please fill all fields to continue');
-			return;
-		}
 
-		// Gọi API reset password
-		const response = await authService.resetPassword(data.username);
-		if (response.status === 200) {
-			Alert.alert('Reset password successfully');
-			navigation.navigate('Login');
-		} else {
-			Alert.alert('Reset password failed');
-		}
 	}
 
 	return (
@@ -61,8 +50,6 @@ function ForgotPasswordContainer({navigation}) {
 						<View className="flex-row items-center bg-light rounded-3xl p-4 mb-4">
 							<Feather name="user" size={16} color={Colors.black}/>
 							<Input
-								value={username}
-								onChangeText={setUsername}
 								placeholder="Username" placeholderTextColor={Constants.HexToRgba(Colors.black, 0.4)}
 								   className="font-rubik font-light text-sm text-black ml-2 flex-1"/>
 						</View>
@@ -85,4 +72,4 @@ function ForgotPasswordContainer({navigation}) {
 	);
 }
 
-export default ForgotPasswordContainer;
+export default ResetPasswordContainer;

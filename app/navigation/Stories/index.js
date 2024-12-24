@@ -5,6 +5,7 @@ import {enableScreens} from 'react-native-screens';
 
 // Containers
 import {StoriesContainer, StoryContainer} from '@/containers';
+import {ChatContainer} from "../../containers";
 
 enableScreens();
 
@@ -27,9 +28,10 @@ const options = {
 
 function Stories() {
 	return (
-		<Stack.Navigator initialRouteName="Stories">
+		<Stack.Navigator initialRouteName="Friends">
 			<Stack.Screen name="Stories" component={StoriesContainer} options={() => options} />
-			<Stack.Screen name="Story" component={StoryContainer} options={() => options} />
+			<Stack.Screen name="Chat" component={ChatContainer} options={() => options} />
+			{/*<Stack.Screen name="Story" component={StoryContainer} options={() => options} />*/}
 		</Stack.Navigator>
 	);
 }

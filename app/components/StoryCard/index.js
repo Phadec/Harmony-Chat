@@ -18,21 +18,26 @@ function StoryShape({size, count}) {
 	);
 }
 
-function StoryCard({photo, name, emoji, navigation}) {
+function StoryCard({item, navigation}) {
 	return (
-		<Button className="flex-row items-center mb-4" onPress={() => navigation.navigate('Story')}>
+		<Button className="flex-row items-center mb-4" onPress={() => navigation.navigate('Chat')}>
 			<View className="relative w-14 h-14 rounded-full justify-center items-center">
-				<StoryShape size={56} count={16} />
+				{/*<StoryShape size={56} count={16} />*/}
 
-				<Image source={photo} className="w-11 h-11 rounded-full absolute" />
+				<Image source={require('@/assets/images/story-1.png')}
+					   className="w-11 h-11 rounded-full absolute" />
 			</View>
 
 			<View className="ml-4">
-				<Text className="font-rubik font-medium text-sm text-black">{name}</Text>
-				<Text className="font-rubik text-xs text-black/70 mt-[2px]">16:30</Text>
+				<Text className="font-rubik font-medium text-sm text-black">{
+					item.nickName ? item.nickName : item.fullName
+				}</Text>
+				{/*<Text className="font-rubik text-xs text-black/70 mt-[2px]">16:30</Text>*/}
 			</View>
 
-			<Text className="ml-auto">{emoji}</Text>
+			<Text className="ml-auto">{
+				['😎', '🌿', '👽', '🙌🏻', '🫰🏽', '🦦', '🪵', '🩰'][Math.floor(Math.random() * 8)]
+			}</Text>
 		</Button>
 	);
 }

@@ -29,6 +29,8 @@ import AddStory from './AddStory';
 import LoginContainer from './Login';
 import SignupContainer from './Signup';
 import ForgotPasswordContainer from './ForgotPassword';
+import EmailVerificationContainer from './Email';
+import ResetPasswordContainer from './ResetPassword';
 
 // Onboarding
 import OnboardingContainer from './Onboarding';
@@ -56,4 +58,6 @@ export {
 	SignupContainer,
 	ForgotPasswordContainer,
 	OnboardingContainer,
+	EmailVerificationContainer,
+	ResetPasswordContainer,
 };

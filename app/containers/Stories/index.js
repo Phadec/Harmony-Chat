@@ -1,9 +1,12 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Text, View} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 
 // Components
 import {Header, StoryCard} from '@/components';
+
+// Services
+import {FriendService} from '@/services/Friend';
 
 // Layout
 import Layout from '@/Layout';
@@ -24,14 +27,39 @@ const stories = [
 ];
 
 function StoriesContainer({navigation}) {
+	const [friends, setFriends] = React.useState([]);
+	const friendsService = new FriendService();
+
+	useEffect(() => {
+			// Call API to get friends
+			const fetchFriends = async () => {
+				const response = await friendsService.getFriends();
+				console.log("Friends response:", response);
+				if (response.$values.length < 1) return;
+
+				setFriends(response.$values);
+			};
+
+			fetchFriends().then(
+				() => console.log('Friends fetched successfully')
+			).catch(
+				(error) => console.error('Error fetching friends:', error)
+			);
+		}, []);
+
 	return (
 		<Layout>
-			<Header title="Stories" stories navigation={navigation} />
+			<Header title="Stories" stories navigation={navigation}/>
 
-			<Text className="font-rubik text-sm text-black mt-6 mb-4">Your friends stories</Text>
+			<Text className="font-rubik text-sm text-black mt-6 mb-4">Your friends</Text>
 
 			<View className="flex-1 bg-light rounded-3xl px-4 mb-4">
-				<FlatList data={stories} keyExtractor={item => item.id} renderItem={({item}) => <StoryCard {...item} navigation={navigation} />} showsVerticalScrollIndicator={false} className="py-4" />
+				<FlatList data={friends}
+						  keyExtractor={item => item.id}
+						  renderItem={({item}) =>
+							  <StoryCard item={item} navigation={navigation}/>
+				}
+						  showsVerticalScrollIndicator={false} className="py-4"/>
 			</View>
 		</Layout>
 	);

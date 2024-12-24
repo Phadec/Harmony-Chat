@@ -50,22 +50,20 @@ function BottomTabNavigator() {
 		<View className="flex-1">
 			<Tab.Navigator tabBar={props => <TabBar {...props} />} initialRouteName="Messages">
 
-{/*
-			<Tab.Screen
+				<Tab.Screen
 					name="Root:Stories"
 					component={Stories}
 					icon="Stories"
 					options={{
-						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Stories" />,
+						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Stories"/>,
 						headerShown: false,
 					}}
 				/>
-*/}
 				<Tab.Screen
 					name="Root:Messages"
 					component={Messages}
 					options={{
-						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Messages" />,
+						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Messages"/>,
 						headerShown: false,
 					}}
 				/>
@@ -74,7 +72,7 @@ function BottomTabNavigator() {
 					name="Root:Groups"
 					component={Groups}
 					options={{
-						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Groups" />,
+						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Groups"/>,
 						headerShown: false,
 					}}
 				/>
@@ -83,7 +81,7 @@ function BottomTabNavigator() {
 					name="Root:Calls"
 					component={Calls}
 					options={{
-						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Calls" />,
+						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Calls"/>,
 						headerShown: false,
 					}}
 				/>
@@ -92,7 +90,7 @@ function BottomTabNavigator() {
 					name="Root:Settings"
 					component={Settings}
 					options={{
-						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Settings" />,
+						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Settings"/>,
 						headerShown: false,
 					}}
 				/>
@@ -105,9 +103,9 @@ function Navigation() {
 	return (
 		<NavigationContainer theme={Themes} ref={navigationRef}>
 			<Stack.Navigator initialRouteName="Onboarding">
-				<Stack.Screen name="Root" component={BottomTabNavigator} options={() => options} />
-				<Stack.Screen name="Auth" component={Auth} options={() => options} />
-				<Stack.Screen name="Onboarding" component={OnboardingContainer} options={() => options} />
+				<Stack.Screen name="Root" component={BottomTabNavigator} options={() => options}/>
+				<Stack.Screen name="Auth" component={Auth} options={() => options}/>
+				<Stack.Screen name="Onboarding" component={OnboardingContainer} options={() => options}/>
 			</Stack.Navigator>
 		</NavigationContainer>
 	);

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get base URL from axiosInstance.js
-import { baseURL } from '../axiosInstance';
+import {baseURL} from '../axiosInstance';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = baseURL + '/api/Auth';
@@ -19,6 +19,43 @@ export class AuthService {
 		return await axios.post(`${API_URL}/login`, data, {
 			headers: {
 				'Content-Type': 'multipart/form-data',
+			},
+		});
+	}
+
+	async register(data) {
+		console.log('URL register:', `${API_URL}/register`);
+
+		const formData = new FormData();
+		formData.append('Username', data.username);
+		formData.append('Password', data.password);
+		formData.append('RetypePassword', data.confirmPassword);
+		formData.append('FirstName', data.firstName);
+		formData.append('LastName', data.lastName);
+		formData.append('Birthday', new Date(data.date).toISOString());
+		formData.append('Email', data.email);
+		formData.append('File', '');
+
+		const response = await axios.post(`${API_URL}/register`, formData, {
+			headers: {
+				'Content-Type': 'multipart/form-data',
+			},
+			timeout: 10000,
+		});
+		return response;
+	}
+
+	async confirmEmail(token) {
+		console.log('URL:', `${API_URL}/confirm-email`);
+		return await axios.get(`${API_URL}/confirm-email?token=${token}`);
+	}
+
+	async resetPassword(username) {
+		console.log('URL:', `${API_URL}/reset-password`);
+
+		return await axios.post(`${API_URL}/reset-password`, JSON.stringify(username), {
+			headers: {
+				'Content-Type': 'application/json',
 			},
 		});
 	}
