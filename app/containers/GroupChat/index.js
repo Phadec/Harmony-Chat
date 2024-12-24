@@ -18,6 +18,13 @@ import {Button, Input} from '@/components';
 // Commons
 import {Colors, Constants} from '@/common';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ChatService } from '../../services/Chat';
+
+const data = [
+
+]
+
 const initialMessages = [
 	{
 		title: 'Today',
