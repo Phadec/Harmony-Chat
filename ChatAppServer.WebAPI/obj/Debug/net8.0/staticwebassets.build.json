@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "V/aB7KSEE4YEl40URhBqvFeBcvuc9L7O22BBEX5ZGYI=",
+  "Source": "ChatAppServer.WebAPI",
+  "BasePath": "_content/ChatAppServer.WebAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "ChatAppServer.WebAPI\\wwwroot",
+      "Source": "ChatAppServer.WebAPI",
+      "ContentRoot": "B:\\AD\\work\\.net\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "B:\\AD\\work\\.net\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\default.jpg",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "B:\\AD\\work\\.net\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatars/default.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\default.jpg"
+    }
+  ]
+}
