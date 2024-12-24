@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, Image} from 'react-native';
+import { baseURL } from '../../services/axiosInstance'; // Import baseURL
 
 // Components
 import {Button} from '@/components';
@@ -17,6 +18,8 @@ function randomColor() {
 }
 
 function BubbleStory({item, navigation}) {
+	const avatarUrl = `${baseURL}/${item.avatar}`;
+
 	return (
 		<Button className="w-16 h-16 rounded-3xl items-center justify-center mr-4"
 				onPress={() => navigation.navigate('Chat', {
@@ -24,11 +27,11 @@ function BubbleStory({item, navigation}) {
 					contactFullName: item.contactFullName,
 					contactNickname: item.contactNickname,
 					status: item.status,
-					avatar: item.avatar,
+					avatar: { uri: avatarUrl },
 				})}
 				style={{backgroundColor: Colors['soft' + randomColor()]}}>
 			<View className="relative w-11 h-11 border-2 rounded-full" style={{borderColor: Colors[randomColor()]}}>
-				<Image source={require("@/assets/images/story-1.png")}
+				<Image source={{ uri: avatarUrl }}
 					   className="rounded-full w-10 h-10" />
 
 				{item.status && <Status color={"green"}/>}

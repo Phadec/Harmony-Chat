@@ -51,16 +51,14 @@ export class ChatService {
   }
 
   // Gửi tin nhắn
-  async sendMessage(recipientId, message, attachment, repliedToMessageId) {
+  async sendMessage(recipientId, message, formData) {
     const userId = await AsyncStorage.getItem('userId');
-    const formData = new FormData();
     formData.append('UserId', userId || '');
     formData.append('RecipientId', recipientId || '');
     formData.append('Message', message || '');
-    if (attachment) formData.append('Attachment', attachment);
-    if (repliedToMessageId) formData.append('RepliedToMessageId', repliedToMessageId);
 
     try {
+      console.log('Sending message with formData:', formData);
       const response = await axiosInstance.post(
         `${ApiUrl}/send-message`, formData,
         {
@@ -77,6 +75,7 @@ export class ChatService {
       return null;
     } catch (error) {
       console.error('Send message failed:', error.response ? error.response.data : error.message);
+      throw error;
     }
   }
 
