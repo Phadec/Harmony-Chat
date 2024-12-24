@@ -19,7 +19,8 @@ function MessagesContainer({navigation}) {
         try {
             const relations = await chatService.getRelationships();
             if (relations?.$values?.length > 0) {
-                setRelationships(relations.$values);
+				const privateChat = relations.$values.filter(item => item.relationshipType === 'Private');
+                setRelationships(privateChat);
             } else {
                 console.warn('No relationships found.');
             }
