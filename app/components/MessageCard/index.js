@@ -26,12 +26,6 @@ function formatChatDate(chatDate) {
 function MessageCard({item, navigation}) {
 	// Check if the user has read the message
 	const [hasRead, setHasRead] = React.useState(false);
-	const chatService = new ChatService();
-
-	const markAsRead = async () => {
-		// Call the API to mark the message as read
-
-	}
 
 	const avatarUrl = `${baseURL}/${item.avatar}`;
 

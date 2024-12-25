@@ -33,7 +33,9 @@ function AddStory() {
 			</View>
 
 			<View className="bg-light rounded-3xl p-4 flex-row items-center mt-5 mb-6">
-				<Input placeholder="Write a comment..." placeholderTextColor={Constants.HexToRgba(Colors.black, 0.4)} className="font-rubik text-xs text-black mr-auto flex-1" />
+				<Input placeholder="Write a comment..."
+					   placeholderTextColor={Constants.HexToRgba(Colors.black, 0.4)}
+					   className="font-rubik text-xs text-black mr-auto flex-1" />
 				<Feather name="send" size={20} color={Colors.main} />
 			</View>
 		</View>

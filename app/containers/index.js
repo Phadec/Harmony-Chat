@@ -20,10 +20,12 @@ import CallingContainer from './Calling';
 // Chats
 import ChatContainer from './Chat';
 import GroupChatContainer from './GroupChat';
+import AddGroup from './AddGroup';
 
 // Stories
 import StoryContainer from './Story';
 import AddStory from './AddStory';
+
 
 // Auth
 import LoginContainer from './Login';
@@ -53,6 +55,7 @@ export {
 	GroupChatContainer,
 	StoryContainer,
 	AddStory,
+	AddGroup,
 	CallingContainer,
 	LoginContainer,
 	SignupContainer,

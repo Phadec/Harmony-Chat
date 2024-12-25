@@ -9,7 +9,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import Navigation from '@/navigation';
 
 // Containers
-import {AddStory} from './containers';
+import {AddGroup, AddStory} from '@/containers';
 
 // Components
 import {CustomBackdrop} from '@/components';
@@ -18,12 +18,14 @@ import {CustomBackdrop} from '@/components';
 import {Colors} from '@/common';
 
 // Actions
-import {actions} from './redux/reducer/StoryRedux';
+import {actions} from './redux/reducer/GroupRedux';
 
 function Navigator() {
 	const [isConnected, setIsConnected] = useState(true);
 
-	const {isOpenAddStory} = useSelector(state => state.story);
+	// const {isOpenAddStory} = useSelector(state => state.story);
+	const {isOpenAddGroup} = useSelector(state => state.group);
+
 	const dispatch = useDispatch();
 
 	useEffect(() => {
@@ -39,11 +41,11 @@ function Navigator() {
 
 	// Bottom Sheet
 	const bottomSheetRef = useRef(null);
-	const snapPoints = useMemo(() => ['1%', '90%'], [isOpenAddStory]);
+	const snapPoints = useMemo(() => ['1%', '95%'], [isOpenAddGroup]);
 	const handleSheetChanges = useCallback(index => {
 		if (index === 0) {
 			bottomSheetRef.current?.close();
-			actions.setAddStory(dispatch, false);
+			actions.setAddGroup(dispatch, false);
 		}
 	}, []);
 
@@ -55,7 +57,7 @@ function Navigator() {
 				appearsOnIndex={1}
 				onPress={() => {
 					bottomSheetRef.current?.close();
-					actions.setAddStory(dispatch, false);
+					actions.setAddGroup(dispatch, false);
 				}}
 			/>
 		),
@@ -76,7 +78,7 @@ function Navigator() {
 				<Navigation />
 			</SafeAreaView>
 
-			{isOpenAddStory && (
+			{isOpenAddGroup && (
 				<BottomSheet
 					ref={bottomSheetRef}
 					index={1}
@@ -86,7 +88,7 @@ function Navigator() {
 					}}
 					backdropComponent={renderBackdrop}
 					onChange={handleSheetChanges}>
-					<AddStory />
+					<AddGroup />
 				</BottomSheet>
 			)}
 		</View>

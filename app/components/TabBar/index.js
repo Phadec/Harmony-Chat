@@ -37,7 +37,10 @@ function Tabbar({state, descriptors, navigation}) {
 
 	const stackName = getFocusedRouteNameFromRoute(route);
 
-	if ((routeName === 'Root:Messages' && stackName === 'Chat') || (routeName === 'Root:Groups' && stackName === 'GroupChat') || (routeName === 'Root:Stories' && stackName === 'Story') || (routeName === 'Root:Calls' && stackName === 'Calling')) return null;
+	if ((routeName === 'Root:Messages' && stackName === 'Chat')
+		|| (routeName === 'Root:Groups' && stackName === 'GroupChat')
+		|| (routeName === 'Root:Stories' && stackName === 'Chat')
+		|| (routeName === 'Root:Calls' && stackName === 'Calling')) return null;
 
 	return (
 		<View className="flex-row items-center justify-evenly bg-main h-20 relative">
@@ -67,7 +70,8 @@ function Tabbar({state, descriptors, navigation}) {
 				return (
 					<View key={index} className="relative items-center justify-center z-10" style={{width: tabWidth}}>
 						<AnimatedButton
-							className={`relative z-10 items-center justify-center rounded-full bg-main ${isFocused ? 'w-12 h-12' : 'w-full h-20'}`}
+							className={`relative z-10 items-center justify-center rounded-full bg-main
+							${isFocused ? 'w-12 h-12' : 'w-full h-20'}`}
 							style={[state.index === index && marginAnimation]}
 							accessibilityRole="button"
 							accessibilityStates={isFocused ? ['selected'] : []}

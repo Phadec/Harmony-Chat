@@ -13,9 +13,9 @@ import {Button} from '@/components';
 import {Colors} from '@/common';
 
 // Actions
-import {actions} from '@/redux/reducer/StoryRedux';
+import {actions} from '@/redux/reducer/GroupRedux';
 
-function Header({title, stories, messages, search, goBack, navigation}) {
+function Header({title, groups, messages, search, goBack, navigation}) {
 	const dispatch = useDispatch();
 
 	return (
@@ -42,8 +42,8 @@ function Header({title, stories, messages, search, goBack, navigation}) {
 					</Button>
 				)}
 
-				{stories && (
-					<Button onPress={() => actions.setAddStory(dispatch, true)}>
+				{groups && (
+					<Button onPress={() => actions.setAddGroup(dispatch, true)}>
 						<AntDesign name="pluscircleo" size={20} color={Colors.black} />
 					</Button>
 				)}

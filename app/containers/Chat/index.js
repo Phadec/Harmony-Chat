@@ -749,6 +749,8 @@ function ChatContainer({navigation, route}) {
 		});
 	}
 
+
+
 	return (
 		<View className="flex-1 bg-white relative">
 			{opened &&
