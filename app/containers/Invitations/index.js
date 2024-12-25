@@ -56,7 +56,7 @@ function FriendRequest({ user, onAccept, onReject }) {
                 <View className="flex-row gap-2">
                     <TouchableOpacity
                         onPress={onAccept}
-                        className="bg-[#E4C7FF] px-8 py-2 rounded-full"
+                        className="bg-purple px-8 py-2 rounded-full"
                     >
                         <Text className="text-[14px] font-medium text-white">Accept   </Text>
                     </TouchableOpacity>
