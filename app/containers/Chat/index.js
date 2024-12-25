@@ -13,7 +13,6 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChatService } from '../../services/Chat';
 import { SignalRService } from '../../services/signalR';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { baseURL } from '../../services/axiosInstance';
 import Video from 'react-native-video';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';

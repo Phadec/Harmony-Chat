@@ -3,6 +3,35 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const ApiUrl = `${baseURL}/api/Groups`;
 
 export class ChatGroup {
+	// Gửi tin nhắn
+	async sendMessage(recipientId, message, formData) {
+		const userId = await AsyncStorage.getItem('userId');
+		formData.append('UserId', userId || '');
+		formData.append('RecipientId', recipientId || '');
+		formData.append('Message', message || '');
+	
+		try {
+		  console.log('Sending message with formData:', formData);
+		  const response = await axiosInstance.post(
+			`${ApiUrl}/send-message`, formData,
+			{
+			  headers: {
+				'Content-Type': 'multipart/form-data',
+			  },
+			});
+	
+		  if (response.data) {
+			return response.data; // Trả về dữ liệu nhận được từ API
+		  }
+	
+		  console.error('Send message failed:', response.data);
+		  return null;
+		} catch (error) {
+		  console.error('Send message failed:', error.response ? error.response.data : error.message);
+		  throw error;
+		}
+	  }
+
 	// Tạo nhóm chat
 	async createGroupChat(nameGroup, memberIds, avatar) {
 		const userId = await AsyncStorage.getItem('userId');
@@ -135,7 +164,8 @@ export class ChatGroup {
 	}
 
 	// Lấy chi tiết thông tin người dùng trong chat
-	async getUserGroupsWithDetails(userId) {
+	async getUserGroupsWithDetails() {
+		const userId = await AsyncStorage.getItem('userId');
 		try {
 			const response = await axiosInstance.get(
 				`${ApiUrl}/user-groups-with-details/${userId}`
