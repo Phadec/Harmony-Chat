@@ -9,6 +9,7 @@ class SignalRService {
 		this.isConnected = false;
 		this.reconnectAttempts = 0;
 		this.messageReceived$ = new BehaviorSubject(null);
+		this.groupCreated$ = new BehaviorSubject(null);
 		this.registerListeners();
 	}
 
@@ -45,6 +46,16 @@ class SignalRService {
 			this.messageReceived$.next(message);
 		});
 
+		this.hubConnection.on('ReceiveGroupNotification', (message) => {
+			console.log('Group notification received:', message);
+			this.groupCreated$.next(message);
+		})
+
+		this.hubConnection.on('NotifyGroupMembers', (groupId, message) => {
+			console.log('New group notification received:', message);
+			this.groupCreated$.next(message);
+		})
+
 		this.hubConnection.on('UserStatusChanged', (status) => {
 			console.log('User status changed:', status);
 		});
@@ -72,12 +83,6 @@ class SignalRService {
 			console.error('SignalR connection closed:', error);
 			this.isConnected = false;
 		});
-	}
-
-	notifyGroupMembers(chat) {
-		this.hubConnection.invoke('NotifyGroupMembers', chat).then(
-			() => console.log('Group members notified:', chat)
-		).catch((error) => console.error('Error notifying group members:', error));
 	}
 
 	startConnection() {
@@ -124,6 +129,20 @@ class SignalRService {
 			.catch((err) => {
 				console.error('Error while stopping SignalR connection: ', err);
 			});
+	}
+
+	setupGroupListeners(onNewGroup) {
+		if (!this.isConnected) {
+			this.startConnection();
+		}
+
+		this.hubConnection.on("NotifyGroupMembers", (groupId, message) => {
+			console.log("New group notification received:", message);
+			// Trigger callback to update UI
+			if (onNewGroup) {
+				onNewGroup(groupId);
+			}
+		});
 	}
 
 	start() {

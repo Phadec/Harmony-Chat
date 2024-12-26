@@ -21,18 +21,34 @@ import {Colors, Constants} from '@/common';
 
 // Services
 import {FriendService} from "../../services/Friend";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {actions} from "../../redux/reducer/GroupRedux";
 
 import {navigationRef} from '@/RootNavigation';
 import {GroupService} from "../../services/Group";
+import {SignalRService} from "../../services/signalR";
 
 function AddGroup() {
 	const dispatch = useDispatch();
-
 	const [friends, setFriends] = useState([]);
 	const [friendSelected, setFriendSelected] = useState([]);
 	const [groupName, setGroupName] = useState('');
+	const signalRService = SignalRService.getInstance();
+
+	useEffect(() => {
+		// Thiết lập SignalR listeners
+		signalRService.setupGroupListeners((groupId) => {
+			// Có thể thêm logic để cập nhật danh sách nhóm ở đây
+			console.log("New group created:", groupId);
+			// Dispatch action để cập nhật Redux store nếu cần
+			dispatch(actions.refreshGroups());
+		});
+
+		// Cleanup when component unmounts
+		return () => {
+			signalRService.hubConnection.off("NotifyGroupMembers");
+		};
+	}, [dispatch]);
 
 	// Lấy danh sách bạn bè từ lần mount đầu tiên
 	useEffect(() => {
@@ -97,8 +113,10 @@ function AddGroup() {
 				return;
 			}
 
-			// Đóng bottom sheet
+			// Đóng bottom sheet và reset form
 			actions.setAddGroup(dispatch, false);
+			setGroupName('');
+			setFriendSelected([]);
 
 			// Hiển thị thông báo thành công
 			Alert.alert('Success', 'Group created successfully', [
@@ -113,8 +131,10 @@ function AddGroup() {
 			);
 		} catch (error) {
 			console.error('Error creating group:', error);
+			Alert.alert('Error', 'Failed to create group');
 		}
 	}
+
 
 	return (
 		<KeyboardAvoidingView behavior="padding" className='flex-1'>

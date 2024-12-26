@@ -1,35 +1,37 @@
 import React, {useState, useEffect} from 'react';
-import {View, FlatList} from 'react-native';
+import {View, FlatList, Image, Text} from 'react-native';
+import {useFocusEffect} from "@react-navigation/native";
 
 // Components
-import {Header, GroupCard} from '@/components';
+import {Header, Button} from '@/components';
 
 // Layout
 import Layout from '@/Layout';
-import {ChatService} from "../../services/Chat";
+
+// Service
 import {SignalRService} from "../../services/signalR";
+import {GroupService} from "../../services/Group";
+
+// Utils
+import {baseURL} from "../../services/axiosInstance";
 
 function GroupsContainer({navigation}) {
 	const [groups, setGroups] = useState([]);
-	const signalRService = SignalRService.getInstance();  // Đảm bảo sử dụng Singleton instance
+	const signalRService = SignalRService.getInstance();
 
-	const fetchGroups = async () => {
+	const fetchGroupsDetails = async () => {
 		try {
-			const chatService = new ChatService();
-			const relationships = await chatService.getRelationships();
-			if (relationships) {
-				// Lấy ra các nhóm từ data có filed 'relationshipType' = 'Group'
-				const groupFiltered = relationships.$values.filter(
-					item => item.relationshipType === 'Group');
-				setGroups(groupFiltered)
+			const groupService = new GroupService();
+			const groups = await groupService.getGroupDetails();
+			if (groups) {
+				setGroups(groups.$values);
 			}
-		}
-		catch (error) {
+		} catch (error) {
 			console.error('Error fetching groups:', error);
 		}
 	};
 
-	// Lấy danh sách nhóm khi component được render
+	// Setup SignalR listeners
 	useEffect(() => {
 		const startSignalRConnection = async () => {
 			// Kiểm tra nếu SignalR đã được kết nối
@@ -40,25 +42,25 @@ function GroupsContainer({navigation}) {
 
 		// Khởi động kết nối SignalR và subscribe vào sự kiện
 		startSignalRConnection().then(() => {
-			const subscription = signalRService.messageReceived$.subscribe(() => {
-				fetchGroups(); // Cập nhật danh sách tin nhắn khi nhận được tin nhắn
+			const subscription = signalRService.groupCreated$.subscribe(() => {
+				fetchGroupsDetails(); // Cập nhật danh sách nhóm khi có nhóm mới được tạo
 			});
 
 			// Cleanup khi component unmount
 			return () => {
-				console.log('Unsubscribing from SignalR messages');
 				subscription.unsubscribe(); // Hủy đăng ký sự kiện
 			};
 		}).catch((error) => {
-			console.error('Error while starting SignalR connection:', error);
+			// console.error('Error while starting SignalR connection:', error);
 		});
-
-		// Cleanup khi component unmount
-		return () => {
-			console.log('Disconnecting SignalR connection');
-			signalRService.stopConnection(); // Ngừng kết nối khi component unmount
-		};
 	}, [signalRService]);
+
+	// Fetch groups khi màn hình được focus
+	useFocusEffect(
+		React.useCallback(() => {
+			fetchGroupsDetails();
+		}, [])
+	);
 
 	return (
 		<Layout>
@@ -67,13 +69,37 @@ function GroupsContainer({navigation}) {
 			<View className="flex-1 mt-6">
 				<FlatList
 					data={groups}
-					key={item => item.groupId}
-					renderItem={
-						({item}) => <GroupCard item={item} navigation={navigation}/>
-					}
-					showsVerticalScrollIndicator={false}/>
+					keyExtractor={item => item.groupId}
+					renderItem={({item}) => (
+						<GroupItem group={item} navigation={navigation}/>
+					)}
+					showsVerticalScrollIndicator={false}
+				/>
 			</View>
 		</Layout>
+	);
+}
+
+function GroupItem({group, navigation}) {
+	const avatarUrl = `${baseURL}/${group.avatar}`;
+
+	return (
+		<Button
+			className="flex-row items-center bg-light rounded-2xl py-2 px-14 mb-3"
+			onPress={() => navigation.navigate('GroupChat', { groupId: group.groupId, groupName: group.name })}
+		>
+			<View className="relative w-11 h-11 rounded-full">
+				<Image
+					source={{uri: avatarUrl}}
+					className="rounded-full w-10 h-10"
+				/>
+			</View>
+			<View className="ml-3 flex-1">
+				<Text className="font-rubik font-medium text-sm text-black leading-5">
+					{group.name}
+				</Text>
+			</View>
+		</Button>
 	);
 }
 

@@ -48,10 +48,12 @@ function GroupCard({item, navigation}) {
 			</View>
 
 			<View className="ml-2">
-				<Text className={`font-rubik ${item.hasNewMessage ? 'font-bold' : 'font-medium text-black/40'}  text-xs text-black`}>
+				<Text
+					className={`font-rubik ${item.hasNewMessage ? 'font-bold' : 'font-medium text-black/40'}  text-xs text-black`}>
 					{formatChatDate(item.chatDate)}
 				</Text>
-				<View className={`${item.hasNewMessage ? 'bg-red rounded-2xl items-center mt-2 w-3 ml-auto py-1.5' : '' }`}/>
+				<View
+					className={`${item.hasNewMessage ? 'bg-red rounded-2xl items-center mt-2 w-3 ml-auto py-1.5' : ''}`}/>
 			</View>
 		</Button>
 	);
