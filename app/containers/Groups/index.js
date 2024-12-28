@@ -1,9 +1,15 @@
-import React, {useState, useEffect} from 'react';
-import {View, FlatList, Image, Text} from 'react-native';
+import React, {useState, useEffect, useRef, useLayoutEffect, useCallback} from 'react';
+import {
+	View,
+	FlatList,
+	Image,
+	Text,
+	TouchableOpacity,
+} from 'react-native';
 import {useFocusEffect} from "@react-navigation/native";
 
 // Components
-import {Header, Button} from '@/components';
+import {Header, CustomContextMenu} from '@/components';
 
 // Layout
 import Layout from '@/Layout';
@@ -12,12 +18,70 @@ import Layout from '@/Layout';
 import {SignalRService} from "../../services/signalR";
 import {GroupService} from "../../services/Group";
 
+// Hooks
+import {useContextMenu} from "@/hooks";
+
 // Utils
 import {baseURL} from "../../services/axiosInstance";
+
+
+const GroupItem = ({group, navigation, index, totalItems}) => {
+	const avatarUrl = `${baseURL}/${group.avatar}`;
+	const {
+		menuRef,
+		isSelected,
+		setIsSelected,
+		handleSelect,
+		handlePress,
+		handleLongPress,
+		getMenuPosition
+	} = useContextMenu({
+		navigationTarget: 'GroupChat',
+		navigationParams: {},
+		onSelectCallbacks: {
+			// Tùy chỉnh các callback cho message
+			mark_unread: () => console.log('Custom mark unread for message'),
+		}
+	});
+
+	return (
+		<CustomContextMenu
+			menuRef={menuRef}
+			isSelected={isSelected}
+			onClose={() => setIsSelected(false)}
+			onSelect={handleSelect}
+			menuPosition={getMenuPosition()}>
+
+			{/* Group item (children)*/}
+			<TouchableOpacity
+				onPress={handlePress}
+				onLongPress={handleLongPress}
+			>
+				<View className={`flex-row items-center rounded-2xl py-2 px-14 mb-3 ${
+					isSelected ? 'bg-gray-100' : 'bg-light'
+				}`}>
+					<View className="relative w-11 h-11 rounded-full">
+						<Image
+							source={{uri: avatarUrl}}
+							className="rounded-full w-10 h-10"
+						/>
+					</View>
+					<View className="ml-3 flex-1">
+						<Text className="font-rubik font-medium text-sm text-black leading-5">
+							{group.name}
+						</Text>
+					</View>
+				</View>
+			</TouchableOpacity>
+		</CustomContextMenu>
+	);
+};
 
 function GroupsContainer({navigation}) {
 	const [groups, setGroups] = useState([]);
 	const signalRService = SignalRService.getInstance();
+	// Tạo một ref để track subscription
+	const subscriptionRef = useRef(null);
 
 	const fetchGroupsDetails = async () => {
 		try {
@@ -31,75 +95,77 @@ function GroupsContainer({navigation}) {
 		}
 	};
 
-	// Setup SignalR listeners
 	useEffect(() => {
-		const startSignalRConnection = async () => {
-			// Kiểm tra nếu SignalR đã được kết nối
-			if (signalRService.hubConnection.state !== signalRService.hubConnection.state.Connected) {
-				await signalRService.start(); // Chỉ bắt đầu kết nối nếu chưa kết nối
+		let isMounted = true;
+
+		const setupSignalR = async () => {
+			try {
+				// Ensure connection
+				if (signalRService.hubConnection.state !== 'Connected') {
+					await signalRService.start();
+				}
+
+				// Unsubscribe from previous subscription
+				if (subscriptionRef.current) {
+					subscriptionRef.current.unsubscribe();
+				}
+
+				// Setup new subscription
+				subscriptionRef.current = signalRService.groupCreated$.subscribe((data) => {
+					console.log("[GroupsContainer] Group notification received:", data);
+					if (isMounted) {
+						fetchGroupsDetails();
+					}
+				});
+
+				// Initial fetch
+				if (isMounted) {
+					await fetchGroupsDetails();
+				}
+			} catch (error) {
+				console.error('Error setting up SignalR:', error);
 			}
 		};
 
-		// Khởi động kết nối SignalR và subscribe vào sự kiện
-		startSignalRConnection().then(() => {
-			const subscription = signalRService.groupCreated$.subscribe(() => {
-				fetchGroupsDetails(); // Cập nhật danh sách nhóm khi có nhóm mới được tạo
-			});
+		setupSignalR();
 
-			// Cleanup khi component unmount
-			return () => {
-				subscription.unsubscribe(); // Hủy đăng ký sự kiện
-			};
-		}).catch((error) => {
-			// console.error('Error while starting SignalR connection:', error);
-		});
-	}, [signalRService]);
+		// Cleanup
+		return () => {
+			isMounted = false;
+			if (subscriptionRef.current) {
+				subscriptionRef.current.unsubscribe();
+			}
+		};
+	}, []);
 
-	// Fetch groups khi màn hình được focus
+	// Handle focus events
 	useFocusEffect(
 		React.useCallback(() => {
+			console.log("[GroupsContainer] Screen focused, fetching groups...");
 			fetchGroupsDetails();
 		}, [])
 	);
 
+
 	return (
 		<Layout>
 			<Header title="Groups" groups navigation={navigation}/>
-
 			<View className="flex-1 mt-6">
 				<FlatList
 					data={groups}
-					keyExtractor={item => item.groupId}
+					keyExtractor={item => item.id}
 					renderItem={({item}) => (
-						<GroupItem group={item} navigation={navigation}/>
+						<GroupItem
+							group={item}
+							navigation={navigation}
+							index={groups.indexOf(item)}
+							totalItems={groups.length}
+						/>
 					)}
 					showsVerticalScrollIndicator={false}
 				/>
 			</View>
 		</Layout>
-	);
-}
-
-function GroupItem({group, navigation}) {
-	const avatarUrl = `${baseURL}/${group.avatar}`;
-
-	return (
-		<Button
-			className="flex-row items-center bg-light rounded-2xl py-2 px-14 mb-3"
-			onPress={() => navigation.navigate('GroupChat', { groupId: group.groupId, groupName: group.name })}
-		>
-			<View className="relative w-11 h-11 rounded-full">
-				<Image
-					source={{uri: avatarUrl}}
-					className="rounded-full w-10 h-10"
-				/>
-			</View>
-			<View className="ml-3 flex-1">
-				<Text className="font-rubik font-medium text-sm text-black leading-5">
-					{group.name}
-				</Text>
-			</View>
-		</Button>
 	);
 }
 

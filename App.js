@@ -6,6 +6,7 @@ import store from '@/redux/store';
 
 // Navigations
 import Navigator from '@/navigator';
+import {MenuProvider} from "react-native-popup-menu";
 
 if (__DEV__) {
 	const ignoreWarns = ['VirtualizedLists should never be nested inside plain ScrollViews'];
@@ -22,9 +23,12 @@ if (__DEV__) {
 }
 
 function App() {
+
 	return (
 		<Provider store={store}>
-			<Navigator />
+			<MenuProvider>
+				<Navigator/>
+			</MenuProvider>
 		</Provider>
 	);
 }

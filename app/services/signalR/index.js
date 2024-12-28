@@ -47,14 +47,14 @@ class SignalRService {
 		});
 
 		this.hubConnection.on('ReceiveGroupNotification', (message) => {
-			console.log('Group notification received:', message);
+			console.log('[SignalR] ReceiveGroupNotification:', message);
 			this.groupCreated$.next(message);
-		})
+		});
 
 		this.hubConnection.on('NotifyGroupMembers', (groupId, message) => {
-			console.log('New group notification received:', message);
-			this.groupCreated$.next(message);
-		})
+			console.log('[SignalR] NotifyGroupMembers:', groupId, message);
+			this.groupCreated$.next({groupId, message});
+		});
 
 		this.hubConnection.on('UserStatusChanged', (status) => {
 			console.log('User status changed:', status);
@@ -136,9 +136,13 @@ class SignalRService {
 			this.startConnection();
 		}
 
-		this.hubConnection.on("NotifyGroupMembers", (groupId, message) => {
-			console.log("New group notification received:", message);
-			// Trigger callback to update UI
+		// Gỡ bỏ listener cũ nếu có
+		this.hubConnection.off('NotifyGroupMembers');
+
+		// Đăng ký listener mới với cùng tên event
+		this.hubConnection.on('NotifyGroupMembers', (groupId, message) => {
+			console.log('[SignalR] NotifyGroupMembers triggered:', groupId, message);
+			this.groupCreated$.next({groupId, message});
 			if (onNewGroup) {
 				onNewGroup(groupId);
 			}

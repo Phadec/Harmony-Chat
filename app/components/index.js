@@ -11,5 +11,7 @@ import MessageCard from './MessageCard';
 import StoryCard from './StoryCard';
 import GroupCard from './GroupCard';
 import SettingItem from './SettingItem';
+import CustomContextMenu from './ContextMenu';
 
-export {TabBar, TabBarIcon, Button, Input, Header, BubbleStory, MessageCard, StoryCard, GroupCard, SettingItem, CustomBackdrop};
+export {TabBar, TabBarIcon, Button, Input, Header, BubbleStory, CustomContextMenu,
+	MessageCard, StoryCard, GroupCard, SettingItem, CustomBackdrop};

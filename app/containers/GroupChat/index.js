@@ -149,7 +149,8 @@ function GroupChatContainer({navigation}) {
 	const opacity = useSharedValue(0);
 	const transform = useSharedValue(30);
 
-	const animation = useAnimatedStyle(() => {
+	const animation = useAnimatedStyle(
+		() => {
 		return {
 			opacity: opacity.value,
 			transform: [{translateY: transform.value}],
@@ -230,7 +231,10 @@ function GroupChatContainer({navigation}) {
 
 	return (
 		<View className="flex-1 bg-white relative">
-			{opened && <BlurView style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}} blurType="dark" blurAmount={8} reducedTransparencyFallbackColor="black" />}
+			{opened && <BlurView
+				style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}}
+				blurType="dark" blurAmount={8} r
+				educedTransparencyFallbackColor="black" />}
 
 			<Header navigation={navigation} />
 

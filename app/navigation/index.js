@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {createContext, useContext, useState} from 'react';
 import {View} from 'react-native';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -18,6 +18,9 @@ import {OnboardingContainer} from '../containers';
 
 // Components
 import {TabBar, TabBarIcon} from '@/components';
+
+// Create context for overlay
+export const OverlayContext = createContext()
 
 const Themes = {
 	...DefaultTheme,
@@ -46,9 +49,21 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 function BottomTabNavigator() {
+	const {isOverlayVisible} = useContext(OverlayContext);
+
 	return (
 		<View className="flex-1">
-			<Tab.Navigator tabBar={props => <TabBar {...props} />} initialRouteName="Messages">
+			<Tab.Navigator
+				initialRouteName="Messages"
+				tabBar={props => (
+					<View style={{
+						position: 'relative',
+						left: 0, right: 0, top: 0, bottom: 0,
+						zIndex: 10,
+					}}>
+						<TabBar {...props} />
+					</View>
+				)}>
 
 				<Tab.Screen
 					name="Root:Stories"
@@ -100,14 +115,18 @@ function BottomTabNavigator() {
 }
 
 function Navigation() {
+	const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+
 	return (
-		<NavigationContainer theme={Themes} ref={navigationRef}>
-			<Stack.Navigator initialRouteName="Onboarding">
-				<Stack.Screen name="Root" component={BottomTabNavigator} options={() => options}/>
-				<Stack.Screen name="Auth" component={Auth} options={() => options}/>
-				<Stack.Screen name="Onboarding" component={OnboardingContainer} options={() => options}/>
-			</Stack.Navigator>
-		</NavigationContainer>
+		<OverlayContext.Provider value={{isOverlayVisible, setIsOverlayVisible}}>
+			<NavigationContainer theme={Themes} ref={navigationRef}>
+				<Stack.Navigator initialRouteName="Onboarding">
+					<Stack.Screen name="Root" component={BottomTabNavigator} options={() => options}/>
+					<Stack.Screen name="Auth" component={Auth} options={() => options}/>
+					<Stack.Screen name="Onboarding" component={OnboardingContainer} options={() => options}/>
+				</Stack.Navigator>
+			</NavigationContainer>
+		</OverlayContext.Provider>
 	);
 }
 

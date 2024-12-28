@@ -6,8 +6,11 @@ import {Header, BubbleStory, MessageCard, GroupCard} from '@/components';
 
 // Layout
 import Layout from '@/Layout';
+
+// Services
 import {ChatService} from "../../services/Chat";
 import {SignalRService} from '../../services/signalR';
+
 
 function MessagesContainer({navigation}) {
 	const chatService = new ChatService();
@@ -77,7 +80,6 @@ function MessagesContainer({navigation}) {
 					className="pl-6"
 				/>
 			</View>
-
 			<FlatList
 				data={relationships}
 				keyExtractor={(item) => {

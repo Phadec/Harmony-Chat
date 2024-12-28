@@ -38,15 +38,14 @@ function AddGroup() {
 	useEffect(() => {
 		// Thiết lập SignalR listeners
 		signalRService.setupGroupListeners((groupId) => {
-			// Có thể thêm logic để cập nhật danh sách nhóm ở đây
 			console.log("New group created:", groupId);
-			// Dispatch action để cập nhật Redux store nếu cần
 			dispatch(actions.refreshGroups());
 		});
 
 		// Cleanup when component unmounts
 		return () => {
-			signalRService.hubConnection.off("NotifyGroupMembers");
+			// Đảm bảo tên event giống với phần đăng ký
+			signalRService.hubConnection.off('NotifyGroupMembers');
 		};
 	}, [dispatch]);
 
@@ -104,12 +103,10 @@ function AddGroup() {
 			// THêm avatar vào FormData
 			data.append('AvatarFile', '');
 
-			console.log('FormData:', data);
 			// Gửi API
 			const groupService = new GroupService();
 			const response = await groupService.createGroup(data);
 			if (!response) {
-				console.error('Error creating group');
 				return;
 			}
 
@@ -117,6 +114,13 @@ function AddGroup() {
 			actions.setAddGroup(dispatch, false);
 			setGroupName('');
 			setFriendSelected([]);
+
+			// Emit event manually if needed
+			signalRService.groupCreated$.next({
+				groupId: response.id,
+				message: 'New group created'
+			});
+
 
 			// Hiển thị thông báo thành công
 			Alert.alert('Success', 'Group created successfully', [
@@ -130,7 +134,6 @@ function AddGroup() {
 				]
 			);
 		} catch (error) {
-			console.error('Error creating group:', error);
 			Alert.alert('Error', 'Failed to create group');
 		}
 	}
