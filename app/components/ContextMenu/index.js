@@ -18,7 +18,7 @@ const CustomContextMenu = ({
 							   children,
 							   menuPosition = {},
 							   options = [
-								   {value: 'mark_unread', icon: '🔄', text: 'Mark as unread'},
+								   {value: 'mark_read', icon: '🔄', text: 'Mark as read'},
 								   {value: 'mute', icon: '🔕', text: 'Mute'},
 								   {value: 'hide', icon: '👁️', text: 'Hide'},
 								   {value: 'delete', icon: '🗑️', text: 'Delete', color: 'red'}

@@ -1,5 +1,5 @@
 import MessagesContainer from './Messages';
-import StoriesContainer from './Stories';
+import FriendsContainer from './Friends';
 import GroupsContainer from './Groups';
 import SettingsContainer from './Settings';
 
@@ -39,7 +39,7 @@ import OnboardingContainer from './Onboarding';
 
 export {
 	MessagesContainer,
-	StoriesContainer,
+	FriendsContainer,
 	GroupsContainer,
 	SettingsContainer,
 	AccountSettingsContainer,

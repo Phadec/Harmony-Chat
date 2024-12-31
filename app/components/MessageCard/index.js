@@ -20,6 +20,12 @@ function formatChatDate(chatDate) {
 	const timeZone = 'Asia/Ho_Chi_Minh';
 	const date = new Date(chatDate);
 	date.setHours(date.getHours() + 7); // Adjust the date by adding 7 hours
+
+	// Kiểm tra nếu là hôm nay thi chỉ hiển thị giờ, ngược lại hiển thị ngày tháng va giờ
+	const today = new Date();
+	if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
+		return formatInTimeZone(date, timeZone, "HH:mm");
+	}
 	return formatInTimeZone(date, timeZone, "dd/MM HH:mm");
 }
 
@@ -70,11 +76,12 @@ function MessageCard({item, navigation}) {
 							   className="rounded-full w-11 h-11"/>
 
 						{/*Kiểm tra trạng thái nếu online thì hiện ko thì tắt*/}
-						{item.status && <Status color={"green"}/>}
+						{item.status === 'online' ? <Status color={"green"}/> : ''}
 
-						<View className="absolute -bottom-[2px] -right-[2px]">
-							<Text>👽</Text>
-						</View>
+						{/*Kiểm tra xem người dùng đọc chưa, nếu chưa thì in đậm*/}
+						{/*<View className="absolute -bottom-[2px] -right-[2px]">*/}
+						{/*	<Text>👽</Text>*/}
+						{/*</View>*/}
 					</View>
 
 					<View className="ml-3 flex-1">

@@ -3,13 +3,14 @@ import {Text, View} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 
 // Components
-import {Header, StoryCard} from '@/components';
+import {Header, FriendCard} from '@/components';
 
 // Services
 import {FriendService} from '@/services/Friend';
 
 // Layout
 import Layout from '@/Layout';
+import {SignalRService} from "../../services/signalR";
 
 const stories = [
 	{id: 1, photo: require('@/assets/images/story-1.png'), name: 'Mayke Schuurs', emoji: '😎'},
@@ -26,30 +27,55 @@ const stories = [
 	{id: 12, photo: require('@/assets/images/story-2.png'), name: 'Stina Gunnarsdottir', emoji: '🦦'},
 ];
 
-function StoriesContainer({navigation}) {
+function FriendsContainer({navigation}) {
 	const [friends, setFriends] = React.useState([]);
 	const friendsService = new FriendService();
+	const signalRService = SignalRService.getInstance();
+
+	// Call API to get friends
+	const fetchFriends = async () => {
+		const response = await friendsService.getFriends();
+		console.log("Friends response:", response);
+		if (response.$values.length < 1) return;
+
+		setFriends(response.$values);
+	};
 
 	useEffect(() => {
-			// Call API to get friends
-			const fetchFriends = async () => {
-				const response = await friendsService.getFriends();
-				console.log("Friends response:", response);
-				if (response.$values.length < 1) return;
+		const startSignalRConnection = async () => {
+			// Kiểm tra nếu SignalR đã được kết nối
+			if (signalRService.hubConnection.state !== signalRService.hubConnection.state.Connected) {
+				await signalRService.start(); // Chỉ bắt đầu kết nối nếu chưa kết nối
+			}
+			console.log("SignalR connection state:", signalRService.hubConnection.state);
+		};
 
-				setFriends(response.$values);
+		// Khởi động kết nối SignalR và subscribe vào sự kiện
+		startSignalRConnection().then(() => {
+			const subscription = signalRService.messageReceived$.subscribe((event) => {
+				console.log("SignalR event received:", event);
+				fetchFriends(); // Cập nhật danh sách bạn bè
+			});
+
+			// Cleanup khi component unmount
+			return () => {
+				console.log('Unsubscribing from SignalR messages');
+				subscription.unsubscribe(); // Hủy đăng ký sự kiện
 			};
+		}).catch((error) => {
+			console.error('Error while starting SignalR connection:', error);
+		});
 
-			fetchFriends().then(
-				() => console.log('Friends fetched successfully')
-			).catch(
-				(error) => console.error('Error fetching friends:', error)
-			);
-		}, []);
+		// Cleanup khi component unmount
+		return () => {
+			console.log('Disconnecting SignalR connection');
+			signalRService.stopConnection(); // Ngừng kết nối khi component unmount
+		};
+	}, [signalRService]); // Chỉ chạy khi signalRService thay đổi (singleton instance)
 
 	return (
 		<Layout>
-			<Header title="Stories" stories navigation={navigation}/>
+			<Header title="Friends" friends navigation={navigation}/>
 
 			<Text className="font-rubik text-sm text-black mt-6 mb-4">Your friends</Text>
 
@@ -57,12 +83,12 @@ function StoriesContainer({navigation}) {
 				<FlatList data={friends}
 						  keyExtractor={item => item.id}
 						  renderItem={({item}) =>
-							  <StoryCard item={item} navigation={navigation}/>
-				}
+							  <FriendCard item={item} navigation={navigation}/>
+						  }
 						  showsVerticalScrollIndicator={false} className="py-4"/>
 			</View>
 		</Layout>
 	);
 }
 
-export default StoriesContainer;
+export default FriendsContainer;

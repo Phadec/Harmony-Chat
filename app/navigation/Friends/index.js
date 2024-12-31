@@ -4,8 +4,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {enableScreens} from 'react-native-screens';
 
 // Containers
-import {StoriesContainer, StoryContainer} from '@/containers';
-import {ChatContainer} from "../../containers";
+import {FriendsContainer, ChatContainer} from '@/containers';
 
 enableScreens();
 
@@ -26,13 +25,13 @@ const options = {
 	headerShown: false,
 };
 
-function Stories() {
+function Friends() {
 	return (
 		<Stack.Navigator initialRouteName="Friends">
-			<Stack.Screen name="Stories" component={StoriesContainer} options={() => options} />
+			<Stack.Screen name="Friends" component={FriendsContainer} options={() => options} />
 			<Stack.Screen name="Chat" component={ChatContainer} options={() => options} />
-			{/*<Stack.Screen name="Story" component={StoryContainer} options={() => options} />*/}
+			{/*<Stack.Screen name="AddFriend" component={null} options={() => options} />*/}
 		</Stack.Navigator>
 	);
 }
-export default Stories;
+export default Friends;

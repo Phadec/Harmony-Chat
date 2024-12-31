@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React from 'react';
 import {View, Image, Text, TouchableOpacity} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -32,6 +32,8 @@ function formatChatDate(chatDate) {
 
 function GroupCard({item, navigation}) {
 	const avatarUrl = `${baseURL}/${item.avatar}`;
+	// Mask as read
+
 	const {
 		menuRef,
 		isSelected,
@@ -41,12 +43,10 @@ function GroupCard({item, navigation}) {
 		handleLongPress,
 		getMenuPosition
 	} = useContextMenu({
+		item: item,
 		navigationTarget: 'GroupChat',
 		navigationParams: {},
-		onSelectCallbacks: {
-			// Tùy chỉnh các callback cho message
-			mark_unread: () => console.log('Custom mark unread for message'),
-		}
+		onSelectCallbacks: {}
 	});
 
 	return (

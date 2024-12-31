@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {View, FlatList} from 'react-native';
 
 // Components
@@ -10,6 +10,7 @@ import Layout from '@/Layout';
 // Services
 import {ChatService} from "../../services/Chat";
 import {SignalRService} from '../../services/signalR';
+import {useFocusEffect} from "@react-navigation/native";
 
 
 function MessagesContainer({navigation}) {
@@ -38,11 +39,13 @@ function MessagesContainer({navigation}) {
 			if (signalRService.hubConnection.state !== signalRService.hubConnection.state.Connected) {
 				await signalRService.start(); // Chỉ bắt đầu kết nối nếu chưa kết nối
 			}
+			console.log("SignalR connection state:", signalRService.hubConnection.state);
 		};
 
 		// Khởi động kết nối SignalR và subscribe vào sự kiện
 		startSignalRConnection().then(() => {
-			const subscription = signalRService.messageReceived$.subscribe(() => {
+			const subscription = signalRService.messageReceived$.subscribe((event) => {
+				console.log("SignalR event received:", event);
 				fetchAndSetRelationships(); // Cập nhật danh sách tin nhắn khi nhận được tin nhắn
 			});
 
@@ -61,6 +64,14 @@ function MessagesContainer({navigation}) {
 			signalRService.stopConnection(); // Ngừng kết nối khi component unmount
 		};
 	}, [signalRService]); // Chỉ chạy khi signalRService thay đổi (singleton instance)
+
+	// Handle focus events
+	useFocusEffect(
+		React.useCallback(() => {
+			console.log("[MessageContainer] Screen focused, fetching groups...");
+			fetchAndSetRelationships();
+		}, [])
+	);
 
 	return (
 		<Layout>

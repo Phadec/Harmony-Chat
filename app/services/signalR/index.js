@@ -74,10 +74,20 @@ class SignalRService {
 			this.messageReceived$.next({type: 'ReactionRemoved', reaction});
 		});
 
+		this.hubConnection.on('UpdateRelationships', () => {
+			console.log('Relationship updated');
+			this.messageReceived$.next({type: 'UpdateRelationships'});
+		});
+
 		this.hubConnection.on('MessageDeleted', (messageId) => {
 			console.log('Message deleted:', messageId);
 			this.messageReceived$.next({type: 'MessageDeleted', messageId});
 		});
+
+		this.hubConnection.on('FriendEventNotification', (event, data) => {
+			console.log('Friend event notification:', event, data);
+			this.messageReceived$.next({type: 'FriendEventNotification', event});
+		})
 
 		this.hubConnection.onclose((error) => {
 			console.error('SignalR connection closed:', error);

@@ -41,7 +41,9 @@ function Tabbar({state, descriptors, navigation}) {
 		|| (routeName === 'Root:Messages' && stackName === 'GroupChat')
 		|| (routeName === 'Root:Groups' && stackName === 'GroupChat')
 		|| (routeName === 'Root:Stories' && stackName === 'Chat')
-		|| (routeName === 'Root:Calls' && stackName === 'Calling')) return null;
+		|| (routeName === 'Root:Stories' && stackName === 'AddFriend')
+		|| (routeName === 'Root:Calls' && stackName === 'Calling')
+	) return null;
 
 	return (
 		<View className="flex-row items-center justify-evenly bg-main h-20 relative">

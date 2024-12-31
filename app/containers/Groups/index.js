@@ -40,7 +40,7 @@ const GroupItem = ({group, navigation, index, totalItems}) => {
 		navigationParams: {},
 		onSelectCallbacks: {
 			// Tùy chỉnh các callback cho message
-			mark_unread: () => console.log('Custom mark unread for message'),
+			mark_read: () => console.log('Custom mark read for message'),
 		}
 	});
 

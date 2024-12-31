@@ -86,12 +86,11 @@ export class ChatService {
         `${ApiUrl}/${chatId}/mark-as-read`, {}
       );
 
-      if (response.data) {
-        return response.data; // Trả về dữ liệu nhận được từ API
-      }
+	  if (response.status === 200) {
+		return true;
+	  }
 
-      console.error('Mark message as read failed:', response.data);
-      return null;
+	  return false;
     } catch (error) {
       console.error('Mark message as read failed:', error.response ? error.response.data : error.message);
     }

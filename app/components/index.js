@@ -8,10 +8,10 @@ import CustomBackdrop from './BottomSheetBackdrop';
 import Header from './Header';
 import BubbleStory from './BubbleStory';
 import MessageCard from './MessageCard';
-import StoryCard from './StoryCard';
+import FriendCard from './FriendCard';
 import GroupCard from './GroupCard';
 import SettingItem from './SettingItem';
 import CustomContextMenu from './ContextMenu';
 
 export {TabBar, TabBarIcon, Button, Input, Header, BubbleStory, CustomContextMenu,
-	MessageCard, StoryCard, GroupCard, SettingItem, CustomBackdrop};
+	MessageCard, FriendCard, GroupCard, SettingItem, CustomBackdrop};

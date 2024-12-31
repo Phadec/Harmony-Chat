@@ -9,11 +9,12 @@ import {navigationRef} from '@/RootNavigation';
 
 // Main Screens
 import Messages from './Messages';
-import Stories from './Stories';
+import Friends from './Friends';
 import Groups from './Groups';
 import Settings from './Settings';
 import Calls from './Calls';
 import Auth from './Auth';
+
 import {OnboardingContainer} from '../containers';
 
 // Components
@@ -66,11 +67,11 @@ function BottomTabNavigator() {
 				)}>
 
 				<Tab.Screen
-					name="Root:Stories"
-					component={Stories}
-					icon="Stories"
+					name="Root:Friends"
+					component={Friends}
+					icon="Friends"
 					options={{
-						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Stories"/>,
+						tabBarIcon: ({focused}) => <TabBarIcon focused={focused} name="Friends"/>,
 						headerShown: false,
 					}}
 				/>

@@ -16,4 +16,20 @@ export class FriendService {
 			return null;
 		}
 	}
+
+	async muteFriendNotification(friendId) {
+		try {
+			const userId = await AsyncStorage.getItem('userId');
+			const response = await axiosInstance.post(`${API_URL}/${userId}/mute-friend-notifications/${friendId}`);
+
+			if (response.status === 200) {
+				return response.data;
+			}
+			
+			return null;
+		} catch (error) {
+			console.log('Error at muteFriendNotification:', error);
+			return null;
+		}
+	}
 }
