@@ -33,6 +33,15 @@ import ForgotPasswordContainer from './ForgotPassword';
 // Onboarding
 import OnboardingContainer from './Onboarding';
 
+//Invitations
+import InvitationsContainer from './Invitations';
+
+//Profile
+import ProfileContainer from './Profile';
+
+//Block
+import BlockedUsersContainer from './BlockedUsers';
+
 export {
 	MessagesContainer,
 	StoriesContainer,
@@ -56,4 +65,7 @@ export {
 	SignupContainer,
 	ForgotPasswordContainer,
 	OnboardingContainer,
+	InvitationsContainer,
+	ProfileContainer,
+	BlockedUsersContainer,
 };
