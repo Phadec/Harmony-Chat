@@ -33,7 +33,7 @@ async getRelationships() {
 		try {
 		  console.log('Sending message with formData:', formData);
 		  const response = await axiosInstance.post(
-			`${ApiUrl}/send-message`, formData,
+			`${baseURL}/api/Chats/send-message`, formData,
 			{
 			  headers: {
 				'Content-Type': 'multipart/form-data',

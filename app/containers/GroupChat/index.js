@@ -26,7 +26,8 @@ import {ChatService} from "../../services/Chat";
 function Header({navigation, route}) {
 	const insets = useSafeAreaInsets();
 	console.log('Header route:', route.params);
-	const {avatar, nameGroup, countMembers} = route.params;
+	const {avatar, nameGroup} = route.params;
+	const countMembers = 3;
 
 	return (
 		<View className="bg-main flex-row items-center p-6 rounded-b-3xl" style={{paddingTop: insets.top + 16}}>
@@ -48,10 +49,6 @@ function Header({navigation, route}) {
 			</View>
 
 			<View className="flex-row items-center ml-auto">
-				<Button>
-					<Octicons name="search" size={16} color={Colors.white} />
-				</Button>
-
 				<Button>
 					<Fontisto name="more-v-a" size={16} color={Colors.white} />
 				</Button>
@@ -128,7 +125,7 @@ function Chat({me, message, date, reaction, onLongPress, onDelete, isDeleted, at
 					)}
 
 					<Text className={`${me ? 'mr-3' : 'ml-3'} font-rubik text-2xs text-black/30`}>
-						{/* {adjustedDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} */}
+						{adjustedDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
 					</Text>
 
 					{me && !isDeleted && (

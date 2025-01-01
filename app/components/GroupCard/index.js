@@ -1,25 +1,20 @@
 import React from 'react';
 import {View, Image, Text, TouchableOpacity} from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Components
 import {CustomContextMenu} from "@/components/";
+
+import {ChatGroup} from "@/services/ChatGroup";
 
 
 // Hooks
 import {useContextMenu} from "@/hooks";
 
-// Common
-import {Constants, Colors} from '@/common';
-
 // Utils
 import {baseURL} from "../../services/axiosInstance";
-import { count } from 'rxjs';
 
 function GroupCard({item, navigation}) {
 	const avatarUrl = `${baseURL}/${item.avatar}`;
-	console.log('GroupCard', item);
-	// Mask as read
 
 	const {
 		menuRef,
@@ -35,8 +30,7 @@ function GroupCard({item, navigation}) {
 		navigationParams: {
 			recipientId: item.id,
 			avatar: {uri: avatarUrl},
-			nameGroup: item.name,
-			countMembers: 10
+			nameGroup: item.name
 		},
 		onSelectCallbacks: {}
 	});
