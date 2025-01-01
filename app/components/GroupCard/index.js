@@ -14,24 +14,11 @@ import {Constants, Colors} from '@/common';
 
 // Utils
 import {baseURL} from "../../services/axiosInstance";
-import {formatInTimeZone} from "date-fns-tz";
-
-function formatChatDate(chatDate) {
-	const timeZone = 'Asia/Ho_Chi_Minh';
-	const date = new Date(chatDate);
-	date.setHours(date.getHours() + 7); // Adjust the date by adding 7 hours
-
-	// Kiểm tra nếu là hôm nay thi chỉ hiển thị giờ, ngược lại hiển thị ngày tháng va giờ
-	const today = new Date();
-	if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
-		return formatInTimeZone(date, timeZone, "HH:mm");
-	}
-
-	return formatInTimeZone(date, timeZone, "dd/MM HH:mm");
-}
+import { count } from 'rxjs';
 
 function GroupCard({item, navigation}) {
 	const avatarUrl = `${baseURL}/${item.avatar}`;
+	console.log('GroupCard', item);
 	// Mask as read
 
 	const {
@@ -45,7 +32,12 @@ function GroupCard({item, navigation}) {
 	} = useContextMenu({
 		item: item,
 		navigationTarget: 'GroupChat',
-		navigationParams: {},
+		navigationParams: {
+			recipientId: item.id,
+			avatar: {uri: avatarUrl},
+			nameGroup: item.name,
+			countMembers: 10
+		},
 		onSelectCallbacks: {}
 	});
 
@@ -70,11 +62,9 @@ function GroupCard({item, navigation}) {
 					</View>
 
 					<View className="ml-3 flex-1">
-						<Text className="font-rubik font-medium text-sm text-black leading-5">{item.groupName}</Text>
+						<Text className="font-rubik font-medium text-sm text-black leading-5">{item.name}</Text>
 
 						<View className="flex-row items-center mt-1">
-							<Ionicons name="checkmark-done-outline" size={14}
-									  color={Constants.HexToRgba(Colors.black, 0.4)}/>
 							<Text
 								className={`font-rubik ${item.hasNewMessage ? 'font-bold' : 'font-medium'} text-xs text-black ml-1`}>
 								{item.senderFullName}: {item.lastMessage}
@@ -85,7 +75,7 @@ function GroupCard({item, navigation}) {
 					<View className="ml-2">
 						<Text
 							className={`font-rubik ${item.hasNewMessage ? 'font-bold' : 'font-medium text-black/40'}  text-xs text-black`}>
-							{formatChatDate(item.chatDate)}
+							{/* {formatChatDate(item.chatDate)} */}
 						</Text>
 						<View
 							className={`${item.hasNewMessage ? 'bg-red rounded-2xl items-center mt-2 w-3 ml-auto py-1.5' : ''}`}/>

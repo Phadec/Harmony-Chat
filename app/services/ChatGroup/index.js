@@ -3,6 +3,26 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const ApiUrl = `${baseURL}/api/Groups`;
 
 export class ChatGroup {
+// Lấy các mối quan hệ (bạn bè, nhóm)
+async getRelationships() {
+    const userId = await AsyncStorage.getItem('userId');
+    try {
+      const response = await axiosInstance.get(
+        `${ApiUrl}/get-relationships`, {
+          params: { userId: userId || '' },
+        });
+
+      if (response.data) {
+        return response.data; // Trả về dữ liệu nhận được từ API
+      }
+
+      console.error('Get relationships failed:', response.data);
+      return null;
+    } catch (error) {
+      console.error('Get relationships failed:', error.response ? error.response.data : error.message);
+    }
+  }
+
 	// Gửi tin nhắn
 	async sendMessage(recipientId, message, formData) {
 		const userId = await AsyncStorage.getItem('userId');

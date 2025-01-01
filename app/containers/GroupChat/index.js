@@ -1,5 +1,5 @@
-import React, {useState, useEffect} from 'react';
-import {SectionList, Image, Text, View, Platform, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard} from 'react-native';
+import React, {useState, useEffect, useRef} from 'react';
+import {SectionList, Image, Text, View, Platform, TouchableWithoutFeedback, TouchableOpacity, KeyboardAvoidingView, Keyboard, Modal} from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import Animated, {useSharedValue, useAnimatedStyle, withTiming} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -9,6 +9,9 @@ import Feather from 'react-native-vector-icons/Feather';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {SignalRService} from "../../services/signalR";
+import AudioRecorderPlayer from 'react-native-audio-recorder-player'; // Add this import
+import {useFocusEffect} from '@react-navigation/native';
 
 // Components
 import {Button, Input} from '@/components';
@@ -18,9 +21,11 @@ import {Colors, Constants} from '@/common';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChatGroup } from '../../services/ChatGroup';
+import {ChatService} from "../../services/Chat";
 
 function Header({navigation, route}) {
 	const insets = useSafeAreaInsets();
+	console.log('Header route:', route.params);
 	const {avatar, nameGroup, countMembers} = route.params;
 
 	return (
@@ -123,7 +128,7 @@ function Chat({me, message, date, reaction, onLongPress, onDelete, isDeleted, at
 					)}
 
 					<Text className={`${me ? 'mr-3' : 'ml-3'} font-rubik text-2xs text-black/30`}>
-						{adjustedDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+						{/* {adjustedDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} */}
 					</Text>
 
 					{me && !isDeleted && (
