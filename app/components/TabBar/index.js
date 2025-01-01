@@ -42,6 +42,7 @@ function Tabbar({state, descriptors, navigation}) {
 		|| (routeName === 'Root:Groups' && stackName === 'GroupChat')
 		|| (routeName === 'Root:Friends' && stackName === 'Chat')
 		|| (routeName === 'Root:Friends' && stackName === 'AddFriend')
+		|| (routeName === 'Root:Friends' && stackName === 'FriendRequests')
 		|| (routeName === 'Root:Calls' && stackName === 'Calling')
 	) return null;
 

@@ -21,7 +21,8 @@ import {Input, Button} from '@/components';
 import {Colors, Constants} from '@/common';
 
 // Services
-import {FriendService, GroupService, SignalRService} from "@/services";
+import {FriendService, GroupService} from "@/services";
+import {SignalRService} from "../../services/signalR";
 
 // Redux
 import {useDispatch, useSelector} from "react-redux";
