@@ -4,7 +4,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {enableScreens} from 'react-native-screens';
 
 // Containers
-import {FriendsContainer, ChatContainer} from '@/containers';
+import {FriendsContainer, ChatContainer, FriendRequests, AddFriend} from '@/containers';
 
 enableScreens();
 
@@ -30,7 +30,8 @@ function Friends() {
 		<Stack.Navigator initialRouteName="Friends">
 			<Stack.Screen name="Friends" component={FriendsContainer} options={() => options} />
 			<Stack.Screen name="Chat" component={ChatContainer} options={() => options} />
-			{/*<Stack.Screen name="AddFriend" component={null} options={() => options} />*/}
+			<Stack.Screen name="AddFriend" component={AddFriend} options={() => options} />
+			<Stack.Screen name="FriendRequests" component={FriendRequests} options={() => options} />
 		</Stack.Navigator>
 	);
 }

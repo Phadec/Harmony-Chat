@@ -49,7 +49,7 @@ function Header({title, friends, groups, messages, search, goBack, navigation}) 
 				)}
 				{friends && (
 					<Button onPress={() => navigation.navigate('AddFriend')}>
-						<AntDesign name="pluscircleo" size={20} color={Colors.black}/>
+						<MaterialIcons name="person-add" size={25} color={Colors.black}/>
 					</Button>
 				)}
 

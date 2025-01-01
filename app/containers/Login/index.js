@@ -50,7 +50,6 @@ function LoginContainer({navigation}) {
 			await setUserInStorage(response.data);
 
 			// Điều hướng dựa trên role của người dùng
-			console.log(response)
 			if (response.data.role === 'User') {
 				navigation.navigate('Root', {screen: 'Root:Messages'});
 			}

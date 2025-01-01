@@ -10,6 +10,7 @@ class SignalRService {
 		this.reconnectAttempts = 0;
 		this.messageReceived$ = new BehaviorSubject(null);
 		this.groupCreated$ = new BehaviorSubject(null);
+		this.notificationReceived$ = new BehaviorSubject(null);
 		this.registerListeners();
 	}
 
@@ -89,10 +90,15 @@ class SignalRService {
 			this.messageReceived$.next({type: 'FriendEventNotification', event});
 		})
 
-		this.hubConnection.onclose((error) => {
-			console.error('SignalR connection closed:', error);
-			this.isConnected = false;
+
+		// Thêm reconnection logic
+		this.hubConnection.onreconnected(() => {
+			console.log('SignalR reconnected');
 		});
+		// this.hubConnection.onclose((error) => {
+		// 	console.error('SignalR connection closed:', error);
+		// 	this.isConnected = false;
+		// });
 	}
 
 	startConnection() {
