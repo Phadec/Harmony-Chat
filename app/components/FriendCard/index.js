@@ -1,16 +1,27 @@
 import React from 'react';
-import {Image, View, Text, TouchableOpacity} from 'react-native';
+import {Image, View, Text, TouchableOpacity, Alert} from 'react-native';
 import Svg, {Circle} from 'react-native-svg';
 
 // Components
 import {Button} from '@/components';
 
+// Icons
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+
 // Commons
 import {Colors} from '@/common';
+
+// Services
+import {FriendService} from "@/services";
+
+
 import {baseURL} from "../../services/axiosInstance";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+
+// Redux
 import {CustomContextMenu} from "../index";
 import {useContextMenu} from "../../hooks";
+import {useDispatch} from "react-redux";
+import {removeFriend, updateFriend} from "../../redux/reducer/FriendRedux";
 
 function StoryShape({size, count}) {
 	const numberOfDots = (2 * 3.14 * 26) / count;
@@ -29,7 +40,10 @@ function Status({color}) {
 }
 
 function FriendCard({item, navigation}) {
+	const dispatch = useDispatch();
 	const avatar = `${baseURL}/${item.avatar}`
+
+
 	const {
 		menuRef,
 		isSelected,
@@ -50,8 +64,45 @@ function FriendCard({item, navigation}) {
 			online: item.online,
 			tagName: item.tagName,
 		},
-		onSelectCallbacks: {}
+		onSelectCallbacks: {
+			mute: () => handleMuteFriendNotification(),	// Mute
+			delete: () => unFriend(),	// Unfriend
+		}
 	});
+
+	// Hàm Mute
+	const handleMuteFriendNotification = async () => {
+		try {
+			if (!item) {
+				console.warn('No item found to mute.');
+				return;
+			}
+			const friendService = new FriendService();
+			const response = await friendService.muteFriendNotification(item.id);
+
+			if (response) {
+				console.log('Muted success for friend:', item.fullName);
+				dispatch(updateFriend({...item, notificationsMuted: !item.notificationsMuted}));
+			}
+		} catch (error) {
+			console.error('Error muting chat:', error);
+		}
+	};
+
+	// unFriend
+	const unFriend = async () => {
+		try {
+			const friendService = new FriendService();
+			const response = await friendService.unFriend(item.id);
+			if (response) {
+				Alert.alert(`Unfriend with ${item.fullName} successfully!`);
+				// Dispatch action để cập nhật Redux store
+				dispatch(removeFriend(item.id));
+			}
+		}catch (error) {
+			console.log('Error unfriend:', error);
+		}
+	}
 
 	return (
 		<CustomContextMenu

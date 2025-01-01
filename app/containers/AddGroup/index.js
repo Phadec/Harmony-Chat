@@ -10,6 +10,7 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 
+// Utils
 import {baseURL} from "../../services/axiosInstance";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -20,13 +21,15 @@ import {Input, Button} from '@/components';
 import {Colors, Constants} from '@/common';
 
 // Services
-import {FriendService} from "../../services/Friend";
+import {FriendService, GroupService} from "@/services";
+import {SignalRService} from "../../services/signalR";
+
+// Redux
 import {useDispatch, useSelector} from "react-redux";
 import {actions} from "../../redux/reducer/GroupRedux";
 
+// Navigation
 import {navigationRef} from '@/RootNavigation';
-import {GroupService} from "../../services/Group";
-import {SignalRService} from "../../services/signalR";
 
 function AddGroup() {
 	const dispatch = useDispatch();

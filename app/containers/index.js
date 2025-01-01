@@ -26,6 +26,9 @@ import AddGroup from './AddGroup';
 import StoryContainer from './Story';
 import AddStory from './AddStory';
 
+// Friends
+import AddFriend from './AddFriend';
+import FriendRequests from "./FriendRequests";
 
 // Auth
 import LoginContainer from './Login';
@@ -49,6 +52,8 @@ import BlockedUsersContainer from './BlockedUsers';
 export {
 	MessagesContainer,
 	FriendsContainer,
+	FriendRequests,
+	AddFriend,
 	GroupsContainer,
 	SettingsContainer,
 	AccountSettingsContainer,

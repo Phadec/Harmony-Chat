@@ -40,8 +40,9 @@ function Tabbar({state, descriptors, navigation}) {
 	if ((routeName === 'Root:Messages' && stackName === 'Chat')
 		|| (routeName === 'Root:Messages' && stackName === 'GroupChat')
 		|| (routeName === 'Root:Groups' && stackName === 'GroupChat')
-		|| (routeName === 'Root:Stories' && stackName === 'Chat')
-		|| (routeName === 'Root:Stories' && stackName === 'AddFriend')
+		|| (routeName === 'Root:Friends' && stackName === 'Chat')
+		|| (routeName === 'Root:Friends' && stackName === 'AddFriend')
+		|| (routeName === 'Root:Friends' && stackName === 'FriendRequests')
 		|| (routeName === 'Root:Calls' && stackName === 'Calling')
 	) return null;
 

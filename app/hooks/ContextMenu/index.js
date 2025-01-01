@@ -2,8 +2,7 @@ import {useRef, useState} from "react";
 import {useNavigation} from "@react-navigation/native";
 
 // Services
-import {ChatService} from "../../services/Chat";
-import {FriendService} from "@/services";
+import {FriendService, ChatService} from "@/services";
 
 function useContextMenu(
 	options = {

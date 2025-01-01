@@ -1,91 +1,105 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
+import {useFocusEffect} from "@react-navigation/native";
 import {Text, View} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 
 // Components
-import {Header, FriendCard} from '@/components';
+import {Header, FriendCard, Button} from '@/components';
 
 // Services
-import {FriendService} from '@/services/Friend';
+import {FriendService} from '@/services';
+import {SignalRService} from "../../services/signalR";
 
 // Layout
 import Layout from '@/Layout';
-import {SignalRService} from "../../services/signalR";
 
-const stories = [
-	{id: 1, photo: require('@/assets/images/story-1.png'), name: 'Mayke Schuurs', emoji: '😎'},
-	{id: 2, photo: require('@/assets/images/story-2.png'), name: 'Daisy Murphy', emoji: '🌿'},
-	{id: 3, photo: require('@/assets/images/story-3.png'), name: 'Veerle de Bree', emoji: '👽'},
-	{id: 4, photo: require('@/assets/images/story-4.png'), name: 'Stormie Hansford', emoji: '🙌🏻'},
-	{id: 5, photo: require('@/assets/images/story-5.png'), name: 'Paulina Gayoso', emoji: '🫰🏽'},
-	{id: 6, photo: require('@/assets/images/story-2.png'), name: 'Stina Gunnarsdottir', emoji: '🦦'},
-	{id: 7, photo: require('@/assets/images/story-1.png'), name: 'Wan Gengxin', emoji: '🪵'},
-	{id: 8, photo: require('@/assets/images/story-2.png'), name: 'Alexander Ljung', emoji: '🩰'},
-	{id: 9, photo: require('@/assets/images/story-3.png'), name: 'Daisy Murphy', emoji: '👽'},
-	{id: 10, photo: require('@/assets/images/story-4.png'), name: 'Paulina Gayoso', emoji: '🙌🏻'},
-	{id: 11, photo: require('@/assets/images/story-5.png'), name: 'Mayke Schuurs', emoji: '🫰🏽'},
-	{id: 12, photo: require('@/assets/images/story-2.png'), name: 'Stina Gunnarsdottir', emoji: '🦦'},
-];
+// Redux
+import {useDispatch, useSelector} from "react-redux";
+import {fetchFriends} from "../../redux/reducer/FriendRedux";
 
 function FriendsContainer({navigation}) {
-	const [friends, setFriends] = React.useState([]);
-	const friendsService = new FriendService();
+	const dispatch = useDispatch();
+	const {friends, error} = useSelector((state) => state.friend);
+
+	const friendService = new FriendService();
 	const signalRService = SignalRService.getInstance();
+	const subscriptionRef = React.useRef(null);
 
-	// Call API to get friends
-	const fetchFriends = async () => {
-		const response = await friendsService.getFriends();
-		console.log("Friends response:", response);
-		if (response.$values.length < 1) return;
+	// Setup SignalR Subscription
+	const setupSignalRSubscription = () => {
+		if (subscriptionRef.current) {
+			subscriptionRef.current.unsubscribe();
+		}
 
-		setFriends(response.$values);
+		// Đồng bộ danh sách bạn bè khi có sự thay đổi
+		subscriptionRef.current = signalRService.messageReceived$.subscribe(() => {
+			dispatch(fetchFriends(friendService));
+		});
 	};
 
+	// Initialize SignalR and fetch friends on mount
 	useEffect(() => {
-		const startSignalRConnection = async () => {
-			// Kiểm tra nếu SignalR đã được kết nối
-			if (signalRService.hubConnection.state !== signalRService.hubConnection.state.Connected) {
-				await signalRService.start(); // Chỉ bắt đầu kết nối nếu chưa kết nối
+		const initializeSignalR = async () => {
+			try {
+				if (signalRService.hubConnection.state !== 'Connected') {
+					await signalRService.start();
+				}
+				setupSignalRSubscription();
+			} catch (err) {
+				console.error('SignalR initialization error:', err);
 			}
-			console.log("SignalR connection state:", signalRService.hubConnection.state);
 		};
 
-		// Khởi động kết nối SignalR và subscribe vào sự kiện
-		startSignalRConnection().then(() => {
-			const subscription = signalRService.messageReceived$.subscribe((event) => {
-				console.log("SignalR event received:", event);
-				fetchFriends(); // Cập nhật danh sách bạn bè
-			});
+		initializeSignalR();
 
-			// Cleanup khi component unmount
-			return () => {
-				console.log('Unsubscribing from SignalR messages');
-				subscription.unsubscribe(); // Hủy đăng ký sự kiện
-			};
-		}).catch((error) => {
-			console.error('Error while starting SignalR connection:', error);
-		});
-
-		// Cleanup khi component unmount
 		return () => {
-			console.log('Disconnecting SignalR connection');
-			signalRService.stopConnection(); // Ngừng kết nối khi component unmount
+			if (subscriptionRef.current) {
+				subscriptionRef.current.unsubscribe();
+				subscriptionRef.current = null;
+			}
 		};
-	}, [signalRService]); // Chỉ chạy khi signalRService thay đổi (singleton instance)
+	}, []);
 
+	// Refetch friends when screen focuses
+	useFocusEffect(
+		useCallback(() => {
+			dispatch(fetchFriends(friendService));
+			setupSignalRSubscription();
+
+			return () => {
+				if (subscriptionRef.current) {
+					subscriptionRef.current.unsubscribe();
+					subscriptionRef.current = null;
+				}
+			};
+		}, [])
+	);
 	return (
 		<Layout>
 			<Header title="Friends" friends navigation={navigation}/>
-
-			<Text className="font-rubik text-sm text-black mt-6 mb-4">Your friends</Text>
+			{/* Lời mời kết bạn */}
+			<View className="flex flex-row justify-between mt-6 mb-3">
+				<Text className="font-rubik text-sm text-black px-3 py-1.5 ">Your friends</Text>
+				<Button
+					onPress={() => navigation.navigate('FriendRequests')}
+					className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium text-sm text-gray-900 transition-colors duration-200">
+					<Text className="font-rubik text-sm text-black">Friend Requests</Text>
+				</Button>
+			</View>
 
 			<View className="flex-1 bg-light rounded-3xl px-4 mb-4">
-				<FlatList data={friends}
-						  keyExtractor={item => item.id}
-						  renderItem={({item}) =>
-							  <FriendCard item={item} navigation={navigation}/>
-						  }
-						  showsVerticalScrollIndicator={false} className="py-4"/>
+				{
+					error ? (
+						<Text>Error: {error}</Text>
+					) : (
+						<FlatList
+							data={friends}
+							keyExtractor={(item) => item.id}
+							renderItem={({item}) => <FriendCard item={item} navigation={navigation}/>}
+							showsVerticalScrollIndicator={false}
+							className="py-4"
+						/>
+					)}
 			</View>
 		</Layout>
 	);

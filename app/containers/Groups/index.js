@@ -1,96 +1,167 @@
-import React, {useEffect, useState} from 'react';
-import {View, FlatList} from 'react-native';
-import {useFocusEffect} from '@react-navigation/native';
+import React, {useState, useEffect, useRef, useLayoutEffect, useCallback} from 'react';
+import {
+	View,
+	FlatList,
+	Image,
+	Text,
+	TouchableOpacity,
+} from 'react-native';
+import {useFocusEffect} from "@react-navigation/native";
 
 // Components
-import {Header, GroupCard} from '@/components';
+import {Header, CustomContextMenu} from '@/components';
 
 // Layout
 import Layout from '@/Layout';
 
-import {ChatGroup} from '../../services/ChatGroup';
-import {SignalRService} from '../../services/signalR';
+// Service
+import {SignalRService} from "../../services/signalR";
+import {GroupService} from "@/services";
+
+// Hooks
+import {useContextMenu} from "@/hooks";
+
+// Constants
+import {baseURL} from "../../services/axiosInstance";
+
+
+const GroupItem = ({group, navigation, index, totalItems}) => {
+	const avatarUrl = `${baseURL}/${group.avatar}`;
+	const {
+		menuRef,
+		isSelected,
+		setIsSelected,
+		handleSelect,
+		handlePress,
+		handleLongPress,
+		getMenuPosition
+	} = useContextMenu({
+		navigationTarget: 'GroupChat',
+		navigationParams: {},
+		onSelectCallbacks: {
+			// Tùy chỉnh các callback cho message
+			mark_read: () => console.log('Custom mark read for message'),
+		}
+	});
+
+	return (
+		<CustomContextMenu
+			menuRef={menuRef}
+			isSelected={isSelected}
+			onClose={() => setIsSelected(false)}
+			onSelect={handleSelect}
+			menuPosition={getMenuPosition()}>
+
+			{/* Group item (children)*/}
+			<TouchableOpacity
+				onPress={handlePress}
+				onLongPress={handleLongPress}
+			>
+				<View className={`flex-row items-center rounded-2xl py-2 px-14 mb-3 ${
+					isSelected ? 'bg-gray-100' : 'bg-light'
+				}`}>
+					<View className="relative w-11 h-11 rounded-full">
+						<Image
+							source={{uri: avatarUrl}}
+							className="rounded-full w-10 h-10"
+						/>
+					</View>
+					<View className="ml-3 flex-1">
+						<Text className="font-rubik font-medium text-sm text-black leading-5">
+							{group.name}
+						</Text>
+					</View>
+				</View>
+			</TouchableOpacity>
+		</CustomContextMenu>
+	);
+};
 
 function GroupsContainer({navigation}) {
-	const chatService = new ChatGroup();
-	const signalRService = SignalRService.getInstance(); // Đảm bảo sử dụng Singleton instance
-	const [relationships, setRelationships] = useState([]);
+	const [groups, setGroups] = useState([]);
+	const signalRService = SignalRService.getInstance();
+	// Tạo một ref để track subscription
+	const subscriptionRef = useRef(null);
 
-	// Hàm gọi API lấy danh sách tin nhắn
-	const fetchAndSetRelationships = async () => {
+	const fetchGroupsDetails = async () => {
 		try {
-			const relations = await chatService.getUserGroupsWithDetails();
-			if (relations?.$values?.length > 0) {
-				setRelationships(relations.$values);
-			} else {
-				console.warn('No groups found.');
+			const groupService = new GroupService();
+			const groups = await groupService.getGroupDetails();
+			if (groups) {
+				setGroups(groups.$values);
 			}
 		} catch (error) {
 			console.error('Error fetching groups:', error);
 		}
 	};
 
-	// Lắng nghe sự kiện messageReceived từ SignalR
 	useEffect(() => {
-		const startSignalRConnection = async () => {
-			// Kiểm tra nếu SignalR đã được kết nối
-			if (signalRService.hubConnection.state !== signalRService.hubConnection.state.Connected) {
-				await signalRService.start(); // Chỉ bắt đầu kết nối nếu chưa kết nối
+		let isMounted = true;
+
+		const setupSignalR = async () => {
+			try {
+				// Ensure connection
+				if (signalRService.hubConnection.state !== 'Connected') {
+					await signalRService.start();
+				}
+
+				// Unsubscribe from previous subscription
+				if (subscriptionRef.current) {
+					subscriptionRef.current.unsubscribe();
+				}
+
+				// Setup new subscription
+				subscriptionRef.current = signalRService.groupCreated$.subscribe((data) => {
+					console.log("[GroupsContainer] Group notification received:", data);
+					if (isMounted) {
+						fetchGroupsDetails();
+					}
+				});
+
+				// Initial fetch
+				if (isMounted) {
+					await fetchGroupsDetails();
+				}
+			} catch (error) {
+				console.error('Error setting up SignalR:', error);
 			}
 		};
 
-		// Khởi động kết nối SignalR và subscribe vào sự kiện
-		startSignalRConnection()
-			.then(() => {
-				const subscription = signalRService.messageReceived$.subscribe((event) => {
-					console.log('SignalR event received:', event);
-					fetchAndSetRelationships(); // Cập nhật danh sách tin nhắn khi nhận được tin nhắn
-				});
+		setupSignalR();
 
-				// Cleanup khi component unmount
-				return () => {
-					console.log('Unsubscribing from SignalR messages');
-					subscription.unsubscribe(); // Hủy đăng ký sự kiện
-				};
-			})
-			.catch(error => {
-				console.error('Error while starting SignalR connection:', error);
-			});
-
-		// Cleanup khi component unmount
+		// Cleanup
 		return () => {
-			console.log('Disconnecting SignalR connection');
-			signalRService.stopConnection(); // Ngừng kết nối khi component unmount
+			isMounted = false;
+			if (subscriptionRef.current) {
+				subscriptionRef.current.unsubscribe();
+			}
 		};
-	}, [signalRService]); // Chỉ chạy khi signalRService thay đổi (singleton instance)
+	}, []);
 
-	// Reload messages when the screen is focused
+	// Handle focus events
 	useFocusEffect(
 		React.useCallback(() => {
-			console.log('[MessageContainer] Screen focused, fetching groups...');
-			fetchAndSetRelationships();
-		}, []),
+			console.log("[GroupsContainer] Screen focused, fetching groups...");
+			fetchGroupsDetails();
+		}, [])
 	);
+
 
 	return (
 		<Layout>
-			<Header title="Groups" messages search navigation={navigation} />
-
+			<Header title="Groups" groups navigation={navigation}/>
 			<View className="flex-1 mt-6">
 				<FlatList
-					data={relationships}
-					keyExtractor={item => {
-						if (item.relationshipType === 'Group') {
-							return item.groupId;
-						}
-						return item.contactId;
-					}}
-					renderItem={({item}) => {
-						if (item.relationshipType === 'Private') {
-							return <MessageCard item={item} navigation={navigation} />;
-						}
-						return <GroupCard item={item} navigation={navigation} />;
-					}}
+					data={groups}
+					keyExtractor={item => item.id}
+					renderItem={({item}) => (
+						<GroupItem
+							group={item}
+							navigation={navigation}
+							index={groups.indexOf(item)}
+							totalItems={groups.length}
+						/>
+					)}
 					showsVerticalScrollIndicator={false}
 				/>
 			</View>
