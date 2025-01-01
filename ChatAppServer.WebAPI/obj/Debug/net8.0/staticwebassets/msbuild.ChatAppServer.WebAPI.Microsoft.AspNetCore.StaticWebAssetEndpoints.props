@@ -1,0 +1,76 @@
+﻿<Project>
+  <ItemGroup>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/2f9eb654-efb9-437b-b090-7dc702feb580.png">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\2f9eb654-efb9-437b-b090-7dc702feb580.png'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=3600, must-revalidate"},{"Name":"Content-Length","Value":"18928"},{"Name":"Content-Type","Value":"image/png"},{"Name":"ETag","Value":"\u0022vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk=\u0022"},{"Name":"Last-Modified","Value":"Tue, 24 Dec 2024 07:17:13 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/2f9eb654-efb9-437b-b090-7dc702feb580.uosypgna2i.png">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\2f9eb654-efb9-437b-b090-7dc702feb580.png'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"uosypgna2i"},{"Name":"integrity","Value":"sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk="},{"Name":"label","Value":"_content/ChatAppServer.WebAPI/avatars/2f9eb654-efb9-437b-b090-7dc702feb580.png"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"18928"},{"Name":"Content-Type","Value":"image/png"},{"Name":"ETag","Value":"\u0022vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk=\u0022"},{"Name":"Last-Modified","Value":"Tue, 24 Dec 2024 07:17:13 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/6cbb7b39-361b-4b67-a3de-11485c7f2495.png">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\6cbb7b39-361b-4b67-a3de-11485c7f2495.png'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=3600, must-revalidate"},{"Name":"Content-Length","Value":"18928"},{"Name":"Content-Type","Value":"image/png"},{"Name":"ETag","Value":"\u0022vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk=\u0022"},{"Name":"Last-Modified","Value":"Wed, 25 Dec 2024 06:38:16 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/6cbb7b39-361b-4b67-a3de-11485c7f2495.uosypgna2i.png">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\6cbb7b39-361b-4b67-a3de-11485c7f2495.png'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"uosypgna2i"},{"Name":"integrity","Value":"sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk="},{"Name":"label","Value":"_content/ChatAppServer.WebAPI/avatars/6cbb7b39-361b-4b67-a3de-11485c7f2495.png"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"18928"},{"Name":"Content-Type","Value":"image/png"},{"Name":"ETag","Value":"\u0022vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk=\u0022"},{"Name":"Last-Modified","Value":"Wed, 25 Dec 2024 06:38:16 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/a6c7e131-3883-4359-b825-a5afe0874684.fz86qlh85p.jpg">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\a6c7e131-3883-4359-b825-a5afe0874684.jpg'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"fz86qlh85p"},{"Name":"integrity","Value":"sha256-Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8="},{"Name":"label","Value":"_content/ChatAppServer.WebAPI/avatars/a6c7e131-3883-4359-b825-a5afe0874684.jpg"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"235059"},{"Name":"Content-Type","Value":"image/jpeg"},{"Name":"ETag","Value":"\u0022Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8=\u0022"},{"Name":"Last-Modified","Value":"Sat, 07 Dec 2024 03:37:18 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/a6c7e131-3883-4359-b825-a5afe0874684.jpg">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\a6c7e131-3883-4359-b825-a5afe0874684.jpg'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=3600, must-revalidate"},{"Name":"Content-Length","Value":"235059"},{"Name":"Content-Type","Value":"image/jpeg"},{"Name":"ETag","Value":"\u0022Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8=\u0022"},{"Name":"Last-Modified","Value":"Sat, 07 Dec 2024 03:37:18 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/default.jpg">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\default.jpg'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=3600, must-revalidate"},{"Name":"Content-Length","Value":"18983"},{"Name":"Content-Type","Value":"image/jpeg"},{"Name":"ETag","Value":"\u0022J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA=\u0022"},{"Name":"Last-Modified","Value":"Sat, 07 Dec 2024 03:37:18 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/default.ltfr8yrqfa.jpg">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\default.jpg'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"ltfr8yrqfa"},{"Name":"integrity","Value":"sha256-J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA="},{"Name":"label","Value":"_content/ChatAppServer.WebAPI/avatars/default.jpg"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"18983"},{"Name":"Content-Type","Value":"image/jpeg"},{"Name":"ETag","Value":"\u0022J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA=\u0022"},{"Name":"Last-Modified","Value":"Sat, 07 Dec 2024 03:37:18 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/fbd7abf2-0e96-4318-b103-48e0af81f4c4.png">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\fbd7abf2-0e96-4318-b103-48e0af81f4c4.png'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=3600, must-revalidate"},{"Name":"Content-Length","Value":"18928"},{"Name":"Content-Type","Value":"image/png"},{"Name":"ETag","Value":"\u0022vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk=\u0022"},{"Name":"Last-Modified","Value":"Wed, 25 Dec 2024 06:21:30 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/avatars/fbd7abf2-0e96-4318-b103-48e0af81f4c4.uosypgna2i.png">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\avatars\fbd7abf2-0e96-4318-b103-48e0af81f4c4.png'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"uosypgna2i"},{"Name":"integrity","Value":"sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk="},{"Name":"label","Value":"_content/ChatAppServer.WebAPI/avatars/fbd7abf2-0e96-4318-b103-48e0af81f4c4.png"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"18928"},{"Name":"Content-Type","Value":"image/png"},{"Name":"ETag","Value":"\u0022vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK\u002BJNLhk=\u0022"},{"Name":"Last-Modified","Value":"Wed, 25 Dec 2024 06:21:30 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/uploads/e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.qn9h6cvao8.xlsx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"qn9h6cvao8"},{"Name":"integrity","Value":"sha256-JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k="},{"Name":"label","Value":"_content/ChatAppServer.WebAPI/uploads/e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"9378"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},{"Name":"ETag","Value":"\u0022JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k=\u0022"},{"Name":"Last-Modified","Value":"Mon, 16 Dec 2024 06:16:27 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/ChatAppServer.WebAPI/uploads/e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"9378"},{"Name":"Content-Type","Value":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},{"Name":"ETag","Value":"\u0022JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k=\u0022"},{"Name":"Last-Modified","Value":"Mon, 16 Dec 2024 06:16:27 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+  </ItemGroup>
+</Project>

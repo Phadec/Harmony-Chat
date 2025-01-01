@@ -1,0 +1,640 @@
+{
+  "Version": 1,
+  "Hash": "yknYbNYtHEOONJ9jv3DmDUvc5nUYvzfYkDLFpWYJ9oc=",
+  "Source": "ChatAppServer.WebAPI",
+  "BasePath": "_content/ChatAppServer.WebAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "ChatAppServer.WebAPI\\wwwroot",
+      "Source": "ChatAppServer.WebAPI",
+      "ContentRoot": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\2f9eb654-efb9-437b-b090-7dc702feb580.png",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatars/2f9eb654-efb9-437b-b090-7dc702feb580#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "uosypgna2i",
+      "Integrity": "vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\2f9eb654-efb9-437b-b090-7dc702feb580.png"
+    },
+    {
+      "Identity": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\6cbb7b39-361b-4b67-a3de-11485c7f2495.png",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatars/6cbb7b39-361b-4b67-a3de-11485c7f2495#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "uosypgna2i",
+      "Integrity": "vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\6cbb7b39-361b-4b67-a3de-11485c7f2495.png"
+    },
+    {
+      "Identity": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\a6c7e131-3883-4359-b825-a5afe0874684.jpg",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatars/a6c7e131-3883-4359-b825-a5afe0874684#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "fz86qlh85p",
+      "Integrity": "Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\a6c7e131-3883-4359-b825-a5afe0874684.jpg"
+    },
+    {
+      "Identity": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\default.jpg",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatars/default#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "ltfr8yrqfa",
+      "Integrity": "J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\default.jpg"
+    },
+    {
+      "Identity": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\fbd7abf2-0e96-4318-b103-48e0af81f4c4.png",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "avatars/fbd7abf2-0e96-4318-b103-48e0af81f4c4#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "uosypgna2i",
+      "Integrity": "vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\fbd7abf2-0e96-4318-b103-48e0af81f4c4.png"
+    },
+    {
+      "Identity": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\uploads\\e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx",
+      "SourceId": "ChatAppServer.WebAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\",
+      "BasePath": "_content/ChatAppServer.WebAPI",
+      "RelativePath": "uploads/e1f54854-e3c5-4ccd-8ab6-ab4978dd1276#[.{fingerprint}]?.xlsx",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "qn9h6cvao8",
+      "Integrity": "JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "avatars/2f9eb654-efb9-437b-b090-7dc702feb580.png",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\2f9eb654-efb9-437b-b090-7dc702feb580.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18928"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 24 Dec 2024 07:17:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/2f9eb654-efb9-437b-b090-7dc702feb580.uosypgna2i.png",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\2f9eb654-efb9-437b-b090-7dc702feb580.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18928"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 24 Dec 2024 07:17:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uosypgna2i"
+        },
+        {
+          "Name": "label",
+          "Value": "avatars/2f9eb654-efb9-437b-b090-7dc702feb580.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/6cbb7b39-361b-4b67-a3de-11485c7f2495.png",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\6cbb7b39-361b-4b67-a3de-11485c7f2495.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18928"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 25 Dec 2024 06:38:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/6cbb7b39-361b-4b67-a3de-11485c7f2495.uosypgna2i.png",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\6cbb7b39-361b-4b67-a3de-11485c7f2495.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18928"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 25 Dec 2024 06:38:16 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uosypgna2i"
+        },
+        {
+          "Name": "label",
+          "Value": "avatars/6cbb7b39-361b-4b67-a3de-11485c7f2495.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/a6c7e131-3883-4359-b825-a5afe0874684.fz86qlh85p.jpg",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\a6c7e131-3883-4359-b825-a5afe0874684.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "235059"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 07 Dec 2024 03:37:18 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "fz86qlh85p"
+        },
+        {
+          "Name": "label",
+          "Value": "avatars/a6c7e131-3883-4359-b825-a5afe0874684.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/a6c7e131-3883-4359-b825-a5afe0874684.jpg",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\a6c7e131-3883-4359-b825-a5afe0874684.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "235059"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 07 Dec 2024 03:37:18 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-Ba82pTaSa5OZXgyGseLwPS/tZxbri6iUkMgAIPkly/8="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/default.jpg",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\default.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18983"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 07 Dec 2024 03:37:18 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/default.ltfr8yrqfa.jpg",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\default.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18983"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 07 Dec 2024 03:37:18 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ltfr8yrqfa"
+        },
+        {
+          "Name": "label",
+          "Value": "avatars/default.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-J3el/jDtQvS/YDy5sScr0WU5UUPnumLF5VITQxPLQkA="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/fbd7abf2-0e96-4318-b103-48e0af81f4c4.png",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\fbd7abf2-0e96-4318-b103-48e0af81f4c4.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18928"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 25 Dec 2024 06:21:30 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk="
+        }
+      ]
+    },
+    {
+      "Route": "avatars/fbd7abf2-0e96-4318-b103-48e0af81f4c4.uosypgna2i.png",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\avatars\\fbd7abf2-0e96-4318-b103-48e0af81f4c4.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "18928"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 25 Dec 2024 06:21:30 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uosypgna2i"
+        },
+        {
+          "Name": "label",
+          "Value": "avatars/fbd7abf2-0e96-4318-b103-48e0af81f4c4.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-vq72MSeEkqMH9shPqw6gLLhen/KqY7GkteuOK+JNLhk="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.qn9h6cvao8.xlsx",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\uploads\\e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "9378"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 16 Dec 2024 06:16:27 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "qn9h6cvao8"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx",
+      "AssetFile": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\wwwroot\\uploads\\e1f54854-e3c5-4ccd-8ab6-ab4978dd1276.xlsx",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "9378"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 16 Dec 2024 06:16:27 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-JjFvhqDe8pIxuIEBcFUlX/1u5lZ639o8o7dVp0YOZ5k="
+        }
+      ]
+    }
+  ]
+}
