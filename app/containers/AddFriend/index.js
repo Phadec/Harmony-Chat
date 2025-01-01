@@ -16,7 +16,7 @@ import {useSearchFriends} from "@/hooks";
 // Layout
 import Layout from "../../Layout";
 
-const SearchInput = React.memo(({ value, onChangeText }) => (
+const SearchInput = React.memo(({value, onChangeText}) => (
 	<View className="bg-light rounded-2xl px-4 flex-row items-center">
 		<Feather name="search" size={20} color={Colors.main}/>
 		<Input
@@ -30,9 +30,20 @@ const SearchInput = React.memo(({ value, onChangeText }) => (
 ));
 
 function AddFriend({navigation}) {
-	const { friends, searchTerm, isLoading, error, handleSearch } = useSearchFriends();
+	const {friends, setFriends, searchTerm, isLoading, error, handleSearch} = useSearchFriends();
 
-	const renderItems = useCallback(({item}) => <FriendSearchCard friend={item}/>, []);
+	// Hàm để loại bỏ bạn bè khỏi danh sách
+	const handleFriendUpdate = useCallback(
+		(friendId) => {
+			setFriends((prevFriends) => prevFriends.filter((friend) => friend.id !== friendId));
+		},
+		[setFriends]
+	);
+
+	// Render item
+	const renderItems = useCallback(({item}) =>
+			<FriendSearchCard friend={item} query={searchTerm} onFriendUpdate={handleFriendUpdate}/>
+		, []);
 
 	const ListEmptyComponent = useCallback(() => (
 		searchTerm ? (

@@ -5,13 +5,21 @@ import Svg, {Circle} from 'react-native-svg';
 // Components
 import {Button} from '@/components';
 
+// Icons
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+
 // Commons
 import {Colors} from '@/common';
+
+// Services
+import {FriendService} from "@/services";
+
+
 import {baseURL} from "../../services/axiosInstance";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+
+// Redux
 import {CustomContextMenu} from "../index";
 import {useContextMenu} from "../../hooks";
-import {FriendService} from "../../services";
 import {useDispatch} from "react-redux";
 import {removeFriend, updateFriend} from "../../redux/reducer/FriendRedux";
 

@@ -1,6 +1,8 @@
 import React from 'react';
 import {Image, View, Text} from 'react-native';
 import {useDispatch} from 'react-redux';
+
+// Icons
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Octicons from 'react-native-vector-icons/Octicons';

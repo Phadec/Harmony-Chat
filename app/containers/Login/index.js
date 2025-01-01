@@ -1,5 +1,7 @@
 import React, {useState} from 'react';
 import {Image, View, Text, Platform, TouchableWithoutFeedback, KeyboardAvoidingView, Keyboard} from 'react-native';
+
+// Icons
 import Feather from 'react-native-vector-icons/Feather';
 import Octicons from 'react-native-vector-icons/Octicons';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -11,7 +13,8 @@ import {Input, Button} from '@/components';
 import {Colors, Constants} from '@/common';
 
 // Services
-import {AuthService} from "@/services/Auth";
+import {AuthService} from "@/services";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 async function setUserInStorage(data) {
@@ -73,7 +76,7 @@ function LoginContainer({navigation}) {
 					<Text className="font-rubik font-medium text-2xl text-white mt-auto text-center mb-9">Login</Text>
 
 					<View className="bg-white rounded-t-3xl py-10 px-6 h-[60vh]">
-						<View className="flex-row items-center bg-light rounded-3xl p-4 mb-4">
+						<View className="flex-row items-center bg-light rounded-3xl p-3 mb-4">
 							<Feather name="user" size={16} color={Colors.black}/>
 							<Input placeholder="Username"
 								   onChangeText={setUsername}
@@ -82,7 +85,7 @@ function LoginContainer({navigation}) {
 								   className="font-rubik font-light text-sm text-black ml-2 flex-1"/>
 						</View>
 
-						<View className="flex-row items-center bg-light rounded-3xl p-4">
+						<View className="flex-row items-center bg-light rounded-3xl p-3">
 							<Feather name="lock" size={16} color={Colors.black}/>
 							<Input placeholder="Password"
 								   value={password}

@@ -16,12 +16,12 @@ import Layout from '@/Layout';
 
 // Service
 import {SignalRService} from "../../services/signalR";
-import {GroupService} from "../../services/Group";
+import {GroupService} from "@/services";
 
 // Hooks
 import {useContextMenu} from "@/hooks";
 
-// Utils
+// Constants
 import {baseURL} from "../../services/axiosInstance";
 
 

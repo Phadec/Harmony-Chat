@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect} from 'react';
+import {useFocusEffect} from "@react-navigation/native";
 import {Text, View} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 
@@ -6,12 +7,11 @@ import {FlatList} from 'react-native-gesture-handler';
 import {Header, FriendCard, Button} from '@/components';
 
 // Services
-import {FriendService} from '@/services/Friend';
+import {FriendService} from '@/services';
+import {SignalRService} from "../../services/signalR";
 
 // Layout
 import Layout from '@/Layout';
-import {SignalRService} from "../../services/signalR";
-import {useFocusEffect} from "@react-navigation/native";
 
 // Redux
 import {useDispatch, useSelector} from "react-redux";
@@ -20,7 +20,6 @@ import {fetchFriends} from "../../redux/reducer/FriendRedux";
 function FriendsContainer({navigation}) {
 	const dispatch = useDispatch();
 	const {friends, error} = useSelector((state) => state.friend);
-	console.log('Friends:', friends);
 
 	const friendService = new FriendService();
 	const signalRService = SignalRService.getInstance();
