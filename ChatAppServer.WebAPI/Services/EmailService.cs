@@ -8,7 +8,7 @@ public interface IEmailService
     Task SendPasswordChangeEmail(string email, string username);
     Task SendResetSuccessEmail(string email, string username);
     Task SendEmailConfirmationAsync(string email, string firstName, string lastName);
-    Task SendEmailConfirmationTokenAsync(string email, string firstName, string lastName, string token);
+    Task SendEmailConfirmationTokenAsync(Guid guid, string email, string firstName, string lastName, string token);
 }
 
 public class EmailService : IEmailService
@@ -51,9 +51,9 @@ public class EmailService : IEmailService
         await SendEmailAsync(email, "Email Confirmation", confirmationMessage);
     }
 
-    public async Task SendEmailConfirmationTokenAsync(string email, string firstName, string lastName, string token)
+    public async Task SendEmailConfirmationTokenAsync(Guid userId, string email, string firstName, string lastName, string token)
     {
-        var confirmationLink = $"{_configuration["AppSettings:ClientURL"]}/confirm-email?token={token}";
+        var confirmationLink = $"{_configuration["AppSettings:ClientURL"]}/api/Auth/confirm-email?userId={userId}&token={token}";
         var confirmationMessage = GenerateEmailConfirmationTokenMessage(firstName, lastName, confirmationLink);
         await SendEmailAsync(email, "Email Confirmation", confirmationMessage);
     }

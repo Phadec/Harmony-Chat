@@ -163,15 +163,22 @@ builder.Logging.SetMinimumLevel(LogLevel.Debug);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI(c =>
+//    {
+//        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChatApp API v1");
+//        c.RoutePrefix = "swagger"; // Set the correct route for Swagger UI
+//    });
+//}
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChatApp API v1");
-        c.RoutePrefix = "swagger"; // Set the correct route for Swagger UI
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChatApp API v1");
+    c.RoutePrefix = "swagger"; // Set the correct route for Swagger UI
+});
 
 app.UseStaticFiles();
 
@@ -189,6 +196,9 @@ app.MapControllers();
 
 // Map the SignalR hub
 app.MapHub<ChatHub>("/chat-hub");
+
+// Map the AuthHub
+app.MapHub<AuthHub>("/auth-hub");
 
 // Run the application
 app.Run();

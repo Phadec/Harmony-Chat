@@ -1,5 +1,6 @@
 ﻿using ChatAppServer.WebAPI.Dtos;
 using ChatAppServer.WebAPI.Models;
+using FuzzySharp;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Net.Mail;
@@ -21,85 +22,129 @@ namespace ChatAppServer.WebAPI.Services
             _emailService = emailService;
         }
 
-        public async Task<object> SearchUserByTagNameAsync(string tagName, Guid authenticatedUserId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<UserSearchResult>> SearchUserByTagNameAsync(string tagName, Guid authenticatedUserId, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(tagName))
+            try
             {
-                throw new ArgumentException("TagName is required");
-            }
-
-            _logger.LogInformation($"Searching for user with tagName: {tagName}");
-
-            if (!tagName.StartsWith("@"))
-            {
-                tagName = "@" + tagName;
-            }
-
-            var authenticatedUser = await _context.Users
-                .Where(u => u.Id == authenticatedUserId)
-                .Select(u => u.TagName)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (authenticatedUser != null && tagName.ToLower() == authenticatedUser.ToLower())
-            {
-                _logger.LogWarning($"User tried to search for themselves with tagName {tagName}");
-                throw new KeyNotFoundException("User not found");
-            }
-
-            var user = await _context.Users
-                .Where(u => u.TagName.ToLower() == tagName.ToLower())
-                .Select(u => new
+                if (string.IsNullOrWhiteSpace(tagName))
                 {
-                    u.Id,
-                    u.Username,
-                    u.FirstName,
-                    u.LastName,
-                    u.Email,
-                    u.Avatar,
-                    u.Status,
-                    u.TagName
-                })
-                .FirstOrDefaultAsync(cancellationToken);
+                    throw new ArgumentException("TagName is required");
+                }
 
-            if (user == null)
-            {
-                _logger.LogWarning($"User with tagName {tagName} not found");
-                throw new KeyNotFoundException("User not found");
+                _logger.LogInformation($"Searching for users with tagName: {tagName}");
+
+                // Remove @ handling since we're searching multiple fields
+                var searchTerm = tagName.ToLower().Trim();
+
+                // Lấy danh sách ID của bạn bè
+                var friendIds = await _context.Friendships
+                    .Where(f => f.UserId == authenticatedUserId || f.FriendId == authenticatedUserId)
+                    .Select(f => f.UserId == authenticatedUserId ? f.FriendId : f.UserId)
+                    .ToListAsync(cancellationToken);
+                _logger.LogInformation($"Found {friendIds.ToArray().ToString} friends for user {authenticatedUserId}");
+
+                // Lấy tất cả users tiềm năng (trừ bản thân và bạn bè)
+                var potentialUsers = await _context.Users
+                    .Where(u => u.Id != authenticatedUserId && !friendIds.Contains(u.Id))
+                    .Select(u => new User
+                    {
+                        Id = u.Id,
+                        Username = u.Username,
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        Email = u.Email,
+                        Avatar = u.Avatar,
+                        Status = u.Status,
+                        TagName = u.TagName
+                    })
+                    .ToListAsync(cancellationToken);
+
+                // Áp dụng Fuzzy Search với các trường cần tìm kiếm
+                var fuzzyResults = potentialUsers
+                    .Select(user => new 
+                    {
+                        User = user,
+                        // Tính điểm cho từng trường
+                        TagNameScore = Fuzz.PartialRatio(searchTerm, user.TagName?.ToLower() ?? string.Empty),
+                        FirstNameScore = Fuzz.PartialRatio(searchTerm, user.FirstName?.ToLower() ?? string.Empty),
+                        LastNameScore = Fuzz.PartialRatio(searchTerm, user.LastName?.ToLower() ?? string.Empty),
+                        FullName1Score = Fuzz.PartialRatio(searchTerm, $"{user.FirstName} {user.LastName}".ToLower()),
+                        FullName2Score = Fuzz.PartialRatio(searchTerm, $"{user.LastName} {user.FirstName}".ToLower())
+                    })
+                    .Select(result => new
+                    {
+                        result.User,
+                        // Lấy điểm cao nhất từ các trường
+                        MaxScore = Math.Max(
+                            Math.Max(
+                                Math.Max(result.TagNameScore, result.FirstNameScore),
+                                Math.Max(result.LastNameScore, result.FullName1Score)
+                            ),
+                            result.FullName2Score
+                        )
+                    })
+                    .Where(result => result.MaxScore >= 80) // Ngưỡng điểm tối thiểu
+                    .OrderByDescending(result => result.MaxScore)
+                    .Select(result => result.User)
+                    .ToList();
+
+                if (!fuzzyResults.Any())
+                {
+                    _logger.LogWarning($"No users found with search term: {searchTerm}");
+                    return Enumerable.Empty<UserSearchResult>();
+                }
+
+                var userIds = fuzzyResults.Select(u => u.Id).ToList();
+
+                // Get all blocks in one query
+                var blocks = await _context.UserBlocks
+                    .Where(ub =>
+                        (ub.UserId == authenticatedUserId && userIds.Contains(ub.BlockedUserId)) ||
+                        (ub.BlockedUserId == authenticatedUserId && userIds.Contains(ub.UserId)))
+                    .ToListAsync(cancellationToken);
+
+                // Get all friend requests in one query
+                var friendRequests = await _context.FriendRequests
+                    .Where(fr =>
+                        ((fr.SenderId == authenticatedUserId && userIds.Contains(fr.ReceiverId)) ||
+                         (fr.ReceiverId == authenticatedUserId && userIds.Contains(fr.SenderId))) &&
+                        fr.Status == "Pending")
+                    .ToListAsync(cancellationToken);
+
+                var results = fuzzyResults
+                    .Where(user => !blocks.Any(b =>
+                        (b.UserId == authenticatedUserId && b.BlockedUserId == user.Id) ||
+                        (b.UserId == user.Id && b.BlockedUserId == authenticatedUserId)))
+                    .Select(user => new UserSearchResult
+                    {
+                        Id = user.Id,
+                        Username = user.Username,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email,
+                        Avatar = user.Avatar,
+                        Status = user.Status,
+                        TagName = user.TagName,
+                        HasSentRequest = friendRequests.Any(fr =>
+                            fr.SenderId == authenticatedUserId && fr.ReceiverId == user.Id),
+                        RequestId = friendRequests
+                            .FirstOrDefault(fr => fr.SenderId == authenticatedUserId && fr.ReceiverId == user.Id)?.Id,
+                        HasReceivedRequest = friendRequests.Any(fr =>
+                            fr.SenderId == user.Id && fr.ReceiverId == authenticatedUserId),
+                        ReceivedRequestId = friendRequests
+                            .FirstOrDefault(fr => fr.SenderId == user.Id && fr.ReceiverId == authenticatedUserId)?.Id
+                    })
+                    .OrderBy(u => u.LastName)
+                    .ThenBy(u => u.FirstName)
+                    .ToList();
+
+                return results;
             }
-
-            var isBlockedByUser = await _context.UserBlocks
-                .AnyAsync(ub => ub.UserId == authenticatedUserId && ub.BlockedUserId == user.Id, cancellationToken);
-
-            var isBlockedByTarget = await _context.UserBlocks
-                .AnyAsync(ub => ub.UserId == user.Id && ub.BlockedUserId == authenticatedUserId, cancellationToken);
-
-            if (isBlockedByUser || isBlockedByTarget)
+            catch (Exception ex)
             {
-                _logger.LogWarning($"User with tagName {tagName} has blocked the authenticated user or vice versa");
-                throw new KeyNotFoundException("User not found");
+                _logger.LogError(ex, "Error occurred while searching users with tagName: {TagName}", tagName);
+                throw;
             }
-
-            var friendRequestSent = await _context.FriendRequests
-                .FirstOrDefaultAsync(fr => fr.SenderId == authenticatedUserId && fr.ReceiverId == user.Id && fr.Status == "Pending", cancellationToken);
-
-            var friendRequestReceived = await _context.FriendRequests
-                .FirstOrDefaultAsync(fr => fr.SenderId == user.Id && fr.ReceiverId == authenticatedUserId && fr.Status == "Pending", cancellationToken);
-
-            return new
-            {
-                user.Id,
-                user.Username,
-                user.FirstName,
-                user.LastName,
-                user.Email,
-                user.Avatar,
-                user.Status,
-                user.TagName,
-                HasSentRequest = friendRequestSent != null,
-                RequestId = friendRequestSent?.Id,
-                HasReceivedRequest = friendRequestReceived != null,
-                ReceivedRequestId = friendRequestReceived?.Id
-            };
         }
 
         public async Task UpdateStatusAsync(Guid userId, string status, CancellationToken cancellationToken)

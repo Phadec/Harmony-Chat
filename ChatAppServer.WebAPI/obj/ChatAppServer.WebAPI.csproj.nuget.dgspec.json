@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "B:\\AD\\work\\.net\\Harmony-Chat\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj": {}
+    "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj": {}
   },
   "projects": {
-    "B:\\AD\\work\\.net\\Harmony-Chat\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj": {
+    "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "B:\\AD\\work\\.net\\Harmony-Chat\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
+        "projectUniqueName": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
         "projectName": "ChatAppServer.WebAPI",
-        "projectPath": "B:\\AD\\work\\.net\\Harmony-Chat\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
-        "packagesPath": "C:\\Users\\AD\\.nuget\\packages\\",
-        "outputPath": "B:\\AD\\work\\.net\\Harmony-Chat\\ChatAppServer.WebAPI\\obj\\",
+        "projectPath": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\ChatAppServer.WebAPI.csproj",
+        "packagesPath": "C:\\Users\\DELL\\.nuget\\packages\\",
+        "outputPath": "D:\\University\\2024-2025\\kh1_4th\\mobile practice\\Harmony-Chat\\ChatAppServer.WebAPI\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\AD\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\DELL\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -22,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -39,8 +42,9 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "direct"
-        }
+          "auditMode": "all"
+        },
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -53,6 +57,10 @@
             "DefaultCorsPolicy": {
               "target": "Package",
               "version": "[8.0.0, )"
+            },
+            "FuzzySharp": {
+              "target": "Package",
+              "version": "[2.0.2, )"
             },
             "GenericFileService": {
               "target": "Package",
@@ -116,7 +124,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

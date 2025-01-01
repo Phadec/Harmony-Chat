@@ -41,6 +41,9 @@ namespace ChatAppServer.WebAPI.Services
             {
                 (string savedFileName, string originalFileName) = FileService.FileSaveToServer(request.AvatarFile, "wwwroot/avatars/");
                 avatarUrl = Path.Combine("avatars", savedFileName).Replace("\\", "/");
+            }else
+            {
+                avatarUrl = "avatars/default.jpg";
             }
 
             var group = new Group

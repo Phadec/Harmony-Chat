@@ -126,7 +126,7 @@ namespace ChatAppServer.WebAPI.Services
                 {
                     try
                     {
-                        await _emailService.SendEmailConfirmationTokenAsync(pendingUser.Email, pendingUser.FirstName, pendingUser.LastName, token);
+                        await _emailService.SendEmailConfirmationTokenAsync(pendingUser.Id, pendingUser.Email, pendingUser.FirstName, pendingUser.LastName, token);
                     }
                     catch (Exception ex)
                     {

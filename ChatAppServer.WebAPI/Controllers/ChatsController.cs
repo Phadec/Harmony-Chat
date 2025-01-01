@@ -391,7 +391,7 @@ namespace ChatAppServer.WebAPI.Controllers
             var totalMessages = await query.CountAsync(cancellationToken);
 
             var privateChats = await query
-                .OrderBy(c => c.Date)
+                .OrderByDescending(c => c.Date)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .Select(c => new
