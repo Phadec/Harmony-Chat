@@ -28,8 +28,8 @@ const options = {
 function Groups() {
 	return (
 		<Stack.Navigator initialRouteName="Groups">
-			<Stack.Screen name="GroupChat" component={GroupChatContainer} options={() => options} />
 			<Stack.Screen name="Groups" component={GroupsContainer} options={() => options} />
+			<Stack.Screen name="GroupChat" component={GroupChatContainer} options={() => options} />
 		</Stack.Navigator>
 	);
 }
