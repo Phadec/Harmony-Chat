@@ -9,7 +9,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {SignalRService} from "../../services/signalR";
+import {SignalRService} from '../../services/signalR';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player'; // Add this import
 import {useFocusEffect} from '@react-navigation/native';
 
@@ -20,14 +20,25 @@ import {Button, Input} from '@/components';
 import {Colors, Constants} from '@/common';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChatGroup } from '../../services/ChatGroup';
-import {ChatService} from "../../services/Chat";
+import {ChatGroup} from '../../services/ChatGroup';
+import {ChatService} from '../../services/Chat';
+import {baseURL} from '../../services/axiosInstance';
 
 function Header({navigation, route}) {
 	const insets = useSafeAreaInsets();
-	console.log('Header route:', route.params);
-	const {avatar, nameGroup} = route.params;
-	const countMembers = 3;
+	const {avatar, nameGroup, recipientId} = route.params;
+	const chatService = new ChatGroup();
+	const [countMembers, setCountMember] = useState(0);
+
+	useEffect(() => {
+		chatService
+			.getGroupMembers(recipientId)
+			.then(item => {
+				// Gọi setCountMember để cập nhật state
+				setCountMember(item.$values.length);
+			})
+			.catch(err => console.error(err));
+	}, [recipientId]); // Thêm dependency nếu recipientId thay đổi
 
 	return (
 		<View className="bg-main flex-row items-center p-6 rounded-b-3xl" style={{paddingTop: insets.top + 16}}>
@@ -36,7 +47,7 @@ function Header({navigation, route}) {
 			</Button>
 
 			<View className="flex-row items-center ml-2">
-				<Image source={avatar} className="w-12 h-12 rounded-full" />
+				<Image source={{uri: `${baseURL}/${avatar}`}} className="w-12 h-12 rounded-full" />
 
 				<View className="ml-3">
 					<Text className="font-rubik font-medium text-sm text-white">{nameGroup}</Text>
@@ -59,13 +70,20 @@ function Header({navigation, route}) {
 
 function getReactionIcon(type) {
 	switch (type) {
-		case 'like':  return "👍";
-		case 'love':  return "❤️";
-		case 'haha':  return "😄";
-		case 'wow':   return "😲";
-		case 'sad':   return "😢";
-		case 'angry': return "😠";
-		default:      return null;
+		case 'like':
+			return '👍';
+		case 'love':
+			return '❤️';
+		case 'haha':
+			return '😄';
+		case 'wow':
+			return '😲';
+		case 'sad':
+			return '😢';
+		case 'angry':
+			return '😠';
+		default:
+			return null;
 	}
 }
 
@@ -90,43 +108,31 @@ function Chat({me, message, date, reaction, onLongPress, onDelete, isDeleted, at
 							<TouchableOpacity onPress={() => setModalVisible(true)} className="mb-2">
 								{attachmentUrl.endsWith('.mp4') ? (
 									<Video
-										source={{ uri: `${baseURL}/${attachmentUrl}` }}
-										style={{ width: 200, height: 200 }}
+										source={{uri: `${baseURL}/${attachmentUrl}`}}
+										style={{width: 200, height: 200}}
 										paused={false} // Set paused to false for preview
 										resizeMode="cover"
 									/>
 								) : (
-									<Image
-										source={{ uri: `${baseURL}/${attachmentUrl}` }}
-										style={{ width: 200, height: 200 }}
-										resizeMode="cover"
-									/>
+									<Image source={{uri: `${baseURL}/${attachmentUrl}`}} style={{width: 200, height: 200}} resizeMode="cover" />
 								)}
 							</TouchableOpacity>
 						)}
 						{audioUrl && (
 							<Button onPress={() => audioRecorderPlayer.startPlayer(audioUrl)}>
-								<Text className={`font-rubik font-light text-sm ${me ? 'text-white text-right' : 'text-black'}`}>
-									Play Audio
-								</Text>
+								<Text className={`font-rubik font-light text-sm ${me ? 'text-white text-right' : 'text-black'}`}>Play Audio</Text>
 							</Button>
 						)}
-						<Text className={`font-rubik font-light text-sm ${me ? 'text-white text-right' : 'text-black'}`}>
-							{message}
-						</Text>
+						<Text className={`font-rubik font-light text-sm ${me ? 'text-white text-right' : 'text-black'}`}>{message}</Text>
 					</View>
 
 					{reaction && (
 						<View className={`mx-2 px-2 py-1 rounded-xl ${me ? 'bg-main' : 'bg-light'}`}>
-							<Text className={`text-xs ${me ? 'text-white' : 'text-black'}`}>
-								{getReactionIcon(reaction)}
-							</Text>
+							<Text className={`text-xs ${me ? 'text-white' : 'text-black'}`}>{getReactionIcon(reaction)}</Text>
 						</View>
 					)}
 
-					<Text className={`${me ? 'mr-3' : 'ml-3'} font-rubik text-2xs text-black/30`}>
-						{adjustedDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-					</Text>
+					<Text className={`${me ? 'mr-3' : 'ml-3'} font-rubik text-2xs text-black/30`}>{adjustedDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</Text>
 
 					{me && !isDeleted && (
 						<View className="flex-row items-center">
@@ -134,7 +140,7 @@ function Chat({me, message, date, reaction, onLongPress, onDelete, isDeleted, at
 								<AntDesign name="delete" size={16} color={Colors.white} />
 							</Button>
 							<Button onPress={isPinned ? onUnpin : onPin} className="ml-2 p-2 bg-yellow-500 rounded-full shadow-lg">
-								<AntDesign name={isPinned ? "pushpin" : "pushpino"} size={16} color={Colors.white} />
+								<AntDesign name={isPinned ? 'pushpin' : 'pushpino'} size={16} color={Colors.white} />
 							</Button>
 						</View>
 					)}
@@ -142,19 +148,9 @@ function Chat({me, message, date, reaction, onLongPress, onDelete, isDeleted, at
 			</TouchableOpacity>
 
 			{attachmentUrl && attachmentUrl.endsWith('.mp4') && (
-				<Modal
-					visible={modalVisible}
-					transparent={true}
-					animationType="slide"
-					onRequestClose={() => setModalVisible(false)}
-				>
+				<Modal visible={modalVisible} transparent={true} animationType="slide" onRequestClose={() => setModalVisible(false)}>
 					<View className="flex-1 justify-center items-center bg-black/80">
-						<Video
-							source={{ uri: `${baseURL}/${attachmentUrl}` }}
-							style={{ width: '100%', height: '100%' }}
-							resizeMode="contain"
-							controls={true}
-						/>
+						<Video source={{uri: `${baseURL}/${attachmentUrl}`}} style={{width: '100%', height: '100%'}} resizeMode="contain" controls={true} />
 						<Button className="absolute top-10 right-10" onPress={() => setModalVisible(false)}>
 							<AntDesign name="close" size={30} color={Colors.white} />
 						</Button>
@@ -163,18 +159,9 @@ function Chat({me, message, date, reaction, onLongPress, onDelete, isDeleted, at
 			)}
 
 			{attachmentUrl && !attachmentUrl.endsWith('.mp4') && (
-				<Modal
-					visible={modalVisible}
-					transparent={true}
-					animationType="slide"
-					onRequestClose={() => setModalVisible(false)}
-				>
+				<Modal visible={modalVisible} transparent={true} animationType="slide" onRequestClose={() => setModalVisible(false)}>
 					<View className="flex-1 justify-center items-center bg-black/80">
-						<Image
-							source={{ uri: `${baseURL}/${attachmentUrl}` }}
-							style={{ width: '100%', height: '100%' }}
-							resizeMode="contain"
-						/>
+						<Image source={{uri: `${baseURL}/${attachmentUrl}`}} style={{width: '100%', height: '100%'}} resizeMode="contain" />
 						<Button className="absolute top-10 right-10" onPress={() => setModalVisible(false)}>
 							<AntDesign name="close" size={30} color={Colors.white} />
 						</Button>
@@ -193,30 +180,29 @@ function formatChatsByDate(messages, userId) {
 			acc[date] = [];
 		}
 		// Get the first reaction if exists
-		const reaction = message.reactions && 
-			message.reactions.$values && 
-			message.reactions.$values.length > 0 ? 
-			message.reactions.$values[0].reactionType : null;
+		const reaction = message.reactions && message.reactions.$values && message.reactions.$values.length > 0 ? message.reactions.$values[0].reactionType : null;
 
 		acc[date].push({
 			...message,
 			me: message.userId === userId,
-			reaction: reaction
+			reaction: reaction,
 		});
 		return acc;
 	}, {});
 
-	return Object.keys(groupedChats).map(date => ({
-		title: date,
-		data: groupedChats[date]
-	})).sort((a, b) => new Date(a.title) - new Date(b.title));
+	return Object.keys(groupedChats)
+		.map(date => ({
+			title: date,
+			data: groupedChats[date],
+		}))
+		.sort((a, b) => new Date(a.title) - new Date(b.title));
 }
 
-function PinnedMessages({ pinnedMessages, onPinnedMessagePress }) {
+function PinnedMessages({pinnedMessages, onPinnedMessagePress}) {
 	return (
 		<View className="bg-light p-4 rounded-b-3xl">
 			<Text className="font-rubik font-medium text-sm text-black mb-2">Pinned Messages</Text>
-			{pinnedMessages.map((message) => (
+			{pinnedMessages.map(message => (
 				<TouchableOpacity key={message.id} onPress={() => onPinnedMessagePress(message.id)}>
 					<View className="p-2 bg-white rounded-xl mb-2 shadow-sm">
 						<Text className="font-rubik text-sm text-black">{message.message}</Text>
@@ -227,9 +213,8 @@ function PinnedMessages({ pinnedMessages, onPinnedMessagePress }) {
 	);
 }
 
-
-function GroupChatContainer({ navigation, route }) {
-	const { recipientId } = route.params;
+function GroupChatContainer({navigation, route}) {
+	const {recipientId} = route.params;
 	const [opened, setOpen] = useState(false);
 	const [chats, setChats] = useState([]);
 	const [userId, setUserId] = useState(null);
@@ -246,8 +231,7 @@ function GroupChatContainer({ navigation, route }) {
 	const opacity = useSharedValue(0);
 	const transform = useSharedValue(30);
 
-	const animation = useAnimatedStyle(
-		() => {
+	const animation = useAnimatedStyle(() => {
 		return {
 			opacity: opacity.value,
 			transform: [{translateY: transform.value}],
@@ -286,11 +270,11 @@ function GroupChatContainer({ navigation, route }) {
 			if (recipientId && userId) {
 				fetchChats();
 			}
-		}, [recipientId, userId])
+		}, [recipientId, userId]),
 	);
 
 	useEffect(() => {
-		const subscription = signalRService.messageReceived$.subscribe((msg) => {
+		const subscription = signalRService.messageReceived$.subscribe(msg => {
 			console.log('Message received:', msg);
 			if (msg && msg.id) {
 				setChats(prevChats => {
@@ -300,7 +284,7 @@ function GroupChatContainer({ navigation, route }) {
 					const newMsg = {
 						...msg,
 						me: msg.userId === userId,
-						reaction: msg.reaction
+						reaction: msg.reaction,
 					};
 
 					if (existingSection) {
@@ -308,7 +292,7 @@ function GroupChatContainer({ navigation, route }) {
 					} else {
 						updatedChats.push({
 							title: messageDate,
-							data: [newMsg]
+							data: [newMsg],
 						});
 					}
 					return updatedChats;
@@ -317,33 +301,21 @@ function GroupChatContainer({ navigation, route }) {
 				setChats(prevChats => {
 					return prevChats.map(section => ({
 						...section,
-						data: section.data.map(chat => 
-							chat.id === msg.reaction.chatId
-								? { ...chat, reaction: msg.reaction.reactionType }
-								: chat
-						)
+						data: section.data.map(chat => (chat.id === msg.reaction.chatId ? {...chat, reaction: msg.reaction.reactionType} : chat)),
 					}));
 				});
 			} else if (msg && msg.type === 'ReactionRemoved') {
 				setChats(prevChats => {
 					return prevChats.map(section => ({
 						...section,
-						data: section.data.map(chat => 
-							chat.id === msg.reaction.chatId
-								? { ...chat, reaction: null }
-								: chat
-						)
+						data: section.data.map(chat => (chat.id === msg.reaction.chatId ? {...chat, reaction: null} : chat)),
 					}));
 				});
 			} else if (msg && msg.type === 'MessageDeleted') {
 				setChats(prevChats => {
 					return prevChats.map(section => ({
 						...section,
-						data: section.data.map(chat => 
-							chat.id === msg.messageId
-								? { ...chat, isDeleted: true, reaction: null, message: 'Message has been deleted' }
-								: chat
-						)
+						data: section.data.map(chat => (chat.id === msg.messageId ? {...chat, isDeleted: true, reaction: null, message: 'Message has been deleted'} : chat)),
 					}));
 				});
 			}
@@ -386,7 +358,7 @@ function GroupChatContainer({ navigation, route }) {
 						} else {
 							updatedChats.push({
 								title: messageDate,
-								data: [newMessage]
+								data: [newMessage],
 							});
 						}
 						return updatedChats;
@@ -467,7 +439,7 @@ function GroupChatContainer({ navigation, route }) {
 							} else {
 								updatedChats.push({
 									title: messageDate,
-									data: [newMessage]
+									data: [newMessage],
 								});
 							}
 							return updatedChats;
@@ -548,7 +520,7 @@ function GroupChatContainer({ navigation, route }) {
 						} else {
 							updatedChats.push({
 								title: messageDate,
-								data: [newMessage]
+								data: [newMessage],
 							});
 						}
 						return updatedChats;
@@ -617,25 +589,31 @@ function GroupChatContainer({ navigation, route }) {
 				data: section.data.map(msg =>
 					msg.id === selectedMessage.id
 						? {
-							...msg,
-							reactions: {
-								$values: msg.reactions && msg.reactions.$values
-									? [ ...msg.reactions.$values, {
-										reactionType: reactionType,
-										reactedByUser: {
-											id: userId
-										}
-									}]
-									: [{
-										reactionType: reactionType,
-										reactedByUser: {
-											id: userId
-										}
-									}]
-							}
-						}
-						: msg
-				)
+								...msg,
+								reactions: {
+									$values:
+										msg.reactions && msg.reactions.$values
+											? [
+													...msg.reactions.$values,
+													{
+														reactionType: reactionType,
+														reactedByUser: {
+															id: userId,
+														},
+													},
+											  ]
+											: [
+													{
+														reactionType: reactionType,
+														reactedByUser: {
+															id: userId,
+														},
+													},
+											  ],
+								},
+						  }
+						: msg,
+				),
 			}));
 		});
 		setSelectedMessage(null);
@@ -649,11 +627,11 @@ function GroupChatContainer({ navigation, route }) {
 				...section,
 				data: section.data.map(msg => {
 					if (msg.id === selectedMessage.id) {
-						const { reaction, ...rest } = msg;
+						const {reaction, ...rest} = msg;
 						return rest;
 					}
 					return msg;
-				})
+				}),
 			}));
 		});
 		setSelectedMessage(null);
@@ -667,11 +645,9 @@ function GroupChatContainer({ navigation, route }) {
 		}
 		setChats(prevChats => {
 			return prevChats.map(section => ({
-					...section,
-					data: section.data.map(msg => 
-						msg.id === messageId ? { ...msg, isDeleted: true, reaction: null, message: 'Message has been deleted' } : msg
-					)
-				}));
+				...section,
+				data: section.data.map(msg => (msg.id === messageId ? {...msg, isDeleted: true, reaction: null, message: 'Message has been deleted'} : msg)),
+			}));
 		});
 	}
 
@@ -681,9 +657,7 @@ function GroupChatContainer({ navigation, route }) {
 		setChats(prevChats => {
 			return prevChats.map(section => ({
 				...section,
-				data: section.data.map(msg => 
-					msg.id === messageId ? { ...msg, isPinned: true } : msg
-				)
+				data: section.data.map(msg => (msg.id === messageId ? {...msg, isPinned: true} : msg)),
 			}));
 		});
 	}
@@ -694,9 +668,7 @@ function GroupChatContainer({ navigation, route }) {
 		setChats(prevChats => {
 			return prevChats.map(section => ({
 				...section,
-				data: section.data.map(msg => 
-					msg.id === messageId ? { ...msg, isPinned: false } : msg
-				)
+				data: section.data.map(msg => (msg.id === messageId ? {...msg, isPinned: false} : msg)),
 			}));
 		});
 	}
@@ -713,10 +685,7 @@ function GroupChatContainer({ navigation, route }) {
 
 	return (
 		<View className="flex-1 bg-white relative">
-			{opened && <BlurView
-				style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}}
-				blurType="dark" blurAmount={8} r
-				educedTransparencyFallbackColor="black" />}
+			{opened && <BlurView style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}} blurType="dark" blurAmount={8} r educedTransparencyFallbackColor="black" />}
 
 			<Header navigation={navigation} route={route} />
 
@@ -727,15 +696,7 @@ function GroupChatContainer({ navigation, route }) {
 					ref={sectionListRef}
 					sections={chats}
 					keyExtractor={(item, index) => `${item.id}-${index}`} // Ensure unique key for each item
-					renderItem={({item}) => (
-						<Chat 
-							{...item} 
-							onLongPress={() => handleLongPress(item)} 
-							onDelete={() => handleDeleteMessage(item.id, item.isPinned)} 
-							onPin={() => handlePinMessage(item.id)}
-							onUnpin={() => handleUnpinMessage(item.id)}
-						/>
-					)}
+					renderItem={({item}) => <Chat {...item} onLongPress={() => handleLongPress(item)} onDelete={() => handleDeleteMessage(item.id, item.isPinned)} onPin={() => handlePinMessage(item.id)} onUnpin={() => handleUnpinMessage(item.id)} />}
 					renderSectionHeader={({section: {title}}) => (
 						<View className="bg-main rounded-full py-2 px-4 mx-auto z-50 my-4">
 							<Text className="font-rubik text-2xs text-white">{title}</Text>
@@ -747,33 +708,24 @@ function GroupChatContainer({ navigation, route }) {
 
 				<View className="flex-row items-start h-20 bg-white pt-1">
 					<View className="bg-light rounded-3xl py-[14px] px-4 flex-row items-center flex-1">
-							<Button onPress={() => setIsEmojiModalVisible(true)}>
+						<Button onPress={() => setIsEmojiModalVisible(true)}>
 							<MaterialIcons name="emoji-emotions" size={20} color={Colors.main} />
 						</Button>
 
-						<Input
-							placeholder="Write a message"
-							placeholderTextColor={Constants.HexToRgba(Colors.black, 0.5)}
-							className="font-rubik font-light text-sm text-black mx-2 flex-1"
-							value={message}
-							onChangeText={setMessage}
-						/>
+						<Input placeholder="Write a message" placeholderTextColor={Constants.HexToRgba(Colors.black, 0.5)} className="font-rubik font-light text-sm text-black mx-2 flex-1" value={message} onChangeText={setMessage} />
 
 						<Button onPress={() => setOpen(true)}>
 							<AntDesign name="menuunfold" size={14} color={Colors.main} />
 						</Button>
 
-						<TouchableWithoutFeedback
-							onPressIn={handleRecordVoice}
-							onPressOut={handleStopRecording}
-						>
+						<TouchableWithoutFeedback onPressIn={handleRecordVoice} onPressOut={handleStopRecording}>
 							<View className="ml-2">
 								<Feather name="mic" size={20} color={Colors.main} />
 							</View>
 						</TouchableWithoutFeedback>
 					</View>
 
-					<Button className="w-12 h-12 rounded-full bg-main items-center justify-center ml-6" onPress={handleSendMessage} style={{ alignSelf: 'center' }}>
+					<Button className="w-12 h-12 rounded-full bg-main items-center justify-center ml-6" onPress={handleSendMessage} style={{alignSelf: 'center'}}>
 						<Feather name="send" size={20} color={Colors.white} />
 					</Button>
 				</View>
@@ -788,64 +740,35 @@ function GroupChatContainer({ navigation, route }) {
 			<Dropup />
 
 			{selectedMessage && (
-				<Modal
-					transparent={true}
-					animationType="slide"
-					visible={!!selectedMessage}
-					onRequestClose={() => setSelectedMessage(null)}
-				>
+				<Modal transparent={true} animationType="slide" visible={!!selectedMessage} onRequestClose={() => setSelectedMessage(null)}>
 					<View className="flex-1 justify-center items-center bg-black/50">
 						<View className="bg-white rounded-3xl p-6">
 							<Text className="font-rubik font-medium text-lg mb-4 text-center">Reactions</Text>
 							<View className="flex-row flex-wrap justify-around gap-4 mb-4">
-								<Button 
-									className="p-3 bg-gray-100 rounded-full"
-									onPress={() => handleAddReaction('like')}
-								>
+								<Button className="p-3 bg-gray-100 rounded-full" onPress={() => handleAddReaction('like')}>
 									<Text style={{fontSize: 24}}>👍</Text>
 								</Button>
-								<Button 
-									className="p-3 bg-gray-100 rounded-full"
-									onPress={() => handleAddReaction('love')}
-								>
+								<Button className="p-3 bg-gray-100 rounded-full" onPress={() => handleAddReaction('love')}>
 									<Text style={{fontSize: 24}}>❤️</Text>
 								</Button>
-								<Button 
-									className="p-3 bg-gray-100 rounded-full"
-									onPress={() => handleAddReaction('haha')}
-								>
+								<Button className="p-3 bg-gray-100 rounded-full" onPress={() => handleAddReaction('haha')}>
 									<Text style={{fontSize: 24}}>😄</Text>
 								</Button>
-								<Button 
-									className="p-3 bg-gray-100 rounded-full"
-									onPress={() => handleAddReaction('wow')}
-								>
+								<Button className="p-3 bg-gray-100 rounded-full" onPress={() => handleAddReaction('wow')}>
 									<Text style={{fontSize: 24}}>😲</Text>
 								</Button>
-								<Button 
-									className="p-3 bg-gray-100 rounded-full"
-									onPress={() => handleAddReaction('sad')}
-								>
+								<Button className="p-3 bg-gray-100 rounded-full" onPress={() => handleAddReaction('sad')}>
 									<Text style={{fontSize: 24}}>😢</Text>
 								</Button>
-								<Button 
-									className="p-3 bg-gray-100 rounded-full"
-									onPress={() => handleAddReaction('angry')}
-								>
+								<Button className="p-3 bg-gray-100 rounded-full" onPress={() => handleAddReaction('angry')}>
 									<Text style={{fontSize: 24}}>😠</Text>
 								</Button>
 							</View>
 							<View className="flex-row justify-around">
-								<Button 
-									className="px-6 py-3 bg-gray-100 rounded-full"
-									onPress={handleRemoveReaction}
-								>
+								<Button className="px-6 py-3 bg-gray-100 rounded-full" onPress={handleRemoveReaction}>
 									<Text style={{fontSize: 20}}>❌</Text>
 								</Button>
-								<Button 
-									className="px-6 py-3 bg-gray-100 rounded-full"
-									onPress={() => setSelectedMessage(null)}
-								>
+								<Button className="px-6 py-3 bg-gray-100 rounded-full" onPress={() => setSelectedMessage(null)}>
 									<Text style={{fontSize: 20}}>✖️</Text>
 								</Button>
 							</View>
@@ -855,12 +778,7 @@ function GroupChatContainer({ navigation, route }) {
 			)}
 
 			{/* Emoji Modal */}
-			<Modal
-				transparent={true}
-				animationType="slide"
-				visible={isEmojiModalVisible}
-				onRequestClose={() => setIsEmojiModalVisible(false)}
-			>
+			<Modal transparent={true} animationType="slide" visible={isEmojiModalVisible} onRequestClose={() => setIsEmojiModalVisible(false)}>
 				<View className="flex-1 justify-center items-center bg-black/50">
 					<View className="bg-white rounded-3xl p-6">
 						<Text className="font-rubik font-medium text-lg mb-4 text-center">Select Emoji</Text>

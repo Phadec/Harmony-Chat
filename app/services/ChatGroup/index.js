@@ -1,27 +1,26 @@
-import axiosInstance, { baseURL } from "../axiosInstance";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import axiosInstance, {baseURL} from '../axiosInstance';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const ApiUrl = `${baseURL}/api/Groups`;
 
 export class ChatGroup {
-// Lấy các mối quan hệ (bạn bè, nhóm)
-async getRelationships() {
-    const userId = await AsyncStorage.getItem('userId');
-    try {
-      const response = await axiosInstance.get(
-        `${ApiUrl}/get-relationships`, {
-          params: { userId: userId || '' },
-        });
+	// Lấy các mối quan hệ (bạn bè, nhóm)
+	async getRelationships() {
+		const userId = await AsyncStorage.getItem('userId');
+		try {
+			const response = await axiosInstance.get(`${ApiUrl}/get-relationships`, {
+				params: {userId: userId || ''},
+			});
 
-      if (response.data) {
-        return response.data; // Trả về dữ liệu nhận được từ API
-      }
+			if (response.data) {
+				return response.data; // Trả về dữ liệu nhận được từ API
+			}
 
-      console.error('Get relationships failed:', response.data);
-      return null;
-    } catch (error) {
-      console.error('Get relationships failed:', error.response ? error.response.data : error.message);
-    }
-  }
+			console.error('Get relationships failed:', response.data);
+			return null;
+		} catch (error) {
+			console.error('Get relationships failed:', error.response ? error.response.data : error.message);
+		}
+	}
 
 	// Gửi tin nhắn
 	async sendMessage(recipientId, message, formData) {
@@ -29,28 +28,26 @@ async getRelationships() {
 		formData.append('UserId', userId || '');
 		formData.append('RecipientId', recipientId || '');
 		formData.append('Message', message || '');
-	
+
 		try {
-		  console.log('Sending message with formData:', formData);
-		  const response = await axiosInstance.post(
-			`${baseURL}/api/Chats/send-message`, formData,
-			{
-			  headers: {
-				'Content-Type': 'multipart/form-data',
-			  },
+			console.log('Sending message with formData:', formData);
+			const response = await axiosInstance.post(`${baseURL}/api/Chats/send-message`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
 			});
-	
-		  if (response.data) {
-			return response.data; // Trả về dữ liệu nhận được từ API
-		  }
-	
-		  console.error('Send message failed:', response.data);
-		  return null;
+
+			if (response.data) {
+				return response.data; // Trả về dữ liệu nhận được từ API
+			}
+
+			console.error('Send message failed:', response.data);
+			return null;
 		} catch (error) {
-		  console.error('Send message failed:', error.response ? error.response.data : error.message);
-		  throw error;
+			console.error('Send message failed:', error.response ? error.response.data : error.message);
+			throw error;
 		}
-	  }
+	}
 
 	// Tạo nhóm chat
 	async createGroupChat(nameGroup, memberIds, avatar) {
@@ -60,13 +57,11 @@ async getRelationships() {
 			formData.append('Name', nameGroup || '');
 			formData.append('MemberIds', memberIds || '');
 			formData.append('Avatar', avatar || '');
-			const reponse = await axiosInstance.post(
-				`${ApiUrl}/create-group-chat`, formData, {
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
-				}
-			);
+			const reponse = await axiosInstance.post(`${ApiUrl}/create-group-chat`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			});
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -74,8 +69,8 @@ async getRelationships() {
 
 			console.error('Create chat failed:', response.data);
 			return null;
-		} catch(error) {
-			console.log("Create chat group error:", error.response ? error.response.data : error.message);
+		} catch (error) {
+			console.log('Create chat group error:', error.response ? error.response.data : error.message);
 		}
 	}
 
@@ -85,13 +80,11 @@ async getRelationships() {
 			const formData = new FormData();
 			formData.append('GroupID', groupId || '');
 			formData.append('UserId', userId || '');
-			const response = await axiosInstance.post(
-				`${ApiUrl}/add-group-chat-member`, formData, {
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
-				}
-			);
+			const response = await axiosInstance.post(`${ApiUrl}/add-group-chat-member`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			});
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -107,9 +100,7 @@ async getRelationships() {
 	// Xóa nhóm chat
 	async deleteGroup(groupId) {
 		try {
-			const response = await axiosInstance.delete(
-				`${ApiUrl}/${groupId}/delete`
-			);
+			const response = await axiosInstance.delete(`${ApiUrl}/${groupId}/delete`);
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -122,12 +113,10 @@ async getRelationships() {
 		}
 	}
 
-	// Cập nhật chat theme 
+	// Cập nhật chat theme
 	async changeGroupAvatar(groupId) {
 		try {
-			const response = await axiosInstance.post(
-				`${ApiUrl}/${groupId}/update-chat-theme`
-			);
+			const response = await axiosInstance.post(`${ApiUrl}/${groupId}/update-chat-theme`);
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -143,19 +132,18 @@ async getRelationships() {
 	// Lấy danh sách thành viên trong nhóm chat
 	async getGroupMembers(groupId) {
 		try {
-			const response = await axiosInstance.get(
-				`${ApiUrl}/${groupId}/members`
-			);
+			const response = await axiosInstance.get(`${ApiUrl}/${groupId}/members`);
+			console.log('Get group members response:', response.data);
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
 			}
 
 			console.error('Get group members failed:', response.data);
-			return null;
 		} catch (error) {
 			console.error('Get group members failed:', error.response ? error.response.data : error.message);
 		}
+		return null;
 	}
 
 	// Xóa thành viên khỏi nhóm chat
@@ -164,13 +152,11 @@ async getRelationships() {
 			const formData = new FormData();
 			formData.append('GroupID', groupId || '');
 			formData.append('UserId', userId || '');
-			const response = await axiosInstance.post(
-				`${ApiUrl}/remove-member`, formData, {
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
-				}
-			);
+			const response = await axiosInstance.post(`${ApiUrl}/remove-member`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			});
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -187,9 +173,7 @@ async getRelationships() {
 	async getUserGroupsWithDetails() {
 		const userId = await AsyncStorage.getItem('userId');
 		try {
-			const response = await axiosInstance.get(
-				`${ApiUrl}/user-groups-with-details/${userId}`
-			);
+			const response = await axiosInstance.get(`${ApiUrl}/user-groups-with-details/${userId}`);
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -202,20 +186,20 @@ async getRelationships() {
 		}
 	}
 
-	// Đổi tên nhóm 
+	// Đổi tên nhóm
 	async renameGroup(groupId, newName) {
 		try {
 			const response = await axiosInstance.put(
-				`${ApiUrl}/rename-group`, 
+				`${ApiUrl}/rename-group`,
 				{
 					groupId: groupId,
 					newName: newName,
-				}
-				, {
+				},
+				{
 					headers: {
 						'Content-Type': 'multipart/form-data',
 					},
-				}
+				},
 			);
 
 			if (response.data) {
@@ -235,15 +219,11 @@ async getRelationships() {
 			const formData = new FormData();
 			formData.append('GroupId', groupId || '');
 			formData.append('UserId', userId || '');
-			const response = await axiosInstance.post(
-				`${ApiUrl}/update-admin`, 
-				formData
-				, {
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
-				}
-			);
+			const response = await axiosInstance.post(`${ApiUrl}/update-admin`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			});
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -262,15 +242,11 @@ async getRelationships() {
 			const formData = new FormData();
 			formData.append('GroupId', groupId || '');
 			formData.append('UserId', userId || '');
-			const response = await axiosInstance.post(
-				`${ApiUrl}/revoke-admin`, 
-				formData
-				, {
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
-				}
-			);
+			const response = await axiosInstance.post(`${ApiUrl}/revoke-admin`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			});
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -289,15 +265,11 @@ async getRelationships() {
 			const formData = new FormData();
 			formData.append('GroupId', groupId || '');
 			formData.append('AvatarFile', avatar || '');
-			const response = await axiosInstance.post(
-				`${ApiUrl}/update-avatar`, 
-				formData
-				, {
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
-				}
-			);
+			const response = await axiosInstance.post(`${ApiUrl}/update-avatar`, formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			});
 
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
@@ -314,13 +286,15 @@ async getRelationships() {
 	async getGroupsNonMember(groupId) {
 		try {
 			const response = await axiosInstance.get(
-				`${ApiUrl}/${groupId}/non-members`, {
-					groupId: groupId
-				}, {
+				`${ApiUrl}/${groupId}/non-members`,
+				{
+					groupId: groupId,
+				},
+				{
 					headers: {
 						'Content-Type': 'multipart/form-data',
 					},
-				}
+				},
 			);
 
 			if (response.data) {
@@ -334,17 +308,19 @@ async getRelationships() {
 		}
 	}
 
-	// Ẩn thông báo từ nhóm 
+	// Ẩn thông báo từ nhóm
 	async muteGroupNotification(groupId) {
 		try {
 			const response = await axiosInstance.post(
-				`${ApiUrl}/${groupId}/mute-group-notification`, {
-					groupId: groupId
-				}, {
+				`${ApiUrl}/${groupId}/mute-group-notification`,
+				{
+					groupId: groupId,
+				},
+				{
 					headers: {
 						'Content-Type': 'multipart/form-data',
 					},
-				}
+				},
 			);
 
 			if (response.data) {
