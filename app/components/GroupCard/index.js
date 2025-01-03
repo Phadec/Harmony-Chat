@@ -29,7 +29,7 @@ function GroupCard({item, navigation}) {
 		navigationTarget: 'GroupChat',
 		navigationParams: {
 			recipientId: item.id,
-			avatar: {uri: avatarUrl},
+			avatar: item.avatar,
 			nameGroup: item.name
 		},
 		onSelectCallbacks: {}
@@ -55,15 +55,8 @@ function GroupCard({item, navigation}) {
 						<Image source={{uri: avatarUrl}} className="rounded-full w-11 h-11"/>
 					</View>
 
-					<View className="ml-3 flex-1">
+					<View className="ml-3 flex-1 my-auto">
 						<Text className="font-rubik font-medium text-sm text-black leading-5">{item.name}</Text>
-
-						<View className="flex-row items-center mt-1">
-							<Text
-								className={`font-rubik ${item.hasNewMessage ? 'font-bold' : 'font-medium'} text-xs text-black ml-1`}>
-								{item.senderFullName}: {item.lastMessage}
-							</Text>
-						</View>
 					</View>
 
 					<View className="ml-2">
