@@ -24,49 +24,110 @@ import {ChatGroup} from '../../services/ChatGroup';
 import {ChatService} from '../../services/Chat';
 import {baseURL} from '../../services/axiosInstance';
 
+const GroupInfo = ({avatar, nameGroup, countMembers}) => {
+	return (
+		<View className="flex-row items-center ml-2">
+			<Image source={{uri: avatar ? `${baseURL}/${avatar}` : undefined}} className="w-12 h-12 rounded-full" />
+			<View className="ml-3">
+				<Text className="font-rubik font-medium text-sm text-white">{nameGroup}</Text>
+				<View className="flex-row items-center">
+					<Feather name="users" size={12} color={Constants.HexToRgba(Colors.white, 0.7)} />
+					<Text className="mt-1 font-rubik text-xs text-white/40 ml-2">{countMembers} members</Text>
+				</View>
+			</View>
+		</View>
+	);
+};
+
 function Header({navigation, route}) {
 	const insets = useSafeAreaInsets();
 	const {avatar, nameGroup, recipientId} = route.params;
 	const chatService = new ChatGroup();
 	const [countMembers, setCountMember] = useState(0);
+	const [opened, setOpen] = useState(false);
+
+	const opacity = useSharedValue(0);
+	const transform = useSharedValue(30);
+
+	const animation = useAnimatedStyle(() => ({
+		opacity: opacity.value,
+		transform: [{translateY: transform.value}],
+	}));
 
 	useEffect(() => {
-		chatService
-			.getGroupMembers(recipientId)
-			.then(item => {
-				// Gọi setCountMember để cập nhật state
-				setCountMember(item.$values.length);
-			})
-			.catch(err => console.error(err));
-	}, [recipientId]); // Thêm dependency nếu recipientId thay đổi
+		if (recipientId) {
+			chatService
+				.getGroupMembers(recipientId)
+				.then(item => {
+					setCountMember(item?.$values?.length || 0);
+				})
+				.catch(err => console.error(err));
+		}
+	}, [recipientId]);
+
+	useEffect(() => {
+		opacity.value = withTiming(opened ? 1 : 0, {duration: 300});
+		transform.value = withTiming(opened ? 0 : 30, {duration: 300});
+	}, [opened]);
 
 	return (
 		<View className="bg-main flex-row items-center p-6 rounded-b-3xl" style={{paddingTop: insets.top + 16}}>
+			{/* Back Button */}
 			<Button onPress={() => navigation.goBack()}>
 				<MaterialIcons name="arrow-back-ios" size={20} color={Colors.white} />
 			</Button>
 
-			<View className="flex-row items-center ml-2">
-				<Image source={{uri: `${baseURL}/${avatar}`}} className="w-12 h-12 rounded-full" />
+			{/* Group Info */}
+			<GroupInfo avatar={avatar} nameGroup={nameGroup} countMembers={countMembers} />
 
-				<View className="ml-3">
-					<Text className="font-rubik font-medium text-sm text-white">{nameGroup}</Text>
-
-					<View className="flex-row items-center">
-						<Feather name="users" size={12} color={Constants.HexToRgba(Colors.white, 0.7)} />
-						<Text className="mt-1 font-rubik text-xs text-white/40 ml-2">{countMembers} members</Text>
-					</View>
-				</View>
-			</View>
-
+			{/* More Options Button */}
 			<View className="flex-row items-center ml-auto">
-				<Button>
+				<Button onPress={() => setOpen(prev => !prev)} className="p-5">
 					<Fontisto name="more-v-a" size={16} color={Colors.white} />
 				</Button>
 			</View>
+
+			{/* Dropdown Settings */}
+			{opened && (
+				<>
+					<BlurView
+						style={{
+							position: 'absolute',
+							left: 0,
+							right: 0,
+							top: 0,
+							bottom: 0,
+							flex: 1,
+							zIndex: 10,
+						}}
+						blurType="dark"
+						blurAmount={8}
+						reducedTransparencyFallbackColor="black"
+					/>
+					<Animated.View className="absolute right-5 w-40 z-20" style={[animation, {zIndex: opened ? 20 : -1, top: 10}]}>
+						<Button className="p-4 ml-auto" onPress={() => setOpen(false)}>
+							<AntDesign name="close" size={20} color={Colors.white} />
+						</Button>
+						<View className="bg-white rounded-3xl py-3">
+							<Button className="px-6 py-3" onPress={() => console.log('Leave Group')}>
+								<Text className="font-rubik font-light text-sm text-black">Leave Group</Text>
+							</Button>
+							<Button className="px-6 py-3" onPress={() => console.log('Delete Group')}>
+								<Text className="font-rubik font-light text-sm text-black">Delete Group</Text>
+							</Button>
+						</View>
+					</Animated.View>
+				</>
+			)}
 		</View>
 	);
 }
+
+function handleLeaveGroup() {
+	
+}
+
+function handleDeleteGroup() {}
 
 function getReactionIcon(type) {
 	switch (type) {
@@ -691,7 +752,7 @@ function GroupChatContainer({navigation, route}) {
 
 			{pinnedMessages.length > 0 && <PinnedMessages pinnedMessages={pinnedMessages} onPinnedMessagePress={handlePinnedMessagePress} />}
 
-			<View className="px-6 flex-1">
+			<View className="px-6 flex-1" style={{position: 'relative', zIndex: -1}}>
 				<SectionList
 					ref={sectionListRef}
 					sections={chats}
