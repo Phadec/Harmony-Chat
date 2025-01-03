@@ -37,7 +37,7 @@ function Tabbar({state, descriptors, navigation}) {
 
 	const stackName = getFocusedRouteNameFromRoute(route);
 
-	if ((routeName === 'Root:Messages' && stackName === 'Chat')
+	if ((routeName === 'Root:Messages' && stackName === 'ChatPrivate')
 		|| (routeName === 'Root:Messages' && stackName === 'GroupChat')
 		|| (routeName === 'Root:Groups' && stackName === 'GroupChat')
 		|| (routeName === 'Root:Friends' && stackName === 'Chat')

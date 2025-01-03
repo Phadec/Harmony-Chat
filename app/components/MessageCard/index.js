@@ -1,7 +1,6 @@
 import React, {useRef, useState} from 'react';
 import {View, Image, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {formatInTimeZone} from "date-fns-tz"; // Import date-fns-tz for timezone formatting
 import {baseURL} from '../../services/axiosInstance'; // Import baseURL
 
 // Common
@@ -9,24 +8,16 @@ import {Constants, Colors} from '@/common';
 
 // Components
 import {CustomContextMenu} from '@/components';
+
+// Hooks
 import {useContextMenu} from "@/hooks";
+
+// Utils
+import {formatChatDate} from "../../utils/date";
 
 function Status({color}) {
 	return <View className="w-3 h-3 rounded-full border-2 border-white absolute -left-[1px] -top-[1px] "
 				 style={{backgroundColor: Colors[color]}}/>;
-}
-
-function formatChatDate(chatDate) {
-	const timeZone = 'Asia/Ho_Chi_Minh';
-	const date = new Date(chatDate);
-	date.setHours(date.getHours() + 7); // Adjust the date by adding 7 hours
-
-	// Kiểm tra nếu là hôm nay thi chỉ hiển thị giờ, ngược lại hiển thị ngày tháng va giờ
-	const today = new Date();
-	if (date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
-		return formatInTimeZone(date, timeZone, "HH:mm");
-	}
-	return formatInTimeZone(date, timeZone, "dd/MM HH:mm");
 }
 
 function MessageCard({item, navigation}) {
@@ -41,7 +32,7 @@ function MessageCard({item, navigation}) {
 		handleLongPress,
 		getMenuPosition
 	} = useContextMenu({
-		navigationTarget: 'Chat',
+		navigationTarget: 'ChatPrivate',
 		navigationParams: {
 			recipientId: item.contactId,
 			contactFullName: item.contactFullName,
@@ -116,5 +107,4 @@ function MessageCard({item, navigation}) {
 		</CustomContextMenu>
 	);
 }
-
 export default MessageCard;

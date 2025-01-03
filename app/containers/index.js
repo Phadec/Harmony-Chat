@@ -21,6 +21,7 @@ import CallingContainer from './Calling';
 import ChatContainer from './Chat';
 import GroupChatContainer from './GroupChat';
 import AddGroup from './AddGroup';
+import ChatPrivateContainer from "./ChatPrivate";
 
 // Stories
 import StoryContainer from './Story';
@@ -80,4 +81,5 @@ export {
 	InvitationsContainer,
 	ProfileContainer,
 	BlockedUsersContainer,
+	ChatPrivateContainer
 };

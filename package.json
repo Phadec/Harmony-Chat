@@ -22,6 +22,7 @@
 		"@react-navigation/native": "^6.1.7",
 		"@react-navigation/stack": "^6.3.17",
 		"axios": "^1.7.9",
+		"date-fns": "^4.1.0",
 		"date-fns-tz": "^3.2.0",
 		"moment-timezone": "^0.5.46",
 		"nativewind": "^2.0.11",

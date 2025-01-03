@@ -43,6 +43,7 @@ function LoginContainer({navigation}) {
 		console.log('Starting login...'); // Log khi bắt đầu đăng nhập
 		try {
 			const response = await authService.login(username, password);
+			console.log('Login response:', response);
 			if (response.data === undefined) {
 				console.error('Invalid response data');
 				setIsLoggingIn(false); // Đặt lại trạng thái khi có lỗi

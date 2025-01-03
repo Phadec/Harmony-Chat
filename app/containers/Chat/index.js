@@ -604,7 +604,6 @@ function ChatContainer({navigation, route}) {
 	}
 
 	function Dropup() {
-		console.log('Rendering Dropup');
 		return (
 			<Animated.View className="absolute bottom-7 right-24 w-40 z-20"
 						   style={[animation, {zIndex: opened ? 20 : -1}]}>

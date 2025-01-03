@@ -45,7 +45,7 @@ function Navigator() {
 	const handleSheetChanges = useCallback(index => {
 		if (index === 0) {
 			bottomSheetRef.current?.close();
-			actions.setAddGroup(dispatch, false);
+			actions.setOpenAddGroup(dispatch, false);
 		}
 	}, []);
 
@@ -57,7 +57,7 @@ function Navigator() {
 				appearsOnIndex={1}
 				onPress={() => {
 					bottomSheetRef.current?.close();
-					actions.setAddGroup(dispatch, false);
+					actions.setOpenAddGroup(dispatch, false);
 				}}
 			/>
 		),

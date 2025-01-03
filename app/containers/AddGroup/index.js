@@ -15,132 +15,21 @@ import {baseURL} from "../../services/axiosInstance";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Components
-import {Input, Button} from '@/components';
+import {Input, Button, FriendAddGroupCard} from '@/components';
 
 // Common
 import {Colors, Constants} from '@/common';
 
-// Services
-import {FriendService, GroupService} from "@/services";
-import {SignalRService} from "../../services/signalR";
-
-// Redux
-import {useDispatch, useSelector} from "react-redux";
-import {actions} from "../../redux/reducer/GroupRedux";
-
-// Navigation
-import {navigationRef} from '@/RootNavigation';
+// Hooks
+import {useAddGroup} from "@/hooks";
 
 function AddGroup() {
-	const dispatch = useDispatch();
-	const [friends, setFriends] = useState([]);
-	const [friendSelected, setFriendSelected] = useState([]);
-	const [groupName, setGroupName] = useState('');
-	const signalRService = SignalRService.getInstance();
-
-	useEffect(() => {
-		// Thiết lập SignalR listeners
-		signalRService.setupGroupListeners((groupId) => {
-			console.log("New group created:", groupId);
-			dispatch(actions.refreshGroups());
-		});
-
-		// Cleanup when component unmounts
-		return () => {
-			// Đảm bảo tên event giống với phần đăng ký
-			signalRService.hubConnection.off('NotifyGroupMembers');
-		};
-	}, [dispatch]);
-
-	// Lấy danh sách bạn bè từ lần mount đầu tiên
-	useEffect(() => {
-		// Lấy userId từ AsyncStorage
-		// Lấy danh sách bạn bè đúng 1 lần khi component được render
-		const fetchFriends = async () => {
-			try {
-				const userId = await AsyncStorage.getItem('userId');
-				setFriendSelected([userId]);
-
-				// Tiến hành call API lấy danh sách bạn bè
-				const friendsService = new FriendService();
-				const friends = await friendsService.getFriends();
-				if (friends) {
-					setFriends(friends.$values);
-				}
-			} catch (error) {
-				console.error('Error fetching friends:', error);
-			}
-		}
-		fetchFriends();
-		console.log("First friend selected:", friendSelected);
-	}, []);
-
-
-	// Hàm xử lý khi chọn hoặc bỏ chọn bạn bè
-	const handleSelectFriend = (friendId, isSelected) => {
-		setFriendSelected((prev) => {
-			return isSelected ? [...prev, friendId] : prev.filter(id => id !== friendId);
-		});
-	};
-
-	// Xử lý sự kiện tạo nhóm
-	const handleCreateGroup = async () => {
-		if (friendSelected.length < 3) {
-			Alert.alert('', 'Group must have at least 3 members');
-			return;
-		}
-		if (!groupName) {
-			Alert.alert('', 'Please enter group name');
-			return;
-		}
-
-		try {
-			// Tạo FormData
-			const data = new FormData();
-			data.append('Name', groupName);
-
-			// Thêm từng `MemberId` vào FormData
-			friendSelected.forEach((id) => {
-				data.append('MemberIds', id);
-			});
-			// THêm avatar vào FormData
-			data.append('AvatarFile', '');
-
-			// Gửi API
-			const groupService = new GroupService();
-			const response = await groupService.createGroup(data);
-			if (!response) {
-				return;
-			}
-
-			// Đóng bottom sheet và reset form
-			actions.setAddGroup(dispatch, false);
-			setGroupName('');
-			setFriendSelected([]);
-
-			// Emit event manually if needed
-			signalRService.groupCreated$.next({
-				groupId: response.id,
-				message: 'New group created'
-			});
-
-
-			// Hiển thị thông báo thành công
-			Alert.alert('Success', 'Group created successfully', [
-					{
-						text: 'OK',
-						onPress: () => {
-							// Điều hướng đến màn hình groups
-							navigationRef.current?.navigate('Root:Groups');
-						}
-					}
-				]
-			);
-		} catch (error) {
-			Alert.alert('Error', 'Failed to create group');
-		}
-	}
-
+	const {
+		friends,
+		setGroupName,
+		handleSelectFriend,
+		handleCreateGroup,
+	} = useAddGroup();
 
 	return (
 		<KeyboardAvoidingView behavior="padding" className='flex-1'>
@@ -181,7 +70,7 @@ function AddGroup() {
 							data={friends}
 							key={item => item.id}
 							renderItem={
-								({item}) => <FriendCard friend={item} onSelectFriend={handleSelectFriend}/>
+								({item}) => <FriendAddGroupCard friend={item} onSelectFriend={handleSelectFriend}/>
 							}/>
 					</View>
 				</View>
@@ -189,41 +78,4 @@ function AddGroup() {
 		</KeyboardAvoidingView>
 	);
 }
-
-function FriendCard({friend, onSelectFriend}) {
-	const [isSelected, setSelected] = useState(false);
-
-	const handlePress = () => {
-		// Đảo trạng thái isSelected
-		const newSelectedState = !isSelected;
-		setSelected(newSelectedState);
-
-		// Gọi hàm callback và truyền id cùng trạng thái mới
-		onSelectFriend(friend.id, newSelectedState);
-	};
-
-	return (
-		<Button
-			onPress={handlePress}
-			className="flex-row items-center justify-between mb-5"
-		>
-			<View className="flex-row items-center">
-				<Image
-					source={{uri: `${baseURL}/${friend.avatar}`}}
-					className="w-10 h-10 rounded-full"
-				/>
-				<Text className="font-rubik font-medium text-base text-black ml-4">
-					{friend.fullName}
-				</Text>
-			</View>
-
-			{isSelected ? (
-				<MaterialIcons name="check-circle" size={24} color={Colors.main}/>
-			) : (
-				<Feather name="circle" size={22} color={Colors.main}/>
-			)}
-		</Button>
-	);
-}
-
 export default AddGroup;

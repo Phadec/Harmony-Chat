@@ -10,9 +10,29 @@ import {CustomContextMenu} from "@/components";
 // Hooks
 import {useContextMenu} from "@/hooks";
 
+// Services
+import {GroupService} from "@/services";
+
+// Redux
+import {useDispatch} from "react-redux";
+import {actions as GroupRedux} from "@/redux/reducer/GroupRedux";
+
 
 const GroupCard = ({group, navigation, index, totalItems}) => {
 	const avatarUrl = `${baseURL}/${group.avatar}`;
+	const dispatch = useDispatch();
+
+	// Mute notification for group
+	const muteNotification = async () => {
+		await GroupRedux.muteGroup(dispatch, new GroupService(), group.id);
+	}
+
+	// Delete group
+	const deleteGroup = async () => {
+		// Call API to delete group
+		await GroupRedux.deleteGroup(dispatch, new GroupService(), group.id);
+	}
+
 	const {
 		menuRef,
 		isSelected,
@@ -26,7 +46,8 @@ const GroupCard = ({group, navigation, index, totalItems}) => {
 		navigationParams: {},
 		onSelectCallbacks: {
 			// Tùy chỉnh các callback cho message
-			mark_read: () => console.log('Custom mark read for message'),
+			mute: () => muteNotification(),
+			delete: () => deleteGroup(),
 		}
 	});
 
@@ -56,6 +77,13 @@ const GroupCard = ({group, navigation, index, totalItems}) => {
 						<Text className="font-rubik font-medium text-sm text-black leading-5">
 							{group.name}
 						</Text>
+						{
+							group.notificationsMuted && (
+								<Text className="font-rubik font-normal text-xs text-gray-500">
+									Notifications muted
+								</Text>
+							)
+						}
 					</View>
 				</View>
 			</TouchableOpacity>

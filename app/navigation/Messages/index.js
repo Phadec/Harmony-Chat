@@ -4,7 +4,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {enableScreens} from 'react-native-screens';
 
 // Containers
-import {MessagesContainer, ChatContainer} from '@/containers';
+import {MessagesContainer, ChatPrivateContainer, GroupChatContainer} from '@/containers';
 
 
 enableScreens();
@@ -30,7 +30,7 @@ function Messages() {
 	return (
 		<Stack.Navigator initialRouteName="Messages">
 			<Stack.Screen name="Messages" component={MessagesContainer} options={() => options}/>
-			<Stack.Screen name="Chat" component={ChatContainer} options={() => options}/>
+			<Stack.Screen name="ChatPrivate" component={ChatPrivateContainer} options={() => options}/>
 			<Stack.Screen name="GroupChat" component={GroupChatContainer} options={() => options}/>
 		</Stack.Navigator>
 	);

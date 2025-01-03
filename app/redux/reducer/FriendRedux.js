@@ -40,7 +40,7 @@ export const reducer = (state = initialState, action) => {
 }
 
 // Action Creators
-// Khơi động lấy danh sách bạn bè
+// Tín hiệu động lấy danh sách bạn bè
 export const fetchFriendsStart = () => ({type: FETCH_FRIENDS_START});
 // Lấy danh sách bạn bè nếu thành công
 export const fetchFriendsSuccess = (friends) => ({

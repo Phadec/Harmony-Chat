@@ -4,11 +4,13 @@ import {View, Image, Text, TouchableOpacity} from 'react-native';
 // Components
 import {CustomContextMenu} from "@/components/";
 
-
 // Hooks
 import {useContextMenu} from "@/hooks";
 
 // Utils
+import {formatChatDate} from "../../utils/date";
+
+// Constants
 import {baseURL} from "../../services/axiosInstance";
 
 function GroupMessageCard({item, navigation}) {
@@ -25,9 +27,9 @@ function GroupMessageCard({item, navigation}) {
 		item: item,
 		navigationTarget: 'GroupChat',
 		navigationParams: {
-			recipientId: item.id,
+			recipientId: item.groupId,
 			avatar: {uri: avatarUrl},
-			nameGroup: item.name
+			nameGroup: item.groupName
 		},
 		onSelectCallbacks: {}
 	});
@@ -66,7 +68,7 @@ function GroupMessageCard({item, navigation}) {
 					<View className="ml-2">
 						<Text
 							className={`font-rubik ${item.hasNewMessage ? 'font-bold' : 'font-medium text-black/40'}  text-xs text-black`}>
-							{/* {formatChatDate(item.chatDate)} */}
+							 {formatChatDate(item.chatDate)}
 						</Text>
 						<View
 							className={`${item.hasNewMessage ? 'bg-red rounded-2xl items-center mt-2 w-3 ml-auto py-1.5' : ''}`}/>

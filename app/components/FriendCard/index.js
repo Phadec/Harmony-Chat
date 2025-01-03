@@ -54,7 +54,7 @@ function FriendCard({item, navigation}) {
 		getMenuPosition
 	} = useContextMenu({
 		item: item,
-		navigationTarget: 'Chat',
+		navigationTarget: 'ChatPrivateContainer',
 		navigationParams: {
 			recipientId: item.id,
 			contactFullName: item.fullName,

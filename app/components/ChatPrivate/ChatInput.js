@@ -9,7 +9,7 @@ import {Colors, Constants} from '@/common';
 function ChatInput ({setOpen}){
 	return (
 		<View className="flex-row items-start h-20 bg-white pt-1">
-			<View className="bg-light rounded-3xl py-[14px] px-4 flex-row items-center flex-1">
+			<View className="bg-light rounded-2xl py-[14px] mb-2 px-4 flex-row items-center flex-1">
 				<Button>
 					<MaterialIcons name="emoji-emotions" size={20} color={Colors.main} />
 				</Button>
@@ -25,7 +25,7 @@ function ChatInput ({setOpen}){
 				</Button>
 			</View>
 
-			<Button className="w-12 h-12 rounded-full bg-main items-center justify-center ml-6">
+			<Button className="w-12 h-12 rounded-full bg-main items-center justify-center mt-3 ml-6">
 				<Feather name="send" size={20} color={Colors.white} />
 			</Button>
 		</View>

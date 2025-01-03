@@ -1,16 +1,16 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {View, FlatList} from 'react-native';
+import {useFocusEffect} from "@react-navigation/native";
 
 // Components
-import {Header, BubbleStory, MessageCard, GroupCard} from '@/components';
+import {Header, BubbleStory, MessageCard, GroupMessageCard} from '@/components';
 
 // Layout
 import Layout from '@/Layout';
 
 // Services
-import {ChatService} from "../../services/Chat";
+import {ChatService} from "@/services";
 import {SignalRService} from '../../services/signalR';
-import {useFocusEffect} from "@react-navigation/native";
 
 
 function MessagesContainer({navigation}) {
@@ -103,7 +103,7 @@ function MessagesContainer({navigation}) {
 					if (item.relationshipType === 'Private') {
 						return <MessageCard item={item} navigation={navigation}/>;
 					}
-					return <GroupCard item={item} navigation={navigation}/>
+					return <GroupMessageCard item={item} navigation={navigation}/>
 				}}
 				showsVerticalScrollIndicator={false}
 			/>

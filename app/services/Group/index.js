@@ -37,4 +37,37 @@ export class GroupService {
 			return null;
 		}
 	}
+
+	async muteGroupNotification(groupId) {
+		try {
+			const response = await axiosInstance.post(
+				`${API_URL}/${groupId}/mute-group-notifications`);
+
+			if (response.status === 200) {
+				return true;
+			}
+
+			return false;
+		} catch (error) {
+			console.log('Error at muteGroupNotification:', error);
+			return false;
+		}
+	}
+
+	// Xóa nhóm chat
+	async deleteGroup(groupId) {
+		try {
+			const response = await axiosInstance.delete(
+				`${API_URL}/${groupId}/delete`
+			);
+			if (response.status){
+				return true;
+			}
+			console.error('Delete group chat failed:', response.data);
+			return false;
+		} catch (error) {
+			console.error('Delete group chat failed:', error.response ? error.response.data : error.message);
+			return false;
+		}
+	}
 }

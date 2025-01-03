@@ -2,7 +2,7 @@ import axiosInstance, { baseURL } from "../axiosInstance";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 const ApiUrl = `${baseURL}/api/Groups`;
 
-export class ChatGroup {
+export class ChatGroupService {
 // Lấy các mối quan hệ (bạn bè, nhóm)
 async getRelationships() {
     const userId = await AsyncStorage.getItem('userId');
@@ -29,7 +29,7 @@ async getRelationships() {
 		formData.append('UserId', userId || '');
 		formData.append('RecipientId', recipientId || '');
 		formData.append('Message', message || '');
-	
+
 		try {
 		  console.log('Sending message with formData:', formData);
 		  const response = await axiosInstance.post(
@@ -39,11 +39,11 @@ async getRelationships() {
 				'Content-Type': 'multipart/form-data',
 			  },
 			});
-	
+
 		  if (response.data) {
 			return response.data; // Trả về dữ liệu nhận được từ API
 		  }
-	
+
 		  console.error('Send message failed:', response.data);
 		  return null;
 		} catch (error) {
@@ -122,7 +122,7 @@ async getRelationships() {
 		}
 	}
 
-	// Cập nhật chat theme 
+	// Cập nhật chat theme
 	async changeGroupAvatar(groupId) {
 		try {
 			const response = await axiosInstance.post(
@@ -202,11 +202,11 @@ async getRelationships() {
 		}
 	}
 
-	// Đổi tên nhóm 
+	// Đổi tên nhóm
 	async renameGroup(groupId, newName) {
 		try {
 			const response = await axiosInstance.put(
-				`${ApiUrl}/rename-group`, 
+				`${ApiUrl}/rename-group`,
 				{
 					groupId: groupId,
 					newName: newName,
@@ -236,7 +236,7 @@ async getRelationships() {
 			formData.append('GroupId', groupId || '');
 			formData.append('UserId', userId || '');
 			const response = await axiosInstance.post(
-				`${ApiUrl}/update-admin`, 
+				`${ApiUrl}/update-admin`,
 				formData
 				, {
 					headers: {
@@ -263,7 +263,7 @@ async getRelationships() {
 			formData.append('GroupId', groupId || '');
 			formData.append('UserId', userId || '');
 			const response = await axiosInstance.post(
-				`${ApiUrl}/revoke-admin`, 
+				`${ApiUrl}/revoke-admin`,
 				formData
 				, {
 					headers: {
@@ -290,7 +290,7 @@ async getRelationships() {
 			formData.append('GroupId', groupId || '');
 			formData.append('AvatarFile', avatar || '');
 			const response = await axiosInstance.post(
-				`${ApiUrl}/update-avatar`, 
+				`${ApiUrl}/update-avatar`,
 				formData
 				, {
 					headers: {
@@ -334,7 +334,7 @@ async getRelationships() {
 		}
 	}
 
-	// Ẩn thông báo từ nhóm 
+	// Ẩn thông báo từ nhóm
 	async muteGroupNotification(groupId) {
 		try {
 			const response = await axiosInstance.post(
