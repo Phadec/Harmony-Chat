@@ -101,10 +101,7 @@ function Header({navigation, route}) {
 			</Button>
 
 			{/* Group Info */}
-			<View>
-				<Text>{nameGroup}</Text>
-				<Text>{countMembers} Members</Text>
-			</View>
+			<GroupInfo avatar={avatar} nameGroup={nameGroup} countMembers={countMembers} />
 
 			{/* More Options Button */}
 			<View className="flex-row items-center ml-auto">
@@ -135,7 +132,7 @@ function Header({navigation, route}) {
 							<AntDesign name="close" size={20} color="#fff" />
 						</Button>
 						<View className="bg-white rounded-3xl py-3">
-							<Button className="px-6 py-3" onPress={() => Alert.alert('Leave Group')}>
+							<Button className="px-6 py-3" onPress={() => handleLeaveGroup(chatService, recipientId, navigation)}>
 								<Text className="font-rubik font-light text-sm text-black">Delete Chat</Text>
 							</Button>
 							<Button className="px-6 py-3" onPress={handleChangeCover}>
@@ -435,20 +432,6 @@ function GroupChatContainer({navigation, route}) {
 						date: new Date(new Date(response.date).setHours(new Date(response.date).getHours() - 7)), // Adjust the date by subtracting 7 hours
 						me: true,
 					};
-					setChats(prevChats => {
-						const updatedChats = [...prevChats];
-						const messageDate = new Date(newMessage.date).toDateString();
-						const existingSection = updatedChats.find(section => section.title === messageDate);
-						if (existingSection) {
-							existingSection.data.push(newMessage);
-						} else {
-							updatedChats.push({
-								title: messageDate,
-								data: [newMessage],
-							});
-						}
-						return updatedChats;
-					});
 					setMessage('');
 				}
 			} catch (error) {
