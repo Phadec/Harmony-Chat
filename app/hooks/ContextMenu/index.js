@@ -25,10 +25,8 @@ function useContextMenu(
 	// hàm markAsRead
 	const handleMarkAsRead = async () => {
 		try {
-			if (!item) {
-				console.warn('No chat found to mark as read.');
-				return;
-			}
+			if (!item) return;
+
 			const response = await chatService.markMessageAsRead(item.chatId);
 		} catch (error) {
 			console.error('Error marking as read:', error);
@@ -38,10 +36,8 @@ function useContextMenu(
 	// Hàm Mute
 	const handleMuteFriendNotification = async () => {
 		try {
-			if (!item) {
-				console.warn('No item found to mute.');
-				return;
-			}
+			if (!item) return;
+
 			const friendService = new FriendService();
 			const response = await friendService.muteFriendNotification(item.id);
 

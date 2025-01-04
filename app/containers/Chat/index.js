@@ -752,9 +752,9 @@ function ChatContainer({navigation, route}) {
 
 	return (
 		<View className="flex-1 bg-white relative">
-			{opened &&
-				<BlurView style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}}
-						  blurType="dark" blurAmount={8} reducedTransparencyFallbackColor="black"/>}
+			{/*{opened &&*/}
+			{/*	<BlurView style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}}*/}
+			{/*			  blurType="dark" blurAmount={8} reducedTransparencyFallbackColor="black"/>}*/}
 
 			<Header navigation={navigation} route={route}/>
 
@@ -826,6 +826,9 @@ function ChatContainer({navigation, route}) {
 					</View>
 				)}
 			</View>
+			{opened &&
+				<BlurView style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}}
+						  blurType="dark" blurAmount={8} reducedTransparencyFallbackColor="black"/>}
 
 			<Dropup/>
 

@@ -9,6 +9,7 @@ class SignalRService {
 		this.isConnected = false;
 		this.reconnectAttempts = 0;
 		this.messageReceived$ = new BehaviorSubject(null);
+		this.typingReceived$ = new BehaviorSubject(null);
 		this.groupCreated$ = new BehaviorSubject(null);
 		this.notificationReceived$ = new BehaviorSubject(null);
 		this.registerListeners();
@@ -90,6 +91,17 @@ class SignalRService {
 			this.messageReceived$.next({type: 'FriendEventNotification', event});
 		})
 
+		// Typing Indicator
+		this.hubConnection.on('TypingIndicator', (senderId, isTyping) => {
+			console.log(`[SignalR] TypingIndicator received: senderId=${senderId}, isTyping=${isTyping}`);
+			this.typingReceived$.next({ senderId, isTyping });
+		});
+
+		this.hubConnection.on('StopTypingIndicator', (senderId) => {
+			console.log(`[SignalR] StopTypingIndicator received: senderId=${senderId}`);
+			this.typingReceived$.next({ senderId, isTyping: false });
+		});
+
 
 		// Thêm reconnection logic
 		this.hubConnection.onreconnected(() => {
@@ -146,6 +158,19 @@ class SignalRService {
 				console.error('Error while stopping SignalR connection: ', err);
 			});
 	}
+
+	startTyping(recipientId) {
+		this.hubConnection.invoke('NotifyTyping', recipientId, true)
+			.then(() => console.log('Typing notification sent.'))
+			.catch(err => console.error('Error sending typing notification:', err));
+	}
+
+	stopTyping(recipientId) {
+		this.hubConnection.invoke('NotifyStopTyping', recipientId)
+			.then(() => console.log('StopTyping notification sent.'))
+			.catch(err => console.error('Error sending stop typing notification:', err));
+	}
+
 
 	setupGroupListeners(onNewGroup) {
 		if (!this.isConnected) {

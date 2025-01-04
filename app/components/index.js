@@ -23,9 +23,12 @@ import DropUp from "./ChatPrivate/DropUp";
 import ChatInput from "./ChatPrivate/ChatInput";
 import ChatMessage from "./ChatPrivate/ChatMessage";
 
+// Typing Indicator
+import TypingIndicator from './TypingIndicator';
+
 export {
 	TabBar, TabBarIcon, Button, Input, Header, BubbleStory, CustomContextMenu,
 	MessageCard, FriendCard, FriendSearchCard, FriendRequestCard, GroupCard,
 	GroupMessageCard, SettingItem, CustomBackdrop, FriendAddGroupCard,
-	HeaderPrivateChat, DropUp, ChatInput, ChatMessage
+	HeaderPrivateChat, DropUp, ChatInput, ChatMessage, TypingIndicator
 };

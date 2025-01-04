@@ -4,7 +4,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {enableScreens} from 'react-native-screens';
 
 // Containers
-import {MessagesContainer, ChatPrivateContainer, GroupChatContainer} from '@/containers';
+import {MessagesContainer, ChatPrivateContainer, ChatContainer, GroupChatContainer} from '@/containers';
 
 
 enableScreens();

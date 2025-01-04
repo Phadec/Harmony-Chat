@@ -1,5 +1,50 @@
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import moment from "moment-timezone";
+
+export const formatMessages = (messages, recipientId) => {
+	const groupedMessages = messages.reduce((groups, message) => {
+		const messageDate = moment.utc(message.date).tz('Asia/Ho_Chi_Minh');
+
+		// Xác định title với prefix số
+		let date;
+		if (messageDate.isSame(moment(), 'day')) {
+			date = '1_Today';
+		} else if (messageDate.isSame(moment().subtract(1, 'day'), 'day')) {
+			date = '2_Yesterday';
+		} else {
+			date = '3_' + messageDate.format('DD/MM/YYYY');
+		}
+
+		const processedMessage = {
+			...message,
+			me: message.userId !== recipientId,
+			formattedTime: moment.utc(message.date)
+				.tz('Asia/Ho_Chi_Minh')
+				.format('HH:mm')
+		};
+
+		const existingGroup = groups.find(group => group.title === date);
+		if (existingGroup) {
+			existingGroup.data.push(processedMessage);
+		} else {
+			groups.push({
+				title: date,
+				data: [processedMessage]
+			});
+		}
+
+		return groups;
+	}, []);
+	// Sort bình thường theo title
+	return groupedMessages
+		.sort((a, b) => a.title.localeCompare(b.title))
+		// Loại bỏ prefix số trong title khi hiển thị
+		.map(group => ({
+			...group,
+			title: group.title.slice(2).replace('_', '')
+		}));
+};
 
 export const formatChatSectionList = (hostID, messages) => {
 

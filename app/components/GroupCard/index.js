@@ -43,7 +43,11 @@ const GroupCard = ({group, navigation, index, totalItems}) => {
 		getMenuPosition
 	} = useContextMenu({
 		navigationTarget: 'GroupChat',
-		navigationParams: {},
+		navigationParams: {
+			recipientId: group.id,
+			avatar: {uri: avatarUrl},
+			nameGroup: group.name
+		},
 		onSelectCallbacks: {
 			// Tùy chỉnh các callback cho message
 			mute: () => muteNotification(),
