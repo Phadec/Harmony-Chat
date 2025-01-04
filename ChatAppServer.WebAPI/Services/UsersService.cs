@@ -83,7 +83,7 @@ namespace ChatAppServer.WebAPI.Services
                             result.FullName2Score
                         )
                     })
-                    .Where(result => result.MaxScore >= 80) // Ngưỡng điểm tối thiểu
+                    .Where(result => result.MaxScore >= 60) // Ngưỡng điểm tối thiểu
                     .OrderByDescending(result => result.MaxScore)
                     .Select(result => result.User)
                     .ToList();
