@@ -45,7 +45,7 @@ function Header({title, friends, groups, messages, search, goBack, navigation}) 
 				)}
 
 				{groups && (
-					<Button onPress={() => actions.setAddGroup(dispatch, true)}>
+					<Button className="p-3 pr-1" onPress={() => actions.setAddGroup(dispatch, true)}>
 						<AntDesign name="pluscircleo" size={20} color={Colors.black}/>
 					</Button>
 				)}
