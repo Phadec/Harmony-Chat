@@ -53,12 +53,12 @@ export class ChatGroup {
 	async createGroupChat(nameGroup, memberIds, avatar) {
 		const userId = await AsyncStorage.getItem('userId');
 		console.log('Avatar:', avatar);
-	
+
 		try {
 			// Chuẩn bị FormData
 			const formData = new FormData();
 			formData.append('Name', nameGroup || '');
-	
+
 			// Gửi mảng memberIds
 			if (Array.isArray(memberIds) && memberIds.length > 0) {
 				memberIds.forEach((id, index) => {
@@ -67,7 +67,7 @@ export class ChatGroup {
 			} else {
 				formData.append('MemberIds', ''); // Nếu không có memberIds, truyền chuỗi rỗng
 			}
-	
+
 			// Xử lý Avatar
 			if (avatar) {
 				formData.append('AvatarFile', {
@@ -76,27 +76,26 @@ export class ChatGroup {
 					type: `image/${avatar.split('.').pop().toLowerCase()}`, // MIME type của file
 				});
 			}
-	
+
 			// Gửi request với axios
 			const response = await axiosInstance.post(`${ApiUrl}/create-group-chat`, formData, {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 				},
 			});
-	
+
 			// Xử lý phản hồi từ server
 			if (response.data) {
 				console.log('Create group chat success:', response.data);
 				return response.data; // Trả về dữ liệu nhận được từ API
 			}
-	
+
 			console.error('Create chat failed:', response.data);
 			return null;
 		} catch (error) {
 			console.error('Create chat group error:', error.response ? error.response.data : error.message);
 		}
 	}
-	
 
 	// Thêm thành viên vào nhóm chat
 	async addGroupChatMember(groupId, userId) {
@@ -125,15 +124,15 @@ export class ChatGroup {
 	async deleteGroup(groupId) {
 		try {
 			const response = await axiosInstance.delete(`${ApiUrl}/${groupId}/delete`);
-			console.log('Delete group chat:', response);
-			if (response.data) {
-				return response.data; // Trả về dữ liệu nhận được từ API
+			if (response && response.data) {
+				return response.data; // Trả về dữ liệu nhận được từ API nếu thành công
 			}
-
-			console.error('Delete group chat failed:', response.data);
-			return null;
+			console.error('Delete group chat failed: No data received.');
+			return null; // Trả về null nếu không có dữ liệu từ API
 		} catch (error) {
-			console.error('Delete group chat failed:', error.response ? error.response.data : error.message);
+			const errorMessage = error.response ? error.response.data || error.message : error.message;
+			console.error('Delete group chat failed:', errorMessage);
+			return null; // Trả về null khi có lỗi xảy ra
 		}
 	}
 

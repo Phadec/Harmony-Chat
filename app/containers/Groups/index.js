@@ -11,9 +11,9 @@ import Layout from '@/Layout';
 import {ChatGroup} from '../../services/ChatGroup';
 import {SignalRService} from '../../services/signalR';
 
-function GroupsContainer({navigation}) {
+function GroupsContainer({ navigation }) {
 	const chatService = new ChatGroup();
-	const signalRService = SignalRService.getInstance(); // Đảm bảo sử dụng Singleton instance
+	const signalRService = SignalRService.getInstance(); 
 	const [relationships, setRelationships] = useState([]);
 
 	// Hàm gọi API lấy danh sách tin nhắn
@@ -33,9 +33,8 @@ function GroupsContainer({navigation}) {
 	// Lắng nghe sự kiện messageReceived từ SignalR
 	useEffect(() => {
 		const startSignalRConnection = async () => {
-			// Kiểm tra nếu SignalR đã được kết nối
 			if (signalRService.hubConnection.state !== signalRService.hubConnection.state.Connected) {
-				await signalRService.start(); // Chỉ bắt đầu kết nối nếu chưa kết nối
+				await signalRService.start();
 			}
 		};
 
@@ -57,20 +56,25 @@ function GroupsContainer({navigation}) {
 				console.error('Error while starting SignalR connection:', error);
 			});
 
-		// Cleanup khi component unmount
 		return () => {
 			console.log('Disconnecting SignalR connection');
 			signalRService.stopConnection(); // Ngừng kết nối khi component unmount
 		};
-	}, [signalRService]); // Chỉ chạy khi signalRService thay đổi (singleton instance)
+	}, [signalRService]);
 
-	// Reload messages when the screen is focused
+	// Reload messages when the screen is focused or data is changed
 	useFocusEffect(
 		React.useCallback(() => {
-			console.log('[MessageContainer] Screen focused, fetching groups...');
+			console.log('[GroupsContainer] Screen focused, fetching groups...');
 			fetchAndSetRelationships();
 		}, []),
 	);
+
+	// Hàm để điều hướng và fetch lại nhóm
+	const handleLeaveGroup = async (chatService, groupId, navigation) => {
+		await chatService.deleteGroup(groupId); // Xóa nhóm
+		navigation.goBack(); // Quay lại màn hình trước
+	};
 
 	return (
 		<Layout>
@@ -85,7 +89,7 @@ function GroupsContainer({navigation}) {
 						}
 						return item.contactId;
 					}}
-					renderItem={({item}) => {
+					renderItem={({ item }) => {
 						if (item.relationshipType == 'Private') {
 							return <MessageCard item={item} navigation={navigation} />;
 						}
