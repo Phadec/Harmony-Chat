@@ -23,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ChatGroup} from '../../services/ChatGroup';
 import {ChatService} from '../../services/Chat';
 import {baseURL} from '../../services/axiosInstance';
+import {launchImageLibrary} from 'react-native-image-picker';
 
 const GroupInfo = ({avatar, nameGroup, countMembers}) => {
 	return (
@@ -70,20 +71,45 @@ function Header({navigation, route}) {
 		transform.value = withTiming(opened ? 0 : 30, {duration: 300});
 	}, [opened]);
 
+	const handleChangeCover = () => {
+		launchImageLibrary({mediaType: 'photo'}, response => {
+			if (response.didCancel) {
+				return; // Nếu người dùng hủy chọn ảnh
+			}
+			if (response.errorCode) {
+				Alert.alert('Error', 'Failed to pick image');
+				return;
+			}
+			const newUriCover = response.assets[0].uri;
+			chatService
+				.changeGroupAvatar(recipientId)
+				.then(() => {
+					Alert.alert('Success', 'Cover updated successfully!');
+				})
+				.catch(err => {
+					console.error(err);
+					Alert.alert('Error', 'Failed to update cover');
+				});
+		});
+	};
+
 	return (
 		<View className="bg-main flex-row items-center p-6 rounded-b-3xl" style={{paddingTop: insets.top + 16}}>
 			{/* Back Button */}
 			<Button onPress={() => navigation.goBack()}>
-				<MaterialIcons name="arrow-back-ios" size={20} color={Colors.white} />
+				<MaterialIcons name="arrow-back-ios" size={20} color="#fff" />
 			</Button>
 
 			{/* Group Info */}
-			<GroupInfo avatar={avatar} nameGroup={nameGroup} countMembers={countMembers} />
+			<View>
+				<Text>{nameGroup}</Text>
+				<Text>{countMembers} Members</Text>
+			</View>
 
 			{/* More Options Button */}
 			<View className="flex-row items-center ml-auto">
 				<Button onPress={() => setOpen(prev => !prev)} className="p-5">
-					<Fontisto name="more-v-a" size={16} color={Colors.white} />
+					<Fontisto name="more-v-a" size={16} color="#fff" />
 				</Button>
 			</View>
 
@@ -106,13 +132,13 @@ function Header({navigation, route}) {
 					/>
 					<Animated.View className="absolute right-5 w-40 z-20" style={[animation, {zIndex: opened ? 20 : -1, top: 10}]}>
 						<Button className="p-4 ml-auto" onPress={() => setOpen(false)}>
-							<AntDesign name="close" size={20} color={Colors.white} />
+							<AntDesign name="close" size={20} color="#fff" />
 						</Button>
 						<View className="bg-white rounded-3xl py-3">
-							<Button className="px-6 py-3" onPress={() => handleLeaveGroup(chatService, recipientId, navigation)}>
+							<Button className="px-6 py-3" onPress={() => Alert.alert('Leave Group')}>
 								<Text className="font-rubik font-light text-sm text-black">Delete Chat</Text>
 							</Button>
-							<Button className="px-6 py-3" onPress={() => handleChangeCover()}>
+							<Button className="px-6 py-3" onPress={handleChangeCover}>
 								<Text className="font-rubik font-light text-sm text-black">Edit cover</Text>
 							</Button>
 						</View>
@@ -127,11 +153,6 @@ function handleLeaveGroup(chatService, groupId, navigation) {
 	chatService.deleteGroup(groupId);
 	navigation.goBack();
 }
-
-function handleChangeCover() {
-	console.log('Change cover');
-}
-
 
 function getReactionIcon(type) {
 	switch (type) {
