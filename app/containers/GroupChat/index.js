@@ -109,11 +109,11 @@ function Header({navigation, route}) {
 							<AntDesign name="close" size={20} color={Colors.white} />
 						</Button>
 						<View className="bg-white rounded-3xl py-3">
-							<Button className="px-6 py-3" onPress={() => console.log('Leave Group')}>
-								<Text className="font-rubik font-light text-sm text-black">Leave Group</Text>
+							<Button className="px-6 py-3" onPress={() => handleLeaveGroup(chatService, recipientId, navigation)}>
+								<Text className="font-rubik font-light text-sm text-black">Delete Chat</Text>
 							</Button>
-							<Button className="px-6 py-3" onPress={() => console.log('Delete Group')}>
-								<Text className="font-rubik font-light text-sm text-black">Delete Group</Text>
+							<Button className="px-6 py-3" onPress={() => handleChangeCover()}>
+								<Text className="font-rubik font-light text-sm text-black">Edit cover</Text>
 							</Button>
 						</View>
 					</Animated.View>
@@ -123,11 +123,15 @@ function Header({navigation, route}) {
 	);
 }
 
-function handleLeaveGroup() {
-	
+function handleLeaveGroup(chatService, groupId, navigation) {
+	chatService.deleteGroup(groupId);
+	navigation.goBack();
 }
 
-function handleDeleteGroup() {}
+function handleChangeCover() {
+	console.log('Change cover');
+}
+
 
 function getReactionIcon(type) {
 	switch (type) {

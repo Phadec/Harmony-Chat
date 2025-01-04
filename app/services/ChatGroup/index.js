@@ -52,27 +52,51 @@ export class ChatGroup {
 	// Tạo nhóm chat
 	async createGroupChat(nameGroup, memberIds, avatar) {
 		const userId = await AsyncStorage.getItem('userId');
+		console.log('Avatar:', avatar);
+	
 		try {
+			// Chuẩn bị FormData
 			const formData = new FormData();
 			formData.append('Name', nameGroup || '');
-			formData.append('MemberIds', memberIds || '');
-			formData.append('Avatar', avatar || '');
-			const reponse = await axiosInstance.post(`${ApiUrl}/create-group-chat`, formData, {
+	
+			// Gửi mảng memberIds
+			if (Array.isArray(memberIds) && memberIds.length > 0) {
+				memberIds.forEach((id, index) => {
+					formData.append(`MemberIds[${index}]`, id); // Gửi từng ID như một phần tử trong mảng
+				});
+			} else {
+				formData.append('MemberIds', ''); // Nếu không có memberIds, truyền chuỗi rỗng
+			}
+	
+			// Xử lý Avatar
+			if (avatar) {
+				formData.append('AvatarFile', {
+					uri: avatar,
+					name: `avatar_${Date.now()}.jpg`, // Tên file tùy chỉnh
+					type: `image/${avatar.split('.').pop().toLowerCase()}`, // MIME type của file
+				});
+			}
+	
+			// Gửi request với axios
+			const response = await axiosInstance.post(`${ApiUrl}/create-group-chat`, formData, {
 				headers: {
 					'Content-Type': 'multipart/form-data',
 				},
 			});
-
+	
+			// Xử lý phản hồi từ server
 			if (response.data) {
+				console.log('Create group chat success:', response.data);
 				return response.data; // Trả về dữ liệu nhận được từ API
 			}
-
+	
 			console.error('Create chat failed:', response.data);
 			return null;
 		} catch (error) {
-			console.log('Create chat group error:', error.response ? error.response.data : error.message);
+			console.error('Create chat group error:', error.response ? error.response.data : error.message);
 		}
 	}
+	
 
 	// Thêm thành viên vào nhóm chat
 	async addGroupChatMember(groupId, userId) {
@@ -101,7 +125,7 @@ export class ChatGroup {
 	async deleteGroup(groupId) {
 		try {
 			const response = await axiosInstance.delete(`${ApiUrl}/${groupId}/delete`);
-
+			console.log('Delete group chat:', response);
 			if (response.data) {
 				return response.data; // Trả về dữ liệu nhận được từ API
 			}

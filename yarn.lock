@@ -6980,7 +6980,7 @@ react-native-gesture-handler@*, react-native-gesture-handler@^2.12.0, "react-nat
     invariant "^2.2.4"
     prop-types "^15.7.2"
 
-react-native-image-picker@^4.10.0:
+react-native-image-picker@^4.10.3:
   version "4.10.3"
   resolved "https://registry.npmjs.org/react-native-image-picker/-/react-native-image-picker-4.10.3.tgz"
   integrity sha512-gLX8J6jCBkUt6jogpSdA7YyaGVLGYywRzMEwBciXshihpFZjc/cRlKymAVlu6Q7HMw0j3vrho6pI8ZGC5O/FGg==

@@ -74,7 +74,7 @@ function GroupsContainer({navigation}) {
 
 	return (
 		<Layout>
-			<Header title="Groups" messages search navigation={navigation} />
+			<Header title="Groups" groups navigation={navigation} />
 
 			<View className="flex-1 mt-6">
 				<FlatList
