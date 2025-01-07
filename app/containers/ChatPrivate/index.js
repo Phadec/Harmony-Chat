@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {View, SectionList, Text, ActivityIndicator, Image} from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import {useSharedValue, useAnimatedStyle, withTiming} from 'react-native-reanimated';
@@ -11,6 +11,7 @@ import {
 } from '@/components';
 import {useRoute} from "@react-navigation/native";
 import useChatPrivate from "../../hooks/ChatPrivate";
+import MessageOverlay from "../../components/ChatPrivate/MessageOverlay";
 
 
 function ChatPrivateContainer({navigation}) {
@@ -31,8 +32,9 @@ function ChatPrivateContainer({navigation}) {
 		notifyStopTyping, // Gọi khi người dùng dừng nhập
 		isSelf,
 		replyTo,
+		replyId,
 		swipeToReply,
-		closeReplyBox
+		closeReplyBox,
 	} = useChatPrivate(recipientId);
 
 	const [opened, setOpen] = useState(false);
@@ -61,8 +63,6 @@ function ChatPrivateContainer({navigation}) {
 		fetchMessages(1);
 	}, [recipientId]);
 
-
-
 	// Component TypingIndicator
 	const TypingIndicatorRender = () => {
 		return (
@@ -79,57 +79,112 @@ function ChatPrivateContainer({navigation}) {
 		)
 	}
 
+	// Thêm state để track tin nhắn đang được selected
+	const [selectedMessage, setSelectedMessage] = useState(null);
+	const [positionMessage, setPositionMessage] = useState(null); // Vị trí của tin nhắn được selected
+
+	// Handler để xử lý longPress để hiển thị menu action và reactions
+	const handleMessageLongPress = useCallback((message, position) => {
+		console.log("Message and Position received:", message, position);
+		setSelectedMessage(message);
+		setPositionMessage(position);
+	}, []);
+
+	// Đóng menu action và reactions
+	const handleCloseActions = useCallback(() => {
+		setSelectedMessage(null);
+		setPositionMessage(null);
+	}, []);
+
 	return (
-		<View className="flex-1 bg-white relative">
-			{opened && (
-				<BlurView
-					style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10,}}
-					blurType="dark" blurAmount={8}
-					reducedTransparencyFallbackColor="black"
-				/>
-			)}
-			<HeaderPrivateChat navigation={navigation}/>
-			<View className="px-5 flex-1">
-				<SectionList
-					sections={messages}
-					keyExtractor={(item) => item.id}
-					renderItem={({item}) => <ChatMessage
-						{...item}
-						onSwipe={swipeToReply}
-					/>}
-					renderSectionHeader={({section: {title}}) => (
-						<View className="bg-main rounded-full py-2 px-4 mx-auto z-50 my-4">
-							<Text className="font-rubik text-2xs text-white">{title}</Text>
+		<GestureHandlerRootView style={{flex: 1}}>
+			<View className="flex-1 bg-white relative">
+				{opened && (
+					<BlurView
+						style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10,}}
+						blurType="dark" blurAmount={1}
+						reducedTransparencyFallbackColor="black"
+					/>
+				)}
+				<HeaderPrivateChat navigation={navigation}/>
+				<View className="px-5 flex-1">
+					<SectionList
+						sections={messages}
+						keyExtractor={useCallback((item) => item.id, [])}
+						renderItem={useCallback(({item}) => (
+							<ChatMessage
+								message={item}
+								onSwipe={swipeToReply}
+								onLongPress={handleMessageLongPress}
+								onCloseActions={handleCloseActions}
+							/>
+						), [swipeToReply, handleMessageLongPress, handleCloseActions, selectedMessage, positionMessage])}
+
+						// Cải thiện performance với getItemLayout
+						getItemLayout={useCallback((data, index) => ({
+							length: 70, // Chiều cao trung bình của mỗi item
+							offset: 70 * index,
+							index,
+						}), [])}
+						renderSectionHeader={({section: {title}}) => (
+							<View className="bg-main rounded-full py-2 px-4 mx-auto z-50 my-4">
+								<Text className="font-rubik text-2xs text-white">{title}</Text>
+							</View>
+						)}
+						showsVerticalScrollIndicator={false}
+						ListFooterComponent={
+							loading ? <ActivityIndicator size="small" color="#0000ff"/> : null
+						}
+						ListHeaderComponent={
+							isTyping ? <TypingIndicatorRender/> : null // Hiển thị "Đang nhập..."
+						}
+						className="-mr-6"
+						inverted
+						onEndReached={handleEndReached} // Khi cuộn đến cuối danh sách
+						onEndReachedThreshold={0.5}
+						removeClippedSubviews={true} // Loại bỏ các phần tử nằm ngoài viewport
+					/>
+
+					{/* Message Overlay để người dùng có thể tương tác vs Tin nhắn */}
+					{selectedMessage && (
+						<View
+							className="absolute left-0 right-0 top-0 bottom-0"
+							style={{ zIndex: 1000 }}
+						>
+							{/* Blur Layer */}
+							<BlurView
+								style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,}}
+								blurType="black"
+								blurAmount={1}
+								reducedTransparencyFallbackColor="black"
+							/>
+
+							{/* Actions Layer - Trực tiếp render với selectedMessage */}
+							<MessageOverlay
+								message={selectedMessage}
+								position={positionMessage}
+								onClose={handleCloseActions}
+							/>
 						</View>
 					)}
-					showsVerticalScrollIndicator={false}
-					ListFooterComponent={
-						loading ? <ActivityIndicator size="small" color="#0000ff"/> : null
-					}
-					ListHeaderComponent={
-						isTyping ? <TypingIndicatorRender/> : null // Hiển thị "Đang nhập..."
-					}
-					className="-mr-6"
-					inverted
-					onEndReached={handleEndReached} // Khi cuộn đến cuối danh sách
-					onEndReachedThreshold={0.5}
-					removeClippedSubviews={true} // Loại bỏ các phần tử nằm ngoài viewport
-				/>
 
-				<ChatInput setOpen={setOpen}
-						   onSend={sendMessage}
-						   notifyTyping={notifyTyping} // Gửi sự kiện "typing"
-						   notifyStopTyping={notifyStopTyping} // Gửi sự kiện "stop typing"
-						   me={isSelf}
-						   reply={replyTo}
-						   closeReply={closeReplyBox}
-						   fullName={fullName}
-				/>
+					{/* Chat Input để người dùng nhắn tin*/}
+					<ChatInput setOpen={setOpen}
+							   onSend={sendMessage}
+							   notifyTyping={notifyTyping} // Gửi sự kiện "typing"
+							   notifyStopTyping={notifyStopTyping} // Gửi sự kiện "stop typing"
+							   me={isSelf}
+							   reply={replyTo}
+							   replyId={replyId}
+							   closeReply={closeReplyBox}
+							   fullName={fullName}
+					/>
+				</View>
+
+				{/*Attachment Menu*/}
+				<DropUp animation={animation} opened={opened} setOpen={setOpen}/>
 			</View>
-
-			{/*Attachment Menu*/}
-			<DropUp animation={animation} opened={opened} setOpen={setOpen}/>
-		</View>
+		</GestureHandlerRootView>
 	);
 }
 

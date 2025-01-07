@@ -18,7 +18,7 @@ function HeaderPrivateChat({navigation}) {
 	const insets = useSafeAreaInsets();
 
 	return (
-		<View className="bg-main flex-row items-center p-6 rounded-b-3xl"
+		<View className="bg-main flex-row items-center p-6 "
 			  style={{paddingTop: insets.top + 16}}>
 			<Button onPress={() => navigation.goBack()}>
 				<MaterialIcons name="arrow-back-ios" size={20} color={Colors.white}/>

@@ -24,14 +24,16 @@ const useChatPrivate = (recipientId) => {
 	const [replyTo, setReplyTo] = useState(null);
 	const [replyId, setReplyId] = useState(null);
 
+
+
 	// Hàm xử lý khi người dùng vuốt tin nhắn để trả lời
-	const swipeToReply = (messageData, me, replyId) => {
+	const swipeToReply = useCallback((messageData, me, replyId) => {
 		setReplyTo(
 			messageData.length > 40 ? `${messageData.slice(0, 40)}...` : messageData
 		);
 		setIsSelf(me);
 		setReplyId(replyId);
-	};
+	}, []);
 
 	// Đóng reply box
 	const closeReplyBox = () => {
@@ -71,7 +73,12 @@ const useChatPrivate = (recipientId) => {
 
 		try {
 			setLoading(true);
-			console.log('Sending message:', messageText);
+
+			if (replyId) {
+				// Đóng reply box sau khi gửi tin nhắn
+				closeReplyBox();
+			}
+
 			const response = await chatService.current.sendMessage(
 				recipientId,
 				messageText,
@@ -192,8 +199,9 @@ const useChatPrivate = (recipientId) => {
 		notifyStopTyping, // Gọi khi người dùng dừng nhập
 		isSelf,
 		replyTo,
+		replyId,
 		swipeToReply,
-		closeReplyBox
+		closeReplyBox,
 	};
 }
 

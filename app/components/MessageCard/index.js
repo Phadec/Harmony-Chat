@@ -87,7 +87,9 @@ function MessageCard({item, navigation}) {
 									  color={Constants.HexToRgba(Colors.black, 0.4)}/>
 							<Text
 								className={`font-rubik ${item.hasNewMessage ? 'font-bold' : 'font-medium'} text-xs text-black ml-1`}>
-								{item.lastMessage}
+								{
+									item.lastMessage.length > 30 ? `${item.lastMessage.slice(0, 30)}...` : item.lastMessage
+								}
 							</Text>
 						</View>
 					</View>
