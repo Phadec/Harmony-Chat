@@ -13,15 +13,27 @@ const MessageContent = React.memo(({message, me, formattedTime, width}) => (
 				{formattedTime}
 			</Text>
 		)}
-		<View style={{padding: 10, borderRadius: 16, backgroundColor: me ? '#9e5bd8' : '#f8f8f8', width: width}}>
-			<Text style={{paddingStart: 5, fontFamily: 'Rubik', fontWeight: '300', fontSize: 14, color: me ? 'white' : 'black',}}>
+		<View style={{
+			padding: 10, 
+			borderRadius: 16, 
+			backgroundColor: message === "Message has been deleted" ? '#e0e0e0' : (me ? '#9e5bd8' : '#f8f8f8'), 
+			width: width
+		}}>
+			<Text style={{
+				paddingStart: 5, 
+				fontFamily: 'Rubik', 
+				fontWeight: '300', 
+				fontSize: 14, 
+				color: message === "Message has been deleted" ? '#666' : (me ? 'white' : 'black'),
+				fontStyle: message === "Message has been deleted" ? 'italic' : 'normal'
+			}}>
 				{message}
 			</Text>
 		</View>
 	</View>
 ));
 
-function MessageOverlay({message, position, onClose}) {
+function MessageOverlay({message, position, onClose, messageId, onMessageDeleted, pinned, onPinToggle}) {
 	if (!position || !message) {
 		return null; // Không render nếu dữ liệu chưa đầy đủ
 	}
@@ -68,7 +80,6 @@ function MessageOverlay({message, position, onClose}) {
 			onPress={handleClose}>
 			<Animated.View style={[overlayStyle]}>
 				<View className={`flex-col ${message.me ? "mr-3" : "ml-3"}`}>
-
 					{/* Component Reaction */}
 					<Reactions message={message}/>
 
@@ -84,7 +95,14 @@ function MessageOverlay({message, position, onClose}) {
 
 					{/* Context Menu Action */}
 					<Pressable onPress={(e) => e.stopPropagation()}>
-						<ContextMenuActions me={message.me} onClose={handleClose}/>
+						<ContextMenuActions
+							me={message.me}
+							onClose={handleClose}
+							messageId={messageId}
+							onMessageDeleted={onMessageDeleted}
+							pinned={message.isPinned}
+							onPinToggle={onPinToggle}
+						/>
 					</Pressable>
 				</View>
 			</Animated.View>

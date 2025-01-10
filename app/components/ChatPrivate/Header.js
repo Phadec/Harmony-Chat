@@ -13,9 +13,17 @@ import {Button} from '@/components';
 
 // common
 import {Colors} from '@/common';
+// route
+import {useRoute} from "@react-navigation/native";
+
+// services
+import {baseURL} from '../../services/axiosInstance'; // Import baseURL
 
 function HeaderPrivateChat({navigation}) {
 	const insets = useSafeAreaInsets();
+	const route = useRoute();
+	const item = route.params?.item;
+	const avatarUrl = `${baseURL}/${item?.avatar}`; // Correct avatarUrl
 
 	return (
 		<View className="bg-main flex-row items-center p-6 "
@@ -26,16 +34,16 @@ function HeaderPrivateChat({navigation}) {
 
 			<View className="flex-row items-center ml-2">
 				<View className="w-12 h-12 relative">
-					<Image source={require('@/assets/images/person-1.webp')}
+					<Image source={{uri: avatarUrl}} // Use correct avatarUrl
 						   className="w-12 h-12 rounded-full"/>
-					<View className="w-4 h-4 rounded-full bg-green border-[3px] border-main absolute top-0 left-0"/>
+					<View className={`w-4 h-4 rounded-full ${item?.status ? 'bg-green' : 'bg-gray'} border-[3px] border-main absolute top-0 left-0`}/>
 				</View>
 
 				<View className="ml-3">
 					<Text className="font-rubik font-medium text-sm text-white">
-						Martijn Dragonj
+						{item?.contactFullName}
 					</Text>
-					<Text className="mt-1 font-rubik text-xs text-white/40">Online</Text>
+					<Text className="mt-1 font-rubik text-xs text-white/40">{item?.status ? 'Online' : 'Offline'}</Text>
 				</View>
 			</View>
 

@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState, useMemo} from 'react';
 
 // Services
 import {ChatService} from "@/services";
@@ -23,7 +23,7 @@ const useChatPrivate = (recipientId) => {
 	const [isSelf, setIsSelf] = useState(false);
 	const [replyTo, setReplyTo] = useState(null);
 	const [replyId, setReplyId] = useState(null);
-
+	const [pinnedMessages, setPinnedMessages] = useState([]);
 
 
 	// Hàm xử lý khi người dùng vuốt tin nhắn để trả lời
@@ -59,6 +59,14 @@ const useChatPrivate = (recipientId) => {
 			// Cập nhật trạng thái có thêm tin nhắn hay không
 			setHasMore(response.totalPages > pageNumber);
 			setPage(pageNumber);
+
+			// Update pinned messages
+			const newPinnedMessages = response.messages.$values.filter(msg => msg.isPinned);
+			setPinnedMessages(prev => {
+				const existingPinnedIds = new Set(prev.map(msg => msg.id));
+				const mergedPinnedMessages = [...prev, ...newPinnedMessages.filter(msg => !existingPinnedIds.has(msg.id))];
+				return mergedPinnedMessages;
+			});
 		} catch (error) {
 			console.error('Error loading messages:', error);
 		} finally {
@@ -68,51 +76,66 @@ const useChatPrivate = (recipientId) => {
 	}, [recipientId, hasMore]);
 
 	// Gửi tin nhắn
-	const sendMessage = useCallback(async (messageText, replyId) => {
-		if (!messageText.trim()) return;
+	const sendMessage = useCallback(async (messageText, attachment, replyId) => {
+        try {
+            if (attachment && !attachment.uri) {
+                throw new Error('Invalid attachment: missing URI');
+            }
 
-		try {
-			setLoading(true);
+            console.log('Attempting to send message:', {
+                messageText,
+                attachment: attachment ? {
+                    uri: attachment.uri,
+                    type: attachment.type,
+                    fileName: attachment.fileName,
+                    fileSize: attachment.fileSize
+                } : null,
+                replyId
+            });
 
-			if (replyId) {
-				// Đóng reply box sau khi gửi tin nhắn
-				closeReplyBox();
-			}
+            const response = await chatService.current.sendMessage(
+                recipientId,
+                messageText,
+                attachment,
+                replyId
+            );
 
-			const response = await chatService.current.sendMessage(
-				recipientId,
-				messageText,
-				replyId
-			);
+            if (!response) {
+                throw new Error('No response from server');
+            }
 
-			// Format tin nhắn theo cấu trúc của SectionList
-			const formattedMessage = formatMessages([response], recipientId)[0];
-			setMessages(prev => {
-				// Kiểm tra xem tin nhắn có thuộc cùng một nhóm với tin nhắn trước không
-				const existingGroupIndex = prev.findIndex(
-					group => group.title === formattedMessage.title
-				);
+            console.log('Message sent successfully:', response);
 
-				// Nếu có thì thêm vào nhóm đó, không thì tạo nhóm mới
-				if (existingGroupIndex !== -1) {
-					const newMessages = [...prev];
-					newMessages[existingGroupIndex].data.unshift(
-						formattedMessage.data[0]
-					);
-					return newMessages;
-				}
+            // Format and update messages
+            const formattedMessage = formatMessages([{
+                ...response,
+                message: response.message || '',
+                attachment: response.attachmentUrl,
+                repliedTo: response.repliedToMessage,
+                senderName: response.senderFullName,
+            }], recipientId)[0];
 
-				return [formattedMessage, ...prev];
-			});
+            setMessages(prev => {
+                const existingGroupIndex = prev.findIndex(
+                    group => group.title === formattedMessage.title
+                );
 
-			return true;
-		} catch (error) {
-			console.error('Error sending message:', error);
-			return false;
-		} finally {
-			setLoading(false);
-		}
-	}, [recipientId]);
+                if (existingGroupIndex !== -1) {
+                    const newMessages = [...prev];
+                    newMessages[existingGroupIndex].data.unshift(
+                        formattedMessage.data[0]
+                    );
+                    return newMessages;
+                }
+                return [formattedMessage, ...prev];
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error sending message:', error);
+            return false;
+        }
+    }, [recipientId]);
 
 	// tải thêm tin nhắn cũ.
 	const handleEndReached = useCallback(() => {
@@ -186,6 +209,78 @@ const useChatPrivate = (recipientId) => {
 		signalR.current.hubConnection.invoke("NotifyTyping", recipientId, false);
 	}, [recipientId]);
 
+	// Add delete message function
+	const deleteMessage = useCallback(async (messageId) => {
+		try {
+			console.log('Deleting message with ID:', messageId);
+			await chatService.current.deleteMessage(messageId);
+			console.log('API delete successful');
+			
+			setMessages(prevMessages => {
+				console.log('Previous messages:', prevMessages);
+				
+				const updatedMessages = prevMessages.map(section => ({
+					...section,
+					data: section.data.map(msg => {
+						if (msg.id === messageId) {
+							console.log('Found message to update:', msg);
+							return {
+								...msg,
+								content: "Message has been deleted",
+								message: "Message has been deleted" // Add this in case your structure uses 'message' instead of 'content'
+							};
+						}
+						return msg;
+					})
+				}));
+				
+				console.log('Updated messages:', updatedMessages);
+				return updatedMessages;
+			});
+			
+			return true;
+		} catch (error) {
+			console.error('Error deleting message:', error);
+			return false;
+		}
+	}, []);
+
+	const togglePin = useCallback(async (messageId, pinned) => {
+		try {
+			let result;
+			if (pinned) {
+				result = await chatService.current.unpinMessage(messageId);
+			} else {
+				result = await chatService.current.pinMessage(messageId);
+			}
+			console.log('Pin/Unpin response:', result);
+
+			setMessages(prevMessages =>
+				prevMessages.map(section => ({
+					...section,
+					data: section.data.map(msg =>
+						msg.id === messageId
+							? { ...msg, isPinned: !pinned }
+							: msg
+					)
+				}))
+			);
+
+			setPinnedMessages(prev => {
+				if (pinned) {
+					return prev.filter(msg => msg.id !== messageId);
+				} else {
+					const newPinnedMessage = messages.flatMap(section =>
+						section.data.filter(msg => msg.id === messageId)
+					)[0];
+					return [...prev, newPinnedMessage];
+				}
+			});
+		} catch (error) {
+			console.error('Error toggling pin:', error);
+		}
+	}, [messages]);
+
 	return {
 		messages,
 		loading,
@@ -202,7 +297,11 @@ const useChatPrivate = (recipientId) => {
 		replyId,
 		swipeToReply,
 		closeReplyBox,
+		deleteMessage,
+		togglePin,
+		pinnedMessages,
 	};
 }
 
 export default useChatPrivate;
+	

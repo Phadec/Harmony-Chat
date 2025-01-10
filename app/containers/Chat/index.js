@@ -1,9 +1,9 @@
 import React, {useEffect, useState, useRef} from 'react';
 import {SectionList, Image, Text, View, TouchableOpacity, Modal, TouchableWithoutFeedback} from 'react-native';
-import {BlurView} from '@react-native-community/blur';
-import Animated, {useSharedValue, useAnimatedStyle, withTiming} from 'react-native-reanimated';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useFocusEffect} from '@react-navigation/native';
+import {BlurView}from '@react-native-community/blur';
+import Animated, {useSharedValue, useAnimatedStyle, withTiming}from 'react-native-reanimated';
+import {useSafeAreaInsets}from 'react-native-safe-area-context';
+import {useFocusEffect}from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Octicons from 'react-native-vector-icons/Octicons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -11,55 +11,53 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ChatService} from '../../services/Chat';
-import {SignalRService} from '../../services/signalR';
+import { ChatService } from '../../services/Chat';
+import { SignalRService } from '../../services/signalR';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {baseURL} from '../../services/axiosInstance';
+import { baseURL } from '../../services/axiosInstance';
 import Video from 'react-native-video';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player'; // Add this import
 // Components
-import {Button, Input} from '@/components';
+import {Button, Input}from '@/components';
 
 // Commons
-import {Colors, Constants} from '@/common';
+import {Colors, Constants}from '@/common';
 
 function Header({navigation, route}) {
 	const insets = useSafeAreaInsets();
-	const {contactFullName, contactNickname, status, avatar, online} = route.params;
+	const { contactFullName, contactNickname, status, avatar, online } = route.params;
 
 	return (
 		<View className="bg-main flex-row items-center p-6 rounded-b-3xl" style={{paddingTop: insets.top + 16}}>
 			<Button onPress={() => navigation.goBack()}>
-				<MaterialIcons name="arrow-back-ios" size={20} color={Colors.white}/>
+				<MaterialIcons name="arrow-back-ios" size={20} color={Colors.white} />
 			</Button>
 
 			<View className="flex-row items-center ml-2">
 				<View className="w-12 h-12 relative">
-					<Image source={avatar} className="w-12 h-12 rounded-full"/>
-					{online && <View
-						className="w-4 h-4 rounded-full bg-green border-[3px] border-main absolute top-0 left-0"/>}
+					<Image source={avatar} className="w-12 h-12 rounded-full" />
+					{online && <View className="w-4 h-4 rounded-full bg-green border-[3px] border-main absolute top-0 left-0" />}
 				</View>
 
 				<View className="ml-3">
-					<Text
-						className="font-rubik font-medium text-sm text-white">{contactNickname || contactFullName}</Text>
+					<Text className="font-rubik font-medium text-sm text-white">{contactNickname || contactFullName}</Text>
 					<Text className="mt-1 font-rubik text-xs text-white/40">{status}</Text>
 				</View>
 			</View>
 
 			<View className="flex-row items-center ml-auto">
 				<Button>
-					<Octicons name="search" size={16} color={Colors.white}/>
+					<Octicons name="search" size={16} color={Colors.white} />
 				</Button>
 
 				<Button className="mx-5">
-					<Feather name="phone-call" size={16} color={Colors.white}/>
+					<Feather name="phone-call" size={16} color={Colors.white} />
 				</Button>
 
 				<Button>
-					<Fontisto name="more-v-a" size={16} color={Colors.white}/>
+					<Fontisto name="more-v-a" size={16} color={Colors.white} />
 				</Button>
 			</View>
 		</View>
@@ -68,37 +66,17 @@ function Header({navigation, route}) {
 
 function getReactionIcon(type) {
 	switch (type) {
-		case 'like':
-			return "👍";
-		case 'love':
-			return "❤️";
-		case 'haha':
-			return "😄";
-		case 'wow':
-			return "😲";
-		case 'sad':
-			return "😢";
-		case 'angry':
-			return "😠";
-		default:
-			return null;
+		case 'like':  return "👍";
+		case 'love':  return "❤️";
+		case 'haha':  return "😄";
+		case 'wow':   return "😲";
+		case 'sad':   return "😢";
+		case 'angry': return "😠";
+		default:      return null;
 	}
 }
 
-function Chat({
-				  me,
-				  message,
-				  date,
-				  reaction,
-				  onLongPress,
-				  onDelete,
-				  isDeleted,
-				  attachmentUrl,
-				  isPinned,
-				  onPin,
-				  onUnpin,
-				  audioUrl
-			  }) {
+function Chat({me, message, date, reaction, onLongPress, onDelete, isDeleted, attachmentUrl, isPinned, onPin, onUnpin, audioUrl}) {
 	const adjustedDate = new Date(date);
 	adjustedDate.setHours(adjustedDate.getHours() + 7);
 	const [modalVisible, setModalVisible] = useState(false);
@@ -110,7 +88,7 @@ function Chat({
 				<View className={`${me ? 'flex-row-reverse' : 'flex-row'} items-end mb-1`}>
 					{me && (
 						<View className="w-8 items-center">
-							<Ionicons name="checkmark-done" size={16} color={Constants.HexToRgba(Colors.black, 0.5)}/>
+							<Ionicons name="checkmark-done" size={16} color={Constants.HexToRgba(Colors.black, 0.5)} />
 						</View>
 					)}
 
@@ -119,15 +97,15 @@ function Chat({
 							<TouchableOpacity onPress={() => setModalVisible(true)} className="mb-2">
 								{attachmentUrl.endsWith('.mp4') ? (
 									<Video
-										source={{uri: `${baseURL}/${attachmentUrl}`}}
-										style={{width: 200, height: 200}}
+										source={{ uri: `${baseURL}/${attachmentUrl}` }}
+										style={{ width: 200, height: 200 }}
 										paused={false} // Set paused to false for preview
 										resizeMode="cover"
 									/>
 								) : (
 									<Image
-										source={{uri: `${baseURL}/${attachmentUrl}`}}
-										style={{width: 200, height: 200}}
+										source={{ uri: `${baseURL}/${attachmentUrl}` }}
+										style={{ width: 200, height: 200 }}
 										resizeMode="cover"
 									/>
 								)}
@@ -135,20 +113,18 @@ function Chat({
 						)}
 						{audioUrl && (
 							<Button onPress={() => audioRecorderPlayer.startPlayer(audioUrl)}>
-								<Text
-									className={`font-rubik font-light text-sm ${me ? 'text-white text-right' : 'text-black'}`}>
+								<Text className={`font-rubik font-light text-sm ${me ? 'text-white text-right' : 'text-black'}`}>
 									Play Audio
 								</Text>
 							</Button>
 						)}
-						<Text
-							className={`font-rubik font-light text-sm ${me ? 'text-white text-right' : 'text-black'}`}>
+						<Text className={`font-rubik font-light text-sm ${me ? 'text-white text-right' : 'text-black'}`}>
 							{message}
 						</Text>
 					</View>
 
 					{reaction && (
-						<View className={`mx-2 px-2 py-1 rounded-xl ${me ? 'bg-gray-100' : 'bg-light'}`}>
+						<View className={`mx-2 px-2 py-1 rounded-xl ${me ? 'bg-main' : 'bg-light'}`}>
 							<Text className={`text-xs ${me ? 'text-white' : 'text-black'}`}>
 								{getReactionIcon(reaction)}
 							</Text>
@@ -156,17 +132,16 @@ function Chat({
 					)}
 
 					<Text className={`${me ? 'mr-3' : 'ml-3'} font-rubik text-2xs text-black/30`}>
-						{adjustedDate.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}
+						{adjustedDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
 					</Text>
 
 					{me && !isDeleted && (
 						<View className="flex-row items-center">
 							<Button onPress={onDelete} className="ml-2 p-2 bg-purple-500 rounded-full shadow-lg">
-								<AntDesign name="delete" size={16} color={Colors.white}/>
+								<AntDesign name="delete" size={16} color={Colors.white} />
 							</Button>
-							<Button onPress={isPinned ? onUnpin : onPin}
-									className="ml-2 p-2 bg-amber-300 rounded-full shadow-lg">
-								<AntDesign name={isPinned ? "pushpin" : "pushpino"} size={16} color={Colors.white}/>
+							<Button onPress={isPinned ? onUnpin : onPin} className="ml-2 p-2 bg-yellow-500 rounded-full shadow-lg">
+								<AntDesign name={isPinned ? "pushpin" : "pushpino"} size={16} color={Colors.white} />
 							</Button>
 						</View>
 					)}
@@ -182,13 +157,13 @@ function Chat({
 				>
 					<View className="flex-1 justify-center items-center bg-black/80">
 						<Video
-							source={{uri: `${baseURL}/${attachmentUrl}`}}
-							style={{width: '100%', height: '100%'}}
+							source={{ uri: `${baseURL}/${attachmentUrl}` }}
+							style={{ width: '100%', height: '100%' }}
 							resizeMode="contain"
 							controls={true}
 						/>
 						<Button className="absolute top-10 right-10" onPress={() => setModalVisible(false)}>
-							<AntDesign name="close" size={30} color={Colors.white}/>
+							<AntDesign name="close" size={30} color={Colors.white} />
 						</Button>
 					</View>
 				</Modal>
@@ -203,12 +178,12 @@ function Chat({
 				>
 					<View className="flex-1 justify-center items-center bg-black/80">
 						<Image
-							source={{uri: `${baseURL}/${attachmentUrl}`}}
-							style={{width: '100%', height: '100%'}}
+							source={{ uri: `${baseURL}/${attachmentUrl}` }}
+							style={{ width: '100%', height: '100%' }}
 							resizeMode="contain"
 						/>
 						<Button className="absolute top-10 right-10" onPress={() => setModalVisible(false)}>
-							<AntDesign name="close" size={30} color={Colors.white}/>
+							<AntDesign name="close" size={30} color={Colors.white} />
 						</Button>
 					</View>
 				</Modal>
@@ -225,9 +200,9 @@ function formatChatsByDate(messages, userId) {
 			acc[date] = [];
 		}
 		// Get the first reaction if exists
-		const reaction = message.reactions &&
-		message.reactions.$values &&
-		message.reactions.$values.length > 0 ?
+		const reaction = message.reactions && 
+			message.reactions.$values && 
+			message.reactions.$values.length > 0 ? 
 			message.reactions.$values[0].reactionType : null;
 
 		acc[date].push({
@@ -244,9 +219,9 @@ function formatChatsByDate(messages, userId) {
 	})).sort((a, b) => new Date(a.title) - new Date(b.title));
 }
 
-function PinnedMessages({pinnedMessages, onPinnedMessagePress}) {
+function PinnedMessages({ pinnedMessages, onPinnedMessagePress }) {
 	return (
-		<View className="bg-fuchsia-200 p-4 rounded-b-3xl">
+		<View className="bg-light p-4 rounded-b-3xl">
 			<Text className="font-rubik font-medium text-sm text-black mb-2">Pinned Messages</Text>
 			{pinnedMessages.map((message) => (
 				<TouchableOpacity key={message.id} onPress={() => onPinnedMessagePress(message.id)}>
@@ -259,8 +234,8 @@ function PinnedMessages({pinnedMessages, onPinnedMessagePress}) {
 	);
 }
 
-function ChatContainer({navigation, route}) {
-	const {recipientId} = route.params;
+function ChatContainer({ navigation, route }) {
+	const { recipientId } = route.params;
 	const [opened, setOpen] = useState(false);
 	const [chats, setChats] = useState([]);
 	const [userId, setUserId] = useState(null);
@@ -299,7 +274,6 @@ function ChatContainer({navigation, route}) {
 			const id = await AsyncStorage.getItem('userId');
 			setUserId(id);
 		}
-
 		getUserId();
 	}, []);
 
@@ -314,7 +288,6 @@ function ChatContainer({navigation, route}) {
 					setChats(formattedChats);
 				}
 			}
-
 			if (recipientId && userId) {
 				fetchChats();
 			}
@@ -349,9 +322,9 @@ function ChatContainer({navigation, route}) {
 				setChats(prevChats => {
 					return prevChats.map(section => ({
 						...section,
-						data: section.data.map(chat =>
+						data: section.data.map(chat => 
 							chat.id === msg.reaction.chatId
-								? {...chat, reaction: msg.reaction.reactionType}
+								? { ...chat, reaction: msg.reaction.reactionType }
 								: chat
 						)
 					}));
@@ -360,9 +333,9 @@ function ChatContainer({navigation, route}) {
 				setChats(prevChats => {
 					return prevChats.map(section => ({
 						...section,
-						data: section.data.map(chat =>
+						data: section.data.map(chat => 
 							chat.id === msg.reaction.chatId
-								? {...chat, reaction: null}
+								? { ...chat, reaction: null }
 								: chat
 						)
 					}));
@@ -371,9 +344,9 @@ function ChatContainer({navigation, route}) {
 				setChats(prevChats => {
 					return prevChats.map(section => ({
 						...section,
-						data: section.data.map(chat =>
+						data: section.data.map(chat => 
 							chat.id === msg.messageId
-								? {...chat, isDeleted: true, reaction: null, message: 'Message has been deleted'}
+								? { ...chat, isDeleted: true, reaction: null, message: 'Message has been deleted' }
 								: chat
 						)
 					}));
@@ -604,9 +577,9 @@ function ChatContainer({navigation, route}) {
 	}
 
 	function Dropup() {
+		console.log('Rendering Dropup');
 		return (
-			<Animated.View className="absolute bottom-7 right-24 w-40 z-20"
-						   style={[animation, {zIndex: opened ? 20 : -1}]}>
+			<Animated.View className="absolute bottom-7 right-24 w-40 z-20" style={[animation, {zIndex: opened ? 20 : -1}]}>
 				<View className="bg-white rounded-3xl py-3">
 					<Button className="px-6 py-3" onPress={() => handleUpload('camera')}>
 						<Text className="font-rubik font-light text-sm text-black">Camera</Text>
@@ -630,7 +603,7 @@ function ChatContainer({navigation, route}) {
 				</View>
 
 				<Button className="p-4 ml-auto" onPress={() => setOpen(false)}>
-					<AntDesign name="close" size={20} color={Colors.white}/>
+					<AntDesign name="close" size={20} color={Colors.white} />
 				</Button>
 			</Animated.View>
 		);
@@ -652,7 +625,7 @@ function ChatContainer({navigation, route}) {
 							...msg,
 							reactions: {
 								$values: msg.reactions && msg.reactions.$values
-									? [...msg.reactions.$values, {
+									? [ ...msg.reactions.$values, {
 										reactionType: reactionType,
 										reactedByUser: {
 											id: userId
@@ -681,7 +654,7 @@ function ChatContainer({navigation, route}) {
 				...section,
 				data: section.data.map(msg => {
 					if (msg.id === selectedMessage.id) {
-						const {reaction, ...rest} = msg;
+						const { reaction, ...rest } = msg;
 						return rest;
 					}
 					return msg;
@@ -699,16 +672,11 @@ function ChatContainer({navigation, route}) {
 		}
 		setChats(prevChats => {
 			return prevChats.map(section => ({
-				...section,
-				data: section.data.map(msg =>
-					msg.id === messageId ? {
-						...msg,
-						isDeleted: true,
-						reaction: null,
-						message: 'Message has been deleted'
-					} : msg
-				)
-			}));
+					...section,
+					data: section.data.map(msg => 
+						msg.id === messageId ? { ...msg, isDeleted: true, reaction: null, message: 'Message has been deleted' } : msg
+					)
+				}));
 		});
 	}
 
@@ -718,8 +686,8 @@ function ChatContainer({navigation, route}) {
 		setChats(prevChats => {
 			return prevChats.map(section => ({
 				...section,
-				data: section.data.map(msg =>
-					msg.id === messageId ? {...msg, isPinned: true} : msg
+				data: section.data.map(msg => 
+					msg.id === messageId ? { ...msg, isPinned: true } : msg
 				)
 			}));
 		});
@@ -731,8 +699,8 @@ function ChatContainer({navigation, route}) {
 		setChats(prevChats => {
 			return prevChats.map(section => ({
 				...section,
-				data: section.data.map(msg =>
-					msg.id === messageId ? {...msg, isPinned: false} : msg
+				data: section.data.map(msg => 
+					msg.id === messageId ? { ...msg, isPinned: false } : msg
 				)
 			}));
 		});
@@ -748,20 +716,13 @@ function ChatContainer({navigation, route}) {
 		});
 	}
 
-
-
 	return (
 		<View className="flex-1 bg-white relative">
-			{/*{opened &&*/}
-			{/*	<BlurView style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}}*/}
-			{/*			  blurType="dark" blurAmount={8} reducedTransparencyFallbackColor="black"/>}*/}
+			{opened && <BlurView style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}} blurType="dark" blurAmount={8} reducedTransparencyFallbackColor="black" />}
 
-			<Header navigation={navigation} route={route}/>
+			<Header navigation={navigation} route={route} />
 
-			{pinnedMessages.length > 0
-				&& <PinnedMessages
-					pinnedMessages={pinnedMessages}
-					onPinnedMessagePress={handlePinnedMessagePress}/>}
+			{pinnedMessages.length > 0 && <PinnedMessages pinnedMessages={pinnedMessages} onPinnedMessagePress={handlePinnedMessagePress} />}
 
 			<View className="px-6 flex-1">
 				<SectionList
@@ -769,10 +730,10 @@ function ChatContainer({navigation, route}) {
 					sections={chats}
 					keyExtractor={(item, index) => `${item.id}-${index}`} // Ensure unique key for each item
 					renderItem={({item}) => (
-						<Chat
-							{...item}
-							onLongPress={() => handleLongPress(item)}
-							onDelete={() => handleDeleteMessage(item.id, item.isPinned)}
+						<Chat 
+							{...item} 
+							onLongPress={() => handleLongPress(item)} 
+							onDelete={() => handleDeleteMessage(item.id, item.isPinned)} 
 							onPin={() => handlePinMessage(item.id)}
 							onUnpin={() => handleUnpinMessage(item.id)}
 						/>
@@ -788,8 +749,8 @@ function ChatContainer({navigation, route}) {
 
 				<View className="flex-row items-start h-20 bg-white pt-1">
 					<View className="bg-light rounded-3xl py-[14px] px-4 flex-row items-center flex-1">
-						<Button onPress={() => setIsEmojiModalVisible(true)}>
-							<MaterialIcons name="emoji-emotions" size={20} color={Colors.main}/>
+							<Button onPress={() => setIsEmojiModalVisible(true)}>
+							<MaterialIcons name="emoji-emotions" size={20} color={Colors.main} />
 						</Button>
 
 						<Input
@@ -801,7 +762,7 @@ function ChatContainer({navigation, route}) {
 						/>
 
 						<Button onPress={() => setOpen(true)}>
-							<AntDesign name="menuunfold" size={14} color={Colors.main}/>
+							<AntDesign name="menuunfold" size={14} color={Colors.main} />
 						</Button>
 
 						<TouchableWithoutFeedback
@@ -809,14 +770,13 @@ function ChatContainer({navigation, route}) {
 							onPressOut={handleStopRecording}
 						>
 							<View className="ml-2">
-								<Feather name="mic" size={20} color={Colors.main}/>
+								<Feather name="mic" size={20} color={Colors.main} />
 							</View>
 						</TouchableWithoutFeedback>
 					</View>
 
-					<Button className="w-12 h-12 rounded-full bg-main items-center justify-center ml-6"
-							onPress={handleSendMessage} style={{alignSelf: 'center'}}>
-						<Feather name="send" size={20} color={Colors.white}/>
+					<Button className="w-12 h-12 rounded-full bg-main items-center justify-center ml-6" onPress={handleSendMessage} style={{ alignSelf: 'center' }}>
+						<Feather name="send" size={20} color={Colors.white} />
 					</Button>
 				</View>
 
@@ -826,11 +786,8 @@ function ChatContainer({navigation, route}) {
 					</View>
 				)}
 			</View>
-			{opened &&
-				<BlurView style={{position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flex: 1, zIndex: 10}}
-						  blurType="dark" blurAmount={8} reducedTransparencyFallbackColor="black"/>}
 
-			<Dropup/>
+			<Dropup />
 
 			{selectedMessage && (
 				<Modal
@@ -843,37 +800,37 @@ function ChatContainer({navigation, route}) {
 						<View className="bg-white rounded-3xl p-6">
 							<Text className="font-rubik font-medium text-lg mb-4 text-center">Reactions</Text>
 							<View className="flex-row flex-wrap justify-around gap-4 mb-4">
-								<Button
+								<Button 
 									className="p-3 bg-gray-100 rounded-full"
 									onPress={() => handleAddReaction('like')}
 								>
 									<Text style={{fontSize: 24}}>👍</Text>
 								</Button>
-								<Button
+								<Button 
 									className="p-3 bg-gray-100 rounded-full"
 									onPress={() => handleAddReaction('love')}
 								>
 									<Text style={{fontSize: 24}}>❤️</Text>
 								</Button>
-								<Button
+								<Button 
 									className="p-3 bg-gray-100 rounded-full"
 									onPress={() => handleAddReaction('haha')}
 								>
 									<Text style={{fontSize: 24}}>😄</Text>
 								</Button>
-								<Button
+								<Button 
 									className="p-3 bg-gray-100 rounded-full"
 									onPress={() => handleAddReaction('wow')}
 								>
 									<Text style={{fontSize: 24}}>😲</Text>
 								</Button>
-								<Button
+								<Button 
 									className="p-3 bg-gray-100 rounded-full"
 									onPress={() => handleAddReaction('sad')}
 								>
 									<Text style={{fontSize: 24}}>😢</Text>
 								</Button>
-								<Button
+								<Button 
 									className="p-3 bg-gray-100 rounded-full"
 									onPress={() => handleAddReaction('angry')}
 								>
@@ -881,13 +838,13 @@ function ChatContainer({navigation, route}) {
 								</Button>
 							</View>
 							<View className="flex-row justify-around">
-								<Button
+								<Button 
 									className="px-6 py-3 bg-gray-100 rounded-full"
 									onPress={handleRemoveReaction}
 								>
 									<Text style={{fontSize: 20}}>❌</Text>
 								</Button>
-								<Button
+								<Button 
 									className="px-6 py-3 bg-gray-100 rounded-full"
 									onPress={() => setSelectedMessage(null)}
 								>
@@ -935,8 +892,7 @@ function ChatContainer({navigation, route}) {
 								<Text style={{fontSize: 24}}>😆</Text>
 							</Button>
 						</View>
-						<Button className="px-6 py-3 bg-gray-100 rounded-full"
-								onPress={() => setIsEmojiModalVisible(false)}>
+						<Button className="px-6 py-3 bg-gray-100 rounded-full" onPress={() => setIsEmojiModalVisible(false)}>
 							<Text style={{fontSize: 20}}>Close</Text>
 						</Button>
 					</View>

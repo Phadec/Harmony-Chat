@@ -1,5 +1,6 @@
 import axiosInstance, {baseURL} from "../axiosInstance";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from 'react-native';
 
 const ApiUrl = `${baseURL}/api/Chats`;
 
@@ -51,36 +52,68 @@ export class ChatService {
 	}
 
 	// Gửi tin nhắn
-	async sendMessage(recipientId, message, RepliedToMessageId) {
-		const userId = await AsyncStorage.getItem('userId');
-		const formData = new FormData();
+	async sendMessage(recipientId, message, attachment, RepliedToMessageId) {
+        try {
+            const userId = await AsyncStorage.getItem('userId');
+            const formData = new FormData();
 
-		formData.append('UserId', userId || '');
-		formData.append('RecipientId', recipientId || '');
-		formData.append('Message', message || '');
-		formData.append('RepliedToMessageId', RepliedToMessageId || '');
+            formData.append('UserId', userId ? userId.toString() : '');
+            formData.append('RecipientId', recipientId ? recipientId.toString() : '');
+            formData.append('Message', message || '');
+            formData.append('RepliedToMessageId', RepliedToMessageId ? RepliedToMessageId.toString() : '');
 
-		try {
-			console.log('Sending message with formData:', formData);
-			const response = await axiosInstance.post(
-				`${ApiUrl}/send-message`, formData,
-				{
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
-				});
+            if (attachment) {
+                console.log('Processing attachment:', attachment);
+                
+                // Ensure file name doesn't have spaces and special characters
+                const safeFileName = (attachment.fileName || "attachment").replace(/[^a-z0-9.]/gi, '_');
+                
+                const file = {
+                    uri: Platform.OS === 'android' ? attachment.uri : attachment.uri.replace('file://', ''),
+                    type: attachment.type || 'application/octet-stream',
+                    name: safeFileName
+                };
 
-			if (response.data) {
-				return response.data; // Trả về dữ liệu nhận được từ API
-			}
+                console.log('Adding file to FormData:', file);
 
-			console.error('Send message failed:', response.data);
-			return null;
-		} catch (error) {
-			console.error('Send message failed:', error.response ? error.response.data : error.message);
-			throw error;
-		}
-	}
+                formData.append('Attachment', file);
+
+                // Log FormData after
+                console.log('FormData after attachment:', formData);
+            }
+
+            console.log('Sending request to:', `${ApiUrl}/send-message`);
+
+            const response = await axiosInstance.post(
+                `${ApiUrl}/send-message`, 
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Accept': 'application/json',
+                    },
+                    transformRequest: (data, headers) => {
+                        // Don't transform FormData
+                        return data;
+                    },
+                }
+            );
+
+            console.log('Server response:', {
+                status: response.status,
+                data: response.data
+            });
+
+            return response.data;
+        } catch (error) {
+            console.error('Send message error:', {
+                message: error.message,
+                responseData: error.response?.data,
+                status: error.response?.status
+            });
+            throw error;
+        }
+    }
 
 	// Đánh dấu tin nhắn là đã đọc
 	async markMessageAsRead(chatId) {

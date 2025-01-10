@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState, useRef} from 'react';
 import {View, SectionList, Text, ActivityIndicator, Image} from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import {useSharedValue, useAnimatedStyle, withTiming} from 'react-native-reanimated';
@@ -35,12 +35,18 @@ function ChatPrivateContainer({navigation}) {
 		replyId,
 		swipeToReply,
 		closeReplyBox,
+		deleteMessage,
+		togglePin,
+		pinnedMessages,
 	} = useChatPrivate(recipientId);
 
 	const [opened, setOpen] = useState(false);
 	const opacity = useSharedValue(0);
 	const transform = useSharedValue(30);
 
+	const handleMessageDeleted = useCallback((messageId) => {
+		deleteMessage(messageId);
+	}, [deleteMessage]);
 
 	const animation = useAnimatedStyle(() => {
 		return {
@@ -96,6 +102,54 @@ function ChatPrivateContainer({navigation}) {
 		setPositionMessage(null);
 	}, []);
 
+	const sectionListRef = useRef(null);
+
+	const handleScrollToMessage = useCallback((messageId) => {
+		const sectionIndex = messages.findIndex(section =>
+			section.data.some(msg => msg.id === messageId)
+		);
+		const itemIndex = messages[sectionIndex]?.data.findIndex(msg => msg.id === messageId);
+
+		console.log('Scrolling to message:', { sectionIndex, itemIndex });
+
+		if (sectionIndex !== -1 && itemIndex !== -1) {
+			sectionListRef.current.scrollToLocation({
+				sectionIndex,
+				itemIndex,
+				animated: true,
+				viewPosition: 0.5,
+			});
+		}
+	}, [messages]);
+
+	const handleSendMedia = useCallback(async (media) => {
+        try {
+            if (!media?.uri) {
+                throw new Error('Invalid media file');
+            }
+
+            const attachment = {
+                uri: media.uri,
+                type: media.type || 'application/octet-stream',
+                fileName: media.fileName,
+                fileSize: media.fileSize
+            };
+
+            console.log('Sending media attachment:', attachment);
+            
+            // Pass the attachment directly
+            const response = await sendMessage('', attachment, null);
+            console.log('Send media response:', response);
+            
+            if (response) {
+                console.log('Media sent successfully');
+                setOpen(false);
+            }
+        } catch (error) {
+            console.error('Error sending media:', error);
+        }
+    }, [sendMessage, setOpen]);
+
 	return (
 		<GestureHandlerRootView style={{flex: 1}}>
 			<View className="flex-1 bg-white relative">
@@ -107,8 +161,23 @@ function ChatPrivateContainer({navigation}) {
 					/>
 				)}
 				<HeaderPrivateChat navigation={navigation}/>
+				{pinnedMessages.length > 0 && (
+					<View className="px-4 py-2 bg-gray-200">
+						<Text className="font-rubik text-xs mb-1">Pinned Messages:</Text>
+						{pinnedMessages.map((msg) => (
+							<Text
+								key={msg.id}
+								className="text-black text-xs mb-1"
+								onPress={() => handleScrollToMessage(msg.id)}
+							>
+								{msg.message}
+							</Text>
+						))}
+					</View>
+				)}
 				<View className="px-5 flex-1">
 					<SectionList
+						ref={sectionListRef}
 						sections={messages}
 						keyExtractor={useCallback((item) => item.id, [])}
 						renderItem={useCallback(({item}) => (
@@ -162,8 +231,12 @@ function ChatPrivateContainer({navigation}) {
 							{/* Actions Layer - Trực tiếp render với selectedMessage */}
 							<MessageOverlay
 								message={selectedMessage}
+								messageId={selectedMessage?.id}
 								position={positionMessage}
 								onClose={handleCloseActions}
+								onMessageDeleted={handleMessageDeleted}
+								pinned={selectedMessage?.pinned}
+								onPinToggle={togglePin}
 							/>
 						</View>
 					)}
@@ -182,7 +255,7 @@ function ChatPrivateContainer({navigation}) {
 				</View>
 
 				{/*Attachment Menu*/}
-				<DropUp animation={animation} opened={opened} setOpen={setOpen}/>
+				<DropUp animation={animation} opened={opened} setOpen={setOpen} onSendMedia={handleSendMedia}/>
 			</View>
 		</GestureHandlerRootView>
 	);
