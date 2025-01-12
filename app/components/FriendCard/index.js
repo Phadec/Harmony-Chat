@@ -67,6 +67,7 @@ function FriendCard({item, navigation}) {
 		onSelectCallbacks: {
 			mute: () => handleMuteFriendNotification(),	// Mute
 			delete: () => unFriend(),	// Unfriend
+			block: () => blockUser(), //Block
 		}
 	});
 
@@ -104,6 +105,40 @@ function FriendCard({item, navigation}) {
 		}
 	}
 
+	//Block
+	const blockUser = async () => {
+		try {
+			Alert.alert(
+				"",
+				`Are you sure you want to block ${item.fullName}? You won't be able to:
+				• See their posts
+				• Receive messages from them
+				• They won't be able to find you`,
+				[
+					{
+						text: "Cancel",
+						style: "cancel"
+					},
+					{
+						text: "Block",
+						style: 'destructive',
+						onPress: async () => {
+							const friendService = new FriendService();
+							const response = await friendService.blockUser(item.id);
+
+							if (response) {
+								// Remove from friends list
+								dispatch(removeFriend(item.id));
+							}
+						}
+					}
+				]
+			);
+		} catch (error) {
+			console.error('Error blocking user:', error);
+		}
+	};
+
 	return (
 		<CustomContextMenu
 			menuRef={menuRef}
@@ -117,7 +152,8 @@ function FriendCard({item, navigation}) {
 					text: item.notificationsMuted ? 'Unmute' : 'Mute'
 				},
 				{value: 'hide', icon: <MaterialIcons name='visibility' size={20}/>, text: 'Hide'},
-				{value: 'delete', icon: <MaterialIcons name='person-remove' size={20}/>, text: 'Unfriend', color: 'red'}
+				{value: 'delete', icon: <MaterialIcons name='person-remove' size={20}/>, text: 'Unfriend', color: 'red'},
+				{value: 'block', icon: <MaterialIcons name='block' size={20}/>, text: 'Block', color: 'red'}
 			]}
 		>
 			<TouchableOpacity

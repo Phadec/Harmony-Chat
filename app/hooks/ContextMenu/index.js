@@ -49,6 +49,22 @@ function useContextMenu(
 		}
 	};
 
+	// Hàm Block
+	const handleBlockUser = async () => {
+		try {
+			if (!item) return;
+
+			const friendService = new FriendService();
+			const response = await friendService.blockUser(item.id);
+
+			if (response) {
+				console.log('Blocked user:', item.fullName);
+			}
+		} catch (error) {
+			console.error('Error blocking user:', error);
+		}
+	};
+
 	const handleSelect = (value) => {
 		if (options.onSelectCallbacks && options.onSelectCallbacks[value]) {
 			options.onSelectCallbacks[value]();
@@ -59,6 +75,9 @@ function useContextMenu(
 					break;
 				case 'mute':
 					handleMuteFriendNotification();
+					break;
+				case 'block':
+					handleBlockUser();
 					break;
 				case 'hide':
 					console.log('Hidden');
