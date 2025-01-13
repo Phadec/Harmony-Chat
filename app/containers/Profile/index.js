@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { View, Image, Text, ScrollView, Platform, TextInput, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Image, Text, ScrollView, Platform, TextInput, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import * as ImagePicker from 'react-native-image-picker';
 import { ActionSheet } from '@/components';
-import Toast from 'react-native-toast-message';
+import { launchImageLibrary } from 'react-native-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { UserService } from '@/services/Users';
+import { baseURL } from "../../services/axiosInstance";
+import { ToastAndroid } from 'react-native';
 
 // Components
 import { Header, Button, SettingItem } from '@/components';
@@ -17,18 +19,12 @@ import Layout from '@/Layout';
 // Commons
 import { Colors } from '@/common';
 
-function ExpandablePersonalInfo({ isExpanded, onToggle, onSave }) {
 
-    //thông tin cá nhân
-    const [personalInfo, setPersonalInfo] = useState({
-        fullName: 'Sarah Parker',
-        email: 'sarah.parker@example.com',
-        phone: '+1 234 567 890',
-        location: 'New York, USA',
-        birthday: '1995-06-15'
-    });
+//ExpandablePersonalInfo
+function ExpandablePersonalInfo({ isExpanded, onToggle, onSave, data }) {
+    const [personalInfo, setPersonalInfo] = useState(data);
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [tempDate, setTempDate] = useState(new Date(personalInfo.birthday));
+    const [tempDate, setTempDate] = useState(new Date());
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -45,12 +41,10 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave }) {
         }
         if (selectedDate) {
             setTempDate(selectedDate);
-            if (Platform.OS === 'android') {
-                setPersonalInfo(prev => ({
-                    ...prev,
-                    birthday: selectedDate.toISOString().split('T')[0]
-                }));
-            }
+            setPersonalInfo(prev => ({
+                ...prev,
+                birthday: selectedDate.toISOString().split('T')[0]
+            }));
         }
     };
 
@@ -85,10 +79,19 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave }) {
             {/* Form Fields */}
             <View className="space-y-4">
                 <View>
-                    <Text className="font-rubik text-sm text-black/40 mb-2">Full Name</Text>
+                    <Text className="font-rubik text-sm text-black/40 mb-2">First Name</Text>
                     <TextInput
-                        value={personalInfo.fullName}
-                        onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, fullName: text }))}
+                        value={personalInfo.firstName}
+                        onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, firstName: text }))}
+                        className="bg-light p-3 rounded-xl font-rubik"
+                    />
+                </View>
+
+                <View>
+                    <Text className="font-rubik text-sm text-black/40 mb-2">Last Name</Text>
+                    <TextInput
+                        value={personalInfo.lastName}
+                        onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, lastName: text }))}
                         className="bg-light p-3 rounded-xl font-rubik"
                     />
                 </View>
@@ -104,27 +107,8 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave }) {
                 </View>
 
                 <View>
-                    <Text className="font-rubik text-sm text-black/40 mb-2">Phone</Text>
-                    <TextInput
-                        value={personalInfo.phone}
-                        onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, phone: text }))}
-                        className="bg-light p-3 rounded-xl font-rubik"
-                        keyboardType="phone-pad"
-                    />
-                </View>
-
-                <View>
-                    <Text className="font-rubik text-sm text-black/40 mb-2">Location</Text>
-                    <TextInput
-                        value={personalInfo.location}
-                        onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, location: text }))}
-                        className="bg-light p-3 rounded-xl font-rubik"
-                    />
-                </View>
-
-                <View>
                     <Text className="font-rubik text-sm text-black/40 mb-2">Birthday</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         onPress={() => setShowDatePicker(true)}
                         className="bg-light p-3 rounded-xl"
                     >
@@ -152,13 +136,13 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave }) {
                                     minimumDate={new Date('1900-01-01')}
                                 />
                                 <View className="flex-row justify-end space-x-4">
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         onPress={() => setShowDatePicker(false)}
                                         className="px-4 py-2"
                                     >
                                         <Text className="text-red">Cancel</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         onPress={handleConfirm}
                                         className="px-4 py-2"
                                     >
@@ -195,31 +179,103 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave }) {
     );
 }
 
+//ProfileContainer
 function ProfileContainer({ navigation }) {
-    const [avatar, setAvatar] = useState(require('@/assets/images/person-1.webp'));
+    const [avatar, setAvatar] = useState(null);
     const [showActionSheet, setShowActionSheet] = useState(false);
     const [isPersonalInfoExpanded, setIsPersonalInfoExpanded] = useState(false);
+    const [personalInfo, setPersonalInfo] = useState({});
+    const [loading, setLoading] = useState(true);
+    const userService = new UserService();
 
-    const handleImagePicker = async (type) => {
+    const updatePersonalInfo = (data) => {
+        setPersonalInfo(prev => ({
+            ...prev,
+            ...data
+        }));
+    };
+
+    const fetchUserInfo = async () => {
+        try {
+            const data = await userService.getUserInfo();
+            updatePersonalInfo({
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email,
+                birthday: data.birthday.split('T')[0]
+            });
+
+            setAvatar(`${baseURL}/${data.avatar}`);
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSavePersonalInfo = async (info) => {
+        try {
+            // Kiểm tra các trường bắt buộc
+            if (!info.firstName || !info.lastName || !info.email) {
+                ToastAndroid.show('First name, last name, and email are required', ToastAndroid.SHORT);
+                throw new Error('First name, last name, and email are required.');
+            }
+
+            // Kiểm tra định dạng email
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(info.email)) {
+                ToastAndroid.show('Please enter a valid email address.', ToastAndroid.SHORT);
+                throw new Error('Please enter a valid email address.');
+            }
+
+            // Gọi hàm updateUserInfo để lưu thông tin người dùng
+            await userService.updateUserInfo({
+                firstName: info.firstName,
+                lastName: info.lastName,
+                birthday: info.birthday,
+                email: info.email,
+                avatar: avatar // Gửi avatar nếu có
+            });
+
+            // Cập nhật thông tin cá nhân
+            updatePersonalInfo({
+                firstName: info.firstName,
+                lastName: info.lastName,
+                email: info.email,
+                birthday: info.birthday
+            });
+
+            ToastAndroid.show('Personal information updated successfully', ToastAndroid.SHORT);
+            setIsPersonalInfoExpanded(false);
+        } catch (error) {
+            console.error('Error updating user info:', error);
+        }
+    };
+
+    const handleImagePicker = async () => {
         const options = {
             mediaType: 'photo',
-            maxWidth: 512,
-            maxHeight: 512,
             quality: 1,
-            includeBase64: true,
         };
-
         try {
-            if (type === 'camera') {
-                const result = await ImagePicker.launchCamera(options);
-                if (result.assets && result.assets[0]) {
-                    setAvatar({ uri: result.assets[0].uri });
-                }
+            const result = await launchImageLibrary(options);
+            if (result.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (result.error) {
+                console.log('ImagePicker Error: ', result.error);
             } else {
-                const result = await ImagePicker.launchImageLibrary(options);
-                if (result.assets && result.assets[0]) {
-                    setAvatar({ uri: result.assets[0].uri });
-                }
+                const selectedAvatar = result.assets[0].uri;
+                setAvatar(selectedAvatar);
+
+                // Gọi hàm để lưu ảnh đại diện lên server
+                await userService.updateUserInfo({
+                    firstName: personalInfo.firstName,
+                    lastName: personalInfo.lastName,
+                    email: personalInfo.email,
+                    birthday: personalInfo.birthday,
+                    avatar: selectedAvatar
+                });
+                ToastAndroid.show('Avatar updated successfully', ToastAndroid.SHORT);
             }
         } catch (error) {
             console.log('ImagePicker Error: ', error);
@@ -228,17 +284,21 @@ function ProfileContainer({ navigation }) {
         }
     };
 
-    const handleSavePersonalInfo = (info) => {
-        console.log('Saving personal info:', info);
-        // Implement save logic here
-        Toast.show({
-            type: 'success',
-            text1: 'Personal information updated successfully',
-            position: 'top',
-            visibilityTime: 2000,
-        });
-        setIsPersonalInfoExpanded(false);
-    };
+
+    useEffect(() => {
+        fetchUserInfo();
+    }, []);
+
+    if (loading) {
+        return (
+            <Layout>
+                <View className="flex-1 items-center justify-center">
+                    <ActivityIndicator size="large" color={Colors.primary} />
+                    <Text className="font-rubik mt-4">Loading...</Text>
+                </View>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>
@@ -252,7 +312,7 @@ function ProfileContainer({ navigation }) {
                 <View className="items-center">
                     <View className="relative">
                         <Image
-                            source={avatar}
+                            source={{ uri: avatar }}
                             className="w-32 h-32 rounded-full"
                         />
                         <Button
@@ -264,19 +324,8 @@ function ProfileContainer({ navigation }) {
                     </View>
 
                     <Text className="font-rubik font-medium text-xl mt-4">
-                        Sarah Parker
+                        {`${personalInfo.firstName} ${personalInfo.lastName}`}
                     </Text>
-                    <Text className="font-rubik text-sm text-black/40 mt-1">
-                        Online
-                    </Text>
-                </View>
-
-                {/* Stats */}
-                <View className="flex-row justify-around mt-6 mb-4">
-                    <View className="items-center">
-                        <Text className="font-rubik font-medium text-xl">328</Text>
-                        <Text className="font-rubik text-sm text-black/40">Friends</Text>
-                    </View>
                 </View>
 
                 {/* Settings Section */}
@@ -285,6 +334,7 @@ function ProfileContainer({ navigation }) {
                         isExpanded={isPersonalInfoExpanded}
                         onToggle={() => setIsPersonalInfoExpanded(!isPersonalInfoExpanded)}
                         onSave={handleSavePersonalInfo}
+                        data={personalInfo}
                     />
 
                     <SettingItem
@@ -311,11 +361,6 @@ function ProfileContainer({ navigation }) {
                     visible={showActionSheet}
                     onClose={() => setShowActionSheet(false)}
                     actions={[
-                        {
-                            title: 'Take Photo',
-                            icon: <MaterialIcons name="camera-alt" size={24} color={Colors.black} />,
-                            onPress: () => handleImagePicker('camera')
-                        },
                         {
                             title: 'Choose from Gallery',
                             icon: <MaterialIcons name="photo-library" size={24} color={Colors.black} />,
