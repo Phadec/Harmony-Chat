@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "374692658863",
+    "project_id": "chatharmony-bb68d",
+    "storage_bucket": "chatharmony-bb68d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374692658863:android:2b5f65986be97909d61e5a",
+        "android_client_info": {
+          "package_name": "com.wisp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXG4hb3rotXGZ4yZ8V1NMhSY-qj0QiG4Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

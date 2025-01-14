@@ -1,0 +1,35 @@
+diff --git a/node_modules/react-native-confetti-cannon/src/components/confetti.js b/node_modules/react-native-confetti-cannon/src/components/confetti.js
+index 2bb1dfe..6b5836d 100644
+--- a/node_modules/react-native-confetti-cannon/src/components/confetti.js
++++ b/node_modules/react-native-confetti-cannon/src/components/confetti.js
+@@ -1,7 +1,7 @@
+ // @flow
+ 
+ import * as React from 'react';
+-import { StyleSheet, Animated } from 'react-native';
++import { StyleSheet, Animated, Text } from 'react-native';
+ 
+ import { randomValue } from '../utils';
+ 
+@@ -29,17 +29,17 @@ class Confetti extends React.PureComponent<Props> {
+   isRounded: boolean = Math.round(randomValue(0, 1)) === 1;
+ 
+   render() {
+-    const { containerTransform, transform, opacity, color } = this.props;
+-    const { width, height, isRounded } = this;
++    const { containerTransform, transform, opacity } = this.props;
+     const containerStyle = { transform: containerTransform };
+-    const style = { width, height, backgroundColor: color, transform, opacity};
++    const style = { transform, opacity};
+ 
+     return (
+       <Animated.View
+         pointerEvents="none"
+         renderToHardwareTextureAndroid={true}
+         style={[styles.confetti, containerStyle]}>
+-        <Animated.View style={[isRounded && styles.rounded, style]} />
++		<Animated.View style={[style]}><Text>❤️</Text></Animated.View>
++		<Animated.View style={[style]}><Text></Text></Animated.View>
+       </Animated.View>
+     );
+   }
