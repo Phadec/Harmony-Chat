@@ -7,9 +7,8 @@ import {Colors} from '@/common';
 import * as ImagePicker from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ChatService} from '@/services';
 
-function DropUp ({animation, opened, setOpen, onSendMedia}) {
+function DropUp ({animation, opened, setOpen, onSendMedia, recipientId}) {
     const handleUpload = async (type) => {
         console.log('handleUpload called with type:', type); // Add debug log
         try {
@@ -31,64 +30,26 @@ function DropUp ({animation, opened, setOpen, onSendMedia}) {
 
             if (result && result.assets && result.assets.length > 0) {
                 const file = result.assets[0];
-                const fileName = file.fileName || `attachment.${file.type.split('/')[1]}`;
                 console.log('Selected file:', file);
+                console.log('Recipient ID:', recipientId); // Use passed-in prop
 
-                const userId = await AsyncStorage.getItem('userId');
-                const recipientId = await AsyncStorage.getItem('recipientId');
+                if (!recipientId) {
+                    throw new Error('Recipient ID is missing');
+                }
 
-                const formData = new FormData();
-                formData.append('UserId', userId);
-                formData.append('RecipientId', recipientId);
-                formData.append('Message', '');
-                formData.append('Attachment', {
-                    uri: file.uri,
-                    type: file.type,
-                    name: fileName,
-                });
+                // Ensure the file has a valid extension
+                if (!file.fileName || !file.fileName.includes('.')) {
+                    const extension = file.type.split('/').pop();
+                    file.fileName = `${file.fileName || 'file'}.${extension}`;
+                }
 
-                console.log('Sending message with formData:', formData); // Log the formData
-
-                const chatService = new ChatService();
-                try {
-                    const response = await chatService.sendMessage(recipientId, '', formData);
-                    console.log('Upload response:', response);
-
-                    if (response) {
-                        const newMessage = {
-                            id: response.id,
-                            userId: userId,
-                            message: response.message,
-                            date: new Date(new Date(response.date).setHours(new Date(response.date).getHours() - 7)),
-                            me: true,
-                            attachmentUrl: response.attachmentUrl,
-                        };
-                        setChats(prevChats => {
-                            const updatedChats = [...prevChats];
-                            const messageDate = new Date(newMessage.date).toDateString();
-                            const existingSection = updatedChats.find(section => section.title === messageDate);
-                            if (existingSection) {
-                                existingSection.data.push(newMessage);
-                            } else {
-                                updatedChats.push({
-                                    title: messageDate,
-                                    data: [newMessage]
-                                });
-                            }
-                            return updatedChats;
-                        });
+                // Pass the file to parent for sending
+                if (onSendMedia) {
+                    try {
+                        await onSendMedia(file);
+                    } catch (error) {
+                        console.error('onSendMedia error:', error);
                     }
-                } catch (error) {
-                    if (error.response) {
-                        console.error('Error response data:', error.response.data);
-                        console.error('Error response status:', error.response.status);
-                        console.error('Error response headers:', error.response.headers);
-                    } else if (error.request) {
-                        console.error('Error request:', error.request);
-                    } else {
-                        console.error('Error message:', error.message);
-                    }
-                    console.error('Send message failed:', error.config); // Log the error config
                 }
             }
         } catch (err) {

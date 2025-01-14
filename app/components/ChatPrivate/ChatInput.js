@@ -5,6 +5,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import { Button, Input } from '@/components';
 import { Colors, Constants } from '@/common';
+import EmojiSelector from 'react-native-emoji-selector'; // Import react-native-emoji-selector
 
 // Tách ReplyBox thành component riêng
 const ReplyBox = memo(({ reply, me, fullName, closeReply }) => {
@@ -33,10 +34,11 @@ const InputBox = memo(({
 						   setMessage,
 						   notifyTyping,
 						   notifyStopTyping,
-						   setOpen
+						   setOpen,
+						   toggleEmojiPicker // Add toggleEmojiPicker prop
 					   }) => (
 	<View className="bg-gray-50 rounded-2xl py-[14px] mb-2 px-4 flex-row items-center flex-1">
-		<Button>
+		<Button onPress={toggleEmojiPicker}> {/* Handle emoji button press */}
 			<MaterialIcons name="emoji-emotions" size={20} color={Colors.main}/>
 		</Button>
 
@@ -70,6 +72,16 @@ const ChatInput = ({
 					   fullName,
 				   }) => {
 	const [message, setMessage] = useState('');
+	const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false); // Add state for emoji picker visibility
+
+	const toggleEmojiPicker = useCallback(() => {
+		setEmojiPickerVisible((prev) => !prev);
+	}, []);
+
+	const handleEmojiSelect = useCallback((emoji) => {
+		setMessage((prev) => prev + emoji);
+		setEmojiPickerVisible(false);
+	}, []);
 
 	// Memoize handleSend
 	const handleSend = useCallback(() => {
@@ -88,6 +100,9 @@ const ChatInput = ({
 
 	return (
 		<View className="flex-col">
+			{isEmojiPickerVisible && (
+				<EmojiSelector onEmojiSelected={handleEmojiSelect} /> // Render react-native-emoji-selector
+			)}
 			<ReplyBox
 				reply={reply}
 				me={me}
@@ -102,6 +117,7 @@ const ChatInput = ({
 					notifyTyping={notifyTyping}
 					notifyStopTyping={notifyStopTyping}
 					setOpen={setOpen}
+					toggleEmojiPicker={toggleEmojiPicker} // Pass toggleEmojiPicker to InputBox
 				/>
 
 				<Button

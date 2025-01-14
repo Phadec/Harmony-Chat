@@ -76,7 +76,7 @@ export class ChatService {
 
                 console.log('Adding file to FormData:', file);
 
-                formData.append('Attachment', file);
+                formData.append('Attachment', file); // Ensure the file is appended
 
                 // Log FormData after
                 console.log('FormData after attachment:', formData);

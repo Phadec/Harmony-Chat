@@ -78,6 +78,12 @@ const useChatPrivate = (recipientId) => {
 	// Gửi tin nhắn
 	const sendMessage = useCallback(async (messageText, attachment, replyId) => {
         try {
+            console.log('Recipient ID:', recipientId); // Log recipientId
+
+            if (!recipientId) {
+                throw new Error('Recipient ID is missing');
+            }
+
             if (attachment && !attachment.uri) {
                 throw new Error('Invalid attachment: missing URI');
             }
@@ -110,7 +116,7 @@ const useChatPrivate = (recipientId) => {
             const formattedMessage = formatMessages([{
                 ...response,
                 message: response.message || '',
-                attachment: response.attachmentUrl,
+                attachmentUrl: response.attachmentUrl, // rename to attachmentUrl
                 repliedTo: response.repliedToMessage,
                 senderName: response.senderFullName,
             }], recipientId)[0];
@@ -304,4 +310,3 @@ const useChatPrivate = (recipientId) => {
 }
 
 export default useChatPrivate;
-	

@@ -255,7 +255,7 @@ function ChatPrivateContainer({navigation}) {
 				</View>
 
 				{/*Attachment Menu*/}
-				<DropUp animation={animation} opened={opened} setOpen={setOpen} onSendMedia={handleSendMedia}/>
+				<DropUp animation={animation} opened={opened} setOpen={setOpen} onSendMedia={handleSendMedia} recipientId={recipientId} />
 			</View>
 		</GestureHandlerRootView>
 	);
