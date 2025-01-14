@@ -2,6 +2,7 @@ import {HubConnectionBuilder, LogLevel} from '@microsoft/signalr';
 import {BehaviorSubject, Subject} from 'rxjs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {baseURL} from '../axiosInstance';
+import { PeerService } from '../peer';
 
 class SignalRService {
 	constructor() {
@@ -154,6 +155,18 @@ class SignalRService {
 		}
 	}
 
+	async initializeAfterLogin() {
+		try {
+			await this.startConnection();
+			// Initialize PeerService after SignalR is connected
+			const peerService = PeerService.getInstance();
+			await peerService.initializePeer();
+			return true;
+		} catch (error) {
+			console.error('Error initializing services after login:', error);
+			return false;
+		}
+	}
 
 	stopConnection() {
 		if (!this.isConnected) return;

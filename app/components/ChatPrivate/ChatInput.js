@@ -31,74 +31,72 @@ const ReplyBox = memo(({ reply, me, fullName, closeReply }) => {
 	);
 });
 
-// Tách InputBox thành component riêng
-const InputBox = memo(({
-						   message,
-						   setMessage,
-						   notifyTyping,
-						   notifyStopTyping,
-						   setOpen,
-						   toggleEmojiPicker,
-						   isEmojiPickerOpen, // Add new prop
-						   onContainerPress // Add new prop
-					   }) => {
-	const inputRef = useRef(null);
+// Wrap InputBox with forwardRef
+const InputBox = React.forwardRef(({
+    message,
+    setMessage,
+    notifyTyping,
+    notifyStopTyping,
+    setOpen,
+    toggleEmojiPicker,
+    isEmojiPickerOpen,
+    onContainerPress
+}, ref) => {  // Add ref as second parameter
+    // Add effect to blur input when emoji picker opens
+    useEffect(() => {
+        if (isEmojiPickerOpen && ref.current) {
+            ref.current.blur();
+        }
+    }, [isEmojiPickerOpen]);
 
-	// Add effect to blur input when emoji picker opens
-	useEffect(() => {
-		if (isEmojiPickerOpen && inputRef.current) {
-			inputRef.current.blur();
-		}
-	}, [isEmojiPickerOpen]);
+    return (
+        <TouchableWithoutFeedback onPress={onContainerPress}>
+            <View className={`bg-gray-50 rounded-2xl mb-2 px-4 flex-row items-center flex-1 ${
+                isEmojiPickerOpen ? 'py-2' : 'py-[14px]'
+            }`}>
+                <Button onPress={() => {
+                    ref.current?.blur(); // Use passed ref instead of inputRef
+                    toggleEmojiPicker();
+                }}>
+                    <MaterialIcons 
+                        name="emoji-emotions" 
+                        size={20} 
+                        color={isEmojiPickerOpen ? Colors.main : Colors.gray}
+                    />
+                </Button>
 
-	return (
-		<TouchableWithoutFeedback onPress={onContainerPress}>
-			<View className={`bg-gray-50 rounded-2xl mb-2 px-4 flex-row items-center flex-1 ${
-				isEmojiPickerOpen ? 'py-2' : 'py-[14px]'
-			}`}>
-				<Button onPress={() => {
-					inputRef.current?.blur(); // Force blur before toggle
-					toggleEmojiPicker();
-				}}>
-					<MaterialIcons 
-						name="emoji-emotions" 
-						size={20} 
-						color={isEmojiPickerOpen ? Colors.main : Colors.gray}
-					/>
-				</Button>
+                <TextInput
+                    ref={ref} // Use passed ref instead of inputRef
+                    value={message}
+                    onChangeText={(text) => {
+                        setMessage(text);
+                        notifyTyping();
+                    }}
+                    onBlur={notifyStopTyping}
+                    placeholder="Write a message"
+                    placeholderTextColor={Constants.HexToRgba(Colors.black, 0.5)}
+                    className="font-rubik font-light text-sm text-black mx-2 flex-1"
+                    keyboardType="default"
+                    multiline
+                    style={{
+                        minHeight: isEmojiPickerOpen ? 20 : 25,
+                        maxHeight: isEmojiPickerOpen ? 40 : 70
+                    }}
+                    editable={!isEmojiPickerOpen} // Disable input when picker is open
+                    pointerEvents={isEmojiPickerOpen ? 'none' : 'auto'} // Prevent touch events
+                    onTouchStart={(e) => {
+                        if (isEmojiPickerOpen) {
+                            e.preventDefault();
+                        }
+                    }}
+                />
 
-				<TextInput
-					ref={inputRef}
-					value={message}
-					onChangeText={(text) => {
-						setMessage(text);
-						notifyTyping();
-					}}
-					onBlur={notifyStopTyping}
-					placeholder="Write a message"
-					placeholderTextColor={Constants.HexToRgba(Colors.black, 0.5)}
-					className="font-rubik font-light text-sm text-black mx-2 flex-1"
-					keyboardType="default"
-					multiline
-					style={{
-						minHeight: isEmojiPickerOpen ? 20 : 25,
-						maxHeight: isEmojiPickerOpen ? 40 : 70
-					}}
-					editable={!isEmojiPickerOpen} // Disable input when picker is open
-					pointerEvents={isEmojiPickerOpen ? 'none' : 'auto'} // Prevent touch events
-					onTouchStart={(e) => {
-						if (isEmojiPickerOpen) {
-							e.preventDefault();
-						}
-					}}
-				/>
-
-				<Button onPress={() => setOpen(true)}>
-					<AntDesign name="menuunfold" size={14} color={Colors.main}/>
-				</Button>
-			</View>
-		</TouchableWithoutFeedback>
-	);
+                <Button onPress={() => setOpen(true)}>
+                    <AntDesign name="menuunfold" size={14} color={Colors.main}/>
+                </Button>
+            </View>
+        </TouchableWithoutFeedback>
+    );
 });
 
 const ChatInput = ({

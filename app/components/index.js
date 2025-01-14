@@ -32,3 +32,5 @@ export {
 	GroupMessageCard, SettingItem, CustomBackdrop, FriendAddGroupCard,
 	HeaderPrivateChat, DropUp, ChatInput, ChatMessage, TypingIndicator
 };
+
+export { default as SearchModal } from './ChatPrivate/SearchModal';

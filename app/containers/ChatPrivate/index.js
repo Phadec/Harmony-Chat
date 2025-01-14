@@ -20,7 +20,7 @@ function ChatPrivateContainer({navigation}) {
 	const avatar = route.params?.avatar;
 	const fullName = route.params?.contactNickName || route.params?.contactFullName;
 	const {
-		messages,
+		messages = [],
 		loading,
 		hasMore,
 		page,
@@ -38,6 +38,8 @@ function ChatPrivateContainer({navigation}) {
 		deleteMessage,
 		togglePin,
 		pinnedMessages,
+		handleReactionAdded,
+		currentUserId, // Thêm currentUserId từ hook
 	} = useChatPrivate(recipientId);
 
 	const [opened, setOpen] = useState(false);
@@ -68,6 +70,11 @@ function ChatPrivateContainer({navigation}) {
 	useEffect(() => {
 		fetchMessages(1);
 	}, [recipientId]);
+
+	// Thêm debug log để kiểm tra dữ liệu messages
+    useEffect(() => {
+        console.log('Messages in container:', messages);
+    }, [messages]);
 
 	// Component TypingIndicator
 	const TypingIndicatorRender = () => {
@@ -105,20 +112,35 @@ function ChatPrivateContainer({navigation}) {
 	const sectionListRef = useRef(null);
 
 	const handleScrollToMessage = useCallback((messageId) => {
-		const sectionIndex = messages.findIndex(section =>
-			section.data.some(msg => msg.id === messageId)
-		);
-		const itemIndex = messages[sectionIndex]?.data.findIndex(msg => msg.id === messageId);
+		console.log('Scrolling to message:', messageId);
+		
+		// Find section and message indices
+		let targetSectionIndex = -1;
+		let targetItemIndex = -1;
 
-		console.log('Scrolling to message:', { sectionIndex, itemIndex });
+		messages.forEach((section, sectionIndex) => {
+			const itemIndex = section.data.findIndex(msg => msg.id === messageId);
+			if (itemIndex !== -1) {
+				targetSectionIndex = sectionIndex;
+				targetItemIndex = itemIndex;
+			}
+		});
 
-		if (sectionIndex !== -1 && itemIndex !== -1) {
-			sectionListRef.current.scrollToLocation({
-				sectionIndex,
-				itemIndex,
+		if (targetSectionIndex !== -1 && targetItemIndex !== -1) {
+			// Scroll to message
+			sectionListRef.current?.scrollToLocation({
+				sectionIndex: targetSectionIndex,
+				itemIndex: targetItemIndex,
 				animated: true,
-				viewPosition: 0.5,
+				viewPosition: 0.5, // Center the item
 			});
+
+			// Optional: Highlight the message temporarily
+			const targetMessage = messages[targetSectionIndex].data[targetItemIndex];
+			if (targetMessage) {
+				// Add visual feedback like highlighting
+				// You can implement this by adding a temporary style to the message
+			}
 		}
 	}, [messages]);
 
@@ -160,7 +182,12 @@ function ChatPrivateContainer({navigation}) {
 						reducedTransparencyFallbackColor="black"
 					/>
 				)}
-				<HeaderPrivateChat navigation={navigation}/>
+				<HeaderPrivateChat 
+					navigation={navigation}
+					messages={messages}
+					onScrollToMessage={handleScrollToMessage}
+					item={route.params} // Truyền toàn bộ route.params
+				/>
 				{pinnedMessages.length > 0 && (
 					<View className="px-4 py-2 bg-gray-200">
 						<Text className="font-rubik text-xs mb-1">Pinned Messages:</Text>
@@ -186,6 +213,7 @@ function ChatPrivateContainer({navigation}) {
 								onSwipe={swipeToReply}
 								onLongPress={handleMessageLongPress}
 								onCloseActions={handleCloseActions}
+								onReactionAdded={handleReactionAdded} // Add this prop
 							/>
 						), [swipeToReply, handleMessageLongPress, handleCloseActions, selectedMessage, positionMessage])}
 
@@ -237,6 +265,8 @@ function ChatPrivateContainer({navigation}) {
 								onMessageDeleted={handleMessageDeleted}
 								pinned={selectedMessage?.pinned}
 								onPinToggle={togglePin}
+								onReactionAdded={handleReactionAdded}
+								currentUserId={currentUserId} // Thêm currentUserId
 							/>
 						</View>
 					)}

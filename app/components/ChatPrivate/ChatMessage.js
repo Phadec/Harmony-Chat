@@ -1,5 +1,5 @@
 // Tách MessageContent thành component riêng
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useEffect, useCallback } from 'react';
 import useChatMessage from "../../hooks/ChatPrivate/ChatMessage";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
@@ -28,6 +28,82 @@ function getAttachmentType(url) {
   }
 }
 
+// Sửa lại mapping cho reaction types để khớp với API
+const REACTION_EMOJIS = {
+    'THUMBSUP': '👍',
+    'HEART': '❤️',
+    'LAUGH': '😆',
+    'WOW': '😮',
+    'CRY': '😢',
+    'ANGRY': '😠'
+};
+
+const Reactions = memo(({ reactions, me }) => {
+    if (!reactions?.length) return null;
+
+    // Filter out null values before processing
+    const validReactions = reactions.filter(r => r != null && r.reactionType && r.reactedByUser);
+    
+    // If no valid reactions after filtering, return null
+    if (!validReactions.length) return null;
+
+    // Sort reactions by createdAt, handling potential null values
+    const sortedReactions = validReactions.sort((a, b) => 
+        new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    );
+
+    const reactionGroups = sortedReactions.reduce((acc, reaction) => {
+        const type = reaction.reactionType;
+        if (!acc[type]) {
+            acc[type] = [];
+        }
+        acc[type].push(reaction);
+        return acc;
+    }, {});
+
+    return (
+        <View 
+            className={`absolute bottom-[-14px] ${me ? 'right-2' : 'left-2'} 
+                bg-white rounded-full px-2.5 py-1.5 flex-row items-center`}
+            style={{
+                shadowColor: "#000",
+                shadowOffset: {
+                    width: 0,
+                    height: 2,
+                },
+                shadowOpacity: 0.15,
+                shadowRadius: 3.84,
+                elevation: 5,
+                borderWidth: 0.5,
+                borderColor: 'rgba(0,0,0,0.1)',
+            }}>
+            {Object.entries(reactionGroups).map(([type, reactions], index, array) => (
+                <View 
+                    key={type} 
+                    className={`flex-row items-center ${index !== array.length - 1 ? 'mr-1.5' : ''}`}
+                    style={{
+                        transform: [{ scale: 1.1 }], // Slightly larger emojis
+                    }}>
+                    <Text 
+                        className="text-sm" 
+                        style={{ 
+                            textShadowColor: 'rgba(0,0,0,0.1)',
+                            textShadowOffset: { width: 1, height: 1 },
+                            textShadowRadius: 1,
+                        }}>
+                        {REACTION_EMOJIS[type]}
+                    </Text>
+                    {reactions.length > 1 && (
+                        <Text className="text-xs text-gray-600 ml-1 font-medium">
+                            {reactions.length}
+                        </Text>
+                    )}
+                </View>
+            ))}
+        </View>
+    );
+});
+
 const ReplyPreview = memo(({ repliedMessage }) => {
     if (!repliedMessage) return null;
     
@@ -48,9 +124,34 @@ const ReplyPreview = memo(({ repliedMessage }) => {
 });
 
 export const MessageContent = React.memo(
-    ({ message, me, formattedTime, width, composedGesture }) => {
+    ({ message, me, formattedTime, width, composedGesture, onReactionAdded }) => {
         const [modalVisible, setModalVisible] = useState(false);
         const attachmentType = message.attachmentUrl ? getAttachmentType(message.attachmentUrl) : null;
+        const [localReactions, setLocalReactions] = useState(message.reactions?.$values || []);
+
+        // Thêm useEffect để cập nhật localReactions khi message.reactions thay đổi
+        useEffect(() => {
+            setLocalReactions(message.reactions?.$values || []);
+        }, [message.reactions]);
+
+        // Sửa lại hàm xử lý reaction
+        const handleReactionAdded = useCallback((messageId, newReaction) => {
+            console.log('Adding reaction:', { messageId, newReaction });
+            if (messageId === message.id) {
+                setLocalReactions(prev => {
+                    console.log('Previous reactions:', prev);
+                    // Lọc bỏ reaction cũ của user hiện tại
+                    const updatedReactions = prev.filter(
+                        r => r.reactedByUser.id !== newReaction.reactedByUser.id
+                    );
+                    console.log('After filtering:', updatedReactions);
+                    const result = [...updatedReactions, newReaction];
+                    console.log('Final reactions:', result);
+                    return result;
+                });
+            }
+            onReactionAdded?.(messageId, newReaction);
+        }, [message.id, onReactionAdded]);
 
         const renderVideoPreview = () => {
             const thumbnailUrl = createMediaURL(baseURL, message.attachmentUrl).replace(/\.(mp4|mov|avi|mkv)$/, '.jpg');
@@ -89,37 +190,48 @@ export const MessageContent = React.memo(
                                 {formattedTime}
                             </Text>
                         )}
-                        <View style={{ padding: 10, borderRadius: 16, backgroundColor: me ? '#9e5bd8' : '#f8f8f8', width: 'auto', maxWidth: 300, alignItems: 'center' }}>
-                            {message.repliedToMessage && (
-                                <ReplyPreview 
-                                    repliedMessage={{
-                                        ...message.repliedToMessage,
-                                        me: message.userId === message.repliedToMessage.id
-                                    }} 
+                        <View className="relative">
+                            <View style={{ padding: 10, borderRadius: 16, backgroundColor: message.message === "Message has been deleted" ? '#e0e0e0' : (me ? '#9e5bd8' : '#f8f8f8'), width: 'auto', maxWidth: 300, alignItems: 'center' }}>
+                                {message.repliedToMessage && (
+                                    <ReplyPreview 
+                                        repliedMessage={{
+                                            ...message.repliedToMessage,
+                                            me: message.userId === message.repliedToMessage.id
+                                        }} 
+                                    />
+                                )}
+                                <Text style={{
+                                    paddingStart: 5,
+                                    fontFamily: 'Rubik',
+                                    fontWeight: '300',
+                                    fontSize: 14,
+                                    color: me ? 'white' : 'black',
+                                    textAlign: 'center' // Center text
+                                }}>
+                                    {message.message}
+                                </Text>
+                                {message.attachmentUrl && (
+                                    <View className="mt-2 rounded-lg overflow-hidden">
+                                        {attachmentType === 'image' ? (
+                                            <Image
+                                                source={{ uri: createMediaURL(baseURL, message.attachmentUrl) }}
+                                                style={{ width: 200, height: 200, borderRadius: 8 }}
+                                                resizeMode="cover"
+                                            />
+                                        ) : attachmentType === 'video' ? (
+                                            renderVideoPreview()
+                                        ) : null}
+                                    </View>
+                                )}
+                            </View>
+                            {/* Only show reactions if message is not deleted */}
+                            {message.message !== "Message has been deleted" && (
+                                <Reactions 
+                                    reactions={localReactions}
+                                    me={me}
+                                    onReactionAdded={handleReactionAdded}
+                                    messageId={message.id}
                                 />
-                            )}
-                            <Text style={{
-                                paddingStart: 5,
-                                fontFamily: 'Rubik',
-                                fontWeight: '300',
-                                fontSize: 14,
-                                color: me ? 'white' : 'black',
-                                textAlign: 'center' // Center text
-                            }}>
-                                {message.message}
-                            </Text>
-                            {message.attachmentUrl && (
-                                <View className="mt-2 rounded-lg overflow-hidden">
-                                    {attachmentType === 'image' ? (
-                                        <Image
-                                            source={{ uri: createMediaURL(baseURL, message.attachmentUrl) }}
-                                            style={{ width: 200, height: 200, borderRadius: 8 }}
-                                            resizeMode="cover"
-                                        />
-                                    ) : attachmentType === 'video' ? (
-                                        renderVideoPreview()
-                                    ) : null}
-                                </View>
                             )}
                         </View>
                         {!me && (
@@ -166,7 +278,7 @@ export const MessageContent = React.memo(
 );
 
 // Component chính
-function ChatMessage({ message, onSwipe, onLongPress, onCloseActions }) {
+function ChatMessage({ message, onSwipe, onLongPress, onCloseActions, onReactionAdded }) {
 	const {
 		calculatedWidth,
 		composedGesture,
@@ -189,6 +301,7 @@ function ChatMessage({ message, onSwipe, onLongPress, onCloseActions }) {
 					formattedTime={message.formattedTime}
 					width={calculatedWidth}
 					composedGesture={composedGesture}
+					onReactionAdded={onReactionAdded} // Pass to MessageContent
 				/>
 			</Animated.View>
 		</View>

@@ -115,7 +115,7 @@ const MessageContent = React.memo(({message, me, formattedTime, width}) => {
   );
 });
 
-function MessageOverlay({message, position, onClose, messageId, onMessageDeleted, pinned, onPinToggle}) {
+function MessageOverlay({message, position, onClose, messageId, onMessageDeleted, pinned, onPinToggle, onReactionAdded, currentUserId}) {
 	if (!position || !message) {
 		return null; // Không render nếu dữ liệu chưa đầy đủ
 	}
@@ -155,6 +155,12 @@ function MessageOverlay({message, position, onClose, messageId, onMessageDeleted
 		onClose();
 	}, [opacity, scale, onClose]);
 
+    const handleReactionAdded = useCallback(async (messageId, newReaction) => {
+        console.log('MessageOverlay handleReactionAdded:', { messageId, newReaction, currentUserId });
+        await onReactionAdded?.(messageId, newReaction);
+        handleClose(); // Đóng overlay sau khi thêm reaction thành công
+    }, [onReactionAdded, handleClose]);
+
 	return (
 		<Pressable
 			style={{position: "absolute", width: "100%", height: "100%", justifyContent: "center",
@@ -163,7 +169,15 @@ function MessageOverlay({message, position, onClose, messageId, onMessageDeleted
 			<Animated.View style={[overlayStyle]}>
 				<View className={`flex-col ${message.me ? "mr-3" : "ml-3"}`}>
 					{/* Component Reaction */}
-					<Reactions message={message}/>
+					<Reactions 
+                        message={{
+                            ...message,
+                            currentUserId,
+                            userId: currentUserId // Ensure both properties are set
+                        }} 
+                        onClose={handleClose} 
+                        onReactionAdded={handleReactionAdded}
+                    />
 
 					{/* Message Content */}
 					<Animated.View className={`w-fit ${message.me ? "flex-row-reverse" : "flex-row"} items-center`}>

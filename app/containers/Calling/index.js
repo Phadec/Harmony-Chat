@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {View, Image, Text, useWindowDimensions} from 'react-native';
 import Animated, {useSharedValue, useAnimatedStyle, withTiming} from 'react-native-reanimated';
 import {BlurView} from '@react-native-community/blur';
@@ -6,6 +6,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { SignalRService } from "@/services/signalR";  // Add this import
 
 // Components
 import {Button} from '@/components';
@@ -13,7 +14,81 @@ import {Button} from '@/components';
 // Commons
 import {Colors} from '@/common';
 
-function CallingContainer({navigation}) {
+function CallingContainer({navigation, route}) {
+    // Thêm log để debug
+    console.log('Received calling params:', route.params);
+    
+    const caller = route.params?.caller || {};
+    const [callAccepted, setCallAccepted] = useState(false);
+    const [callDuration, setCallDuration] = useState(0);
+    const signalR = useRef(SignalRService.getInstance());
+    
+    // Thêm log chi tiết
+    useEffect(() => {
+        console.log('Caller information:', {
+            fullName: caller.fullName,
+            avatar: caller.avatar,
+            status: caller.status,
+            userId: caller.userId
+        });
+        
+        if (!caller?.fullName) {
+            console.warn('No caller information provided');
+            // navigation.goBack();  // Comment tạm thời để debug
+        }
+    }, [caller]);
+
+    // Handle call duration
+    useEffect(() => {
+        let intervalId;
+        if (callAccepted) {
+            intervalId = setInterval(() => {
+                setCallDuration(prev => prev + 1);
+            }, 1000);
+        }
+        return () => clearInterval(intervalId);
+    }, [callAccepted]);
+
+    // Format duration to MM:SS
+    const formatDuration = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Initialize call when component mounts
+    useEffect(() => {
+        if (caller.recipientId) {
+            // Emit call start event
+            signalR.current.hubConnection.invoke("StartCall", caller.recipientId)
+                .catch(err => console.error("Error starting call:", err));
+
+            // Listen for call accepted
+            signalR.current.hubConnection.on("CallAccepted", () => {
+                setCallAccepted(true);
+            });
+
+            // Listen for call rejected/ended
+            signalR.current.hubConnection.on("CallEnded", () => {
+                navigation.goBack();
+            });
+        }
+
+        return () => {
+            // Cleanup listeners when component unmounts
+            signalR.current.hubConnection.off("CallAccepted");
+            signalR.current.hubConnection.off("CallEnded");
+        };
+    }, [caller.recipientId]);
+
+    const handleEndCall = () => {
+        if (caller.recipientId) {
+            signalR.current.hubConnection.invoke("EndCall", caller.recipientId)
+                .catch(err => console.error("Error ending call:", err));
+        }
+        navigation.goBack();
+    };
+
 	const [call, setCall] = useState(false);
 
 	const {width, height} = useWindowDimensions();
@@ -72,7 +147,10 @@ function CallingContainer({navigation}) {
 			</Animated.View>
 
 			<Animated.View className={`overflow-hidden border-4 border-white ${call ? 'rounded-3xl' : 'rounded-full'}`} style={[profileAnimated]}>
-				<Image source={require('@/assets/images/call-1.webp')} className="w-full h-full" />
+					<Image 
+						source={caller?.avatar ? {uri: caller.avatar} : require('@/assets/images/call-1.webp')} 
+						className="w-full h-full"
+					/>
 			</Animated.View>
 
 			<Animated.View className="absolute top-24 left-11 z-10" style={[friendAnimated]}>
@@ -88,11 +166,13 @@ function CallingContainer({navigation}) {
 			{!call && (
 				<>
 					<View className="mt-3 mx-auto items-center">
-						<Text className="font-rubik font-medium text-xl text-black">Sergio Pliego</Text>
-						<Text className="font-rubik text-sm text-black/40 mt-2">0555 555 55 55</Text>
+						<Text className="font-rubik font-medium text-xl text-black">
+							{caller.fullName || 'Unknown User'}
+						</Text>
+						<Text className="font-rubik text-sm text-black/40 mt-2">
+							{callAccepted ? 'Connected' : 'Calling...'}
+						</Text>
 					</View>
-
-					<Text className="font-rubik text-sm text-black/40 mt-14">Calling...</Text>
 				</>
 			)}
 
@@ -117,7 +197,7 @@ function CallingContainer({navigation}) {
 					</Button>
 				</View>
 
-				<Button className={`w-14 h-14 rounded-full bg-red items-center justify-center ${call ? 'ml-5' : 'mt-14'}`} onPress={() => navigation.goBack()}>
+				<Button className={`w-14 h-14 rounded-full bg-red items-center justify-center ${call ? 'ml-5' : 'mt-14'}`} onPress={handleEndCall}>
 					<MaterialCommunityIcons name="phone-hangup" size={18} color={Colors.white} />
 				</Button>
 			</View>

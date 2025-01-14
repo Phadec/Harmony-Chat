@@ -7,6 +7,7 @@ import store from '@/redux/store';
 // Navigations
 import Navigator from '@/navigator';
 import {MenuProvider} from "react-native-popup-menu";
+import { AuthProvider } from './app/contexts/AuthContext';
 
 if (__DEV__) {
 	const ignoreWarns = ['VirtualizedLists should never be nested inside plain ScrollViews'];
@@ -27,7 +28,9 @@ function App() {
 	return (
 		<Provider store={store}>
 			<MenuProvider>
-				<Navigator/>
+				<AuthProvider>
+					<Navigator/>
+				</AuthProvider>
 			</MenuProvider>
 		</Provider>
 	);

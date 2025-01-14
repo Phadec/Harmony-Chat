@@ -1,4 +1,5 @@
-import React, {useCallback, useEffect, useRef, useState, useMemo} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import { useAuth } from '../../contexts/AuthContext'; // Fix the import path
 
 // Services
 import {ChatService} from "@/services";
@@ -9,6 +10,7 @@ import {formatMessages} from "../../utils/SectionListDT";
 
 
 const useChatPrivate = (recipientId) => {
+	const { user } = useAuth(); // Get current user
 	const [messages, setMessages] = useState([]);
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
@@ -273,8 +275,46 @@ const useChatPrivate = (recipientId) => {
 		}
 	}, [messages]);
 
+	const handleReactionAdded = useCallback((messageId, newReaction) => {
+    console.log('handleReactionAdded:', { messageId, newReaction });
+    
+    setMessages(prevMessages => 
+        prevMessages.map(section => ({
+            ...section,
+            data: section.data.map(msg => {
+                if (msg.id === messageId) {
+                    if (!newReaction) {
+                        // If reaction is null, remove all reactions
+                        return {
+                            ...msg,
+                            reactions: { $values: [] }
+                        };
+                    }
+                    
+                    // Initialize reactions if they don't exist
+                    const currentReactions = msg.reactions?.$values || [];
+                    
+                    // Remove old reaction from same user if exists
+                    const filteredReactions = currentReactions.filter(
+                        r => r?.reactedByUser?.id !== user?.id
+                    );
+                    
+                    return {
+                        ...msg,
+                        reactions: {
+                            $values: [...filteredReactions, newReaction].filter(Boolean)
+                        }
+                    };
+                }
+                return msg;
+            })
+        }))
+    );
+}, [user?.id]);
+
 	return {
-		messages,
+		messages: messages || [], // Ensure messages is always an array
+		currentUserId: user?.id, // Add currentUserId to return object
 		loading,
 		hasMore,
 		page,
@@ -292,6 +332,7 @@ const useChatPrivate = (recipientId) => {
 		deleteMessage,
 		togglePin,
 		pinnedMessages,
+		handleReactionAdded,
 	};
 }
 
