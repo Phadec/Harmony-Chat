@@ -37,6 +37,8 @@
 		"react-native-confetti-cannon": "^1.5.2",
 		"react-native-context-menu-view": "^1.16.0",
 		"react-native-document-picker": "^9.3.1",
+		"react-native-emoji-board": "^1.2.1",
+		"react-native-emoji-modal": "^0.2.4",
 		"react-native-emoji-picker": "^0.2.2",
 		"react-native-emoji-selector": "^0.2.0",
 		"react-native-gesture-handler": "^2.12.0",

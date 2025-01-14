@@ -27,13 +27,12 @@ const useChatPrivate = (recipientId) => {
 
 
 	// Hàm xử lý khi người dùng vuốt tin nhắn để trả lời
-	const swipeToReply = useCallback((messageData, me, replyId) => {
-		setReplyTo(
-			messageData.length > 40 ? `${messageData.slice(0, 40)}...` : messageData
-		);
-		setIsSelf(me);
-		setReplyId(replyId);
-	}, []);
+	const swipeToReply = useCallback((messageData, me, messageId) => {
+        console.log('SwipeToReply:', { messageData, me, messageId });
+        setReplyTo(messageData);
+        setIsSelf(me);
+        setReplyId(messageId); // Đảm bảo messageId được truyền đúng
+    }, []);
 
 	// Đóng reply box
 	const closeReplyBox = () => {
@@ -75,68 +74,55 @@ const useChatPrivate = (recipientId) => {
 		}
 	}, [recipientId, hasMore]);
 
-	// Gửi tin nhắn
-	const sendMessage = useCallback(async (messageText, attachment, replyId) => {
+	// Sửa lại hàm sendMessage để xử lý reply
+    const sendMessage = useCallback(async (messageText, replyToId = null) => {
         try {
-            console.log('Recipient ID:', recipientId); // Log recipientId
-
-            if (!recipientId) {
-                throw new Error('Recipient ID is missing');
-            }
-
-            if (attachment && !attachment.uri) {
-                throw new Error('Invalid attachment: missing URI');
-            }
-
-            console.log('Attempting to send message:', {
+            console.log('Sending message:', {
                 messageText,
-                attachment: attachment ? {
-                    uri: attachment.uri,
-                    type: attachment.type,
-                    fileName: attachment.fileName,
-                    fileSize: attachment.fileSize
-                } : null,
-                replyId
+                replyToId,
+                recipientId
             });
+
+            if (!messageText?.trim()) {
+                console.error('Empty message');
+                return false;
+            }
 
             const response = await chatService.current.sendMessage(
                 recipientId,
-                messageText,
-                attachment,
-                replyId
+                messageText.trim(),
+                null,
+                replyToId // Đảm bảo truyền replyToId
             );
 
-            if (!response) {
-                throw new Error('No response from server');
+            console.log('Send response:', response);
+
+            if (response) {
+                // Cập nhật messages với thông tin reply
+                setMessages(prev => {
+                    const formattedMessage = formatMessages([{
+                        ...response,
+                        message: messageText.trim(),
+                        repliedToMessage: response.repliedToMessage, // Lấy từ response
+                        repliedToId: replyToId
+                    }], recipientId)[0];
+
+                    const existingGroupIndex = prev.findIndex(
+                        group => group.title === formattedMessage.title
+                    );
+
+                    if (existingGroupIndex !== -1) {
+                        const newMessages = [...prev];
+                        newMessages[existingGroupIndex].data.unshift(formattedMessage.data[0]);
+                        return newMessages;
+                    }
+                    return [formattedMessage, ...prev];
+                });
+
+                return true;
             }
 
-            console.log('Message sent successfully:', response);
-
-            // Format and update messages
-            const formattedMessage = formatMessages([{
-                ...response,
-                message: response.message || '',
-                attachmentUrl: response.attachmentUrl, // rename to attachmentUrl
-                repliedTo: response.repliedToMessage,
-                senderName: response.senderFullName,
-            }], recipientId)[0];
-
-            setMessages(prev => {
-                const existingGroupIndex = prev.findIndex(
-                    group => group.title === formattedMessage.title
-                );
-
-                if (existingGroupIndex !== -1) {
-                    const newMessages = [...prev];
-                    newMessages[existingGroupIndex].data.unshift(
-                        formattedMessage.data[0]
-                    );
-                    return newMessages;
-                }
-                return [formattedMessage, ...prev];
-            });
-
-            return true;
+            return false;
         } catch (error) {
             console.error('Error sending message:', error);
             return false;
