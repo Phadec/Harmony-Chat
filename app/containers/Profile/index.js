@@ -97,6 +97,15 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave, data }) {
                 </View>
 
                 <View>
+                    <Text className="font-rubik text-sm text-black/40 mb-2">Tag Name</Text>
+                    <TextInput
+                        value={personalInfo.tagName}
+                        onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, tagName: text }))}
+                        className="bg-light p-3 rounded-xl font-rubik"
+                    />
+                </View>
+
+                <View>
                     <Text className="font-rubik text-sm text-black/40 mb-2">Email</Text>
                     <TextInput
                         value={personalInfo.email}
@@ -202,7 +211,8 @@ function ProfileContainer({ navigation }) {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email,
-                birthday: data.birthday.split('T')[0]
+                birthday: data.birthday.split('T')[0],
+                tagName: data.tagName
             });
 
             setAvatar(`${baseURL}/${data.avatar}`);
@@ -234,6 +244,7 @@ function ProfileContainer({ navigation }) {
                 lastName: info.lastName,
                 birthday: info.birthday,
                 email: info.email,
+                tagName: info.tagName,
                 avatar: avatar // Gửi avatar nếu có
             });
 
@@ -242,6 +253,7 @@ function ProfileContainer({ navigation }) {
                 firstName: info.firstName,
                 lastName: info.lastName,
                 email: info.email,
+                tagName: info.tagName,
                 birthday: info.birthday
             });
 
@@ -273,6 +285,7 @@ function ProfileContainer({ navigation }) {
                     lastName: personalInfo.lastName,
                     email: personalInfo.email,
                     birthday: personalInfo.birthday,
+                    tagName: personalInfo.tagName,
                     avatar: selectedAvatar
                 });
                 ToastAndroid.show('Avatar updated successfully', ToastAndroid.SHORT);

@@ -78,7 +78,7 @@ function useContextMenu(
 	const deleteChat = async () => {
 		try {
 			if (!item) return;
-			const response = await chatService.deleteChat(item.c);
+			const response = await chatService.deleteChat(item.contactId);
 			if (response) {
 				console.log(`Deleted chat with ${item.contactFullName} successfully!`);
 				Alert.alert(`Chat with ${item.contactFullName} has been deleted.`);
