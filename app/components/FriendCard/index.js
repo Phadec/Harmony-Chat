@@ -66,8 +66,8 @@ function FriendCard({item, navigation}) {
 		},
 		onSelectCallbacks: {
 			mute: () => handleMuteFriendNotification(),	// Mute
-			delete: () => unFriend(),	// Unfriend
-			block: () => blockUser(), //Block
+			delete: () => unFriend(), // Unfriend
+			block: () => handleBlockUser() //block user
 		}
 	});
 
@@ -106,7 +106,7 @@ function FriendCard({item, navigation}) {
 	}
 
 	//Block
-	const blockUser = async () => {
+	const handleBlockUser = async () => {
 		try {
 			Alert.alert(
 				"",
@@ -125,9 +125,7 @@ function FriendCard({item, navigation}) {
 						onPress: async () => {
 							const friendService = new FriendService();
 							const response = await friendService.blockUser(item.id);
-
 							if (response) {
-								// Remove from friends list
 								dispatch(removeFriend(item.id));
 							}
 						}
