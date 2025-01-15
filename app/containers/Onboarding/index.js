@@ -14,8 +14,8 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedAntDesign = Animated.createAnimatedComponent(AntDesign);
 
 const onboarding = [
-	{id: 1, image: require('@/assets/images/onboarding-1.png'), title: 'Messaging with your friends is fun with Wisp'},
-	{id: 2, image: require('@/assets/images/onboarding-2.png'), title: 'Use wisp to communicate with your loved ones'},
+	{id: 1, image: require('@/assets/images/onboarding-1.png'), title: 'Messaging with your friends is fun with Harmony'},
+	{id: 2, image: require('@/assets/images/onboarding-2.png'), title: 'Use Harmony to communicate with your loved ones'},
 	{id: 3, image: require('@/assets/images/onboarding-3.png'), title: 'You can create a community and reach more people'},
 ];
 
