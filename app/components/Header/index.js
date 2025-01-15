@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Image, View, Text} from 'react-native';
 import {useDispatch} from 'react-redux';
 
@@ -16,9 +16,25 @@ import {Colors} from '@/common';
 
 // Actions
 import {actions} from '@/redux/reducer/GroupRedux';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {baseURL} from "../../services/axiosInstance";
 
 function Header({title, friends, groups, messages, search, goBack, navigation}) {
 	const dispatch = useDispatch();
+	const [avatarUri, setAvatarUri] = useState(null);
+
+	useEffect(() => {
+		const loadAvatar = async () => {
+			try {
+				const img = await AsyncStorage.getItem('userAvatar');
+				setAvatarUri(`${baseURL}/${img}`);
+			} catch (error) {
+				console.error('Error loading avatar:', error);
+			}
+		};
+
+		loadAvatar();
+	}, []);
 
 	return (
 		<View className="flex-row items-center">
@@ -58,7 +74,8 @@ function Header({title, friends, groups, messages, search, goBack, navigation}) 
 				<Button className="w-12 h-12 rounded-full relative ml-6">
 					<View className="w-3 h-3 absolute left-0 top-0 z-10"/>
 
-					<Image source={require('@/assets/images/story-4.png')} className="w-12 h-12 rounded-full"/>
+					<Image source={avatarUri ? {uri: avatarUri} : require('@/assets/images/story-4.png')}
+						   className="w-12 h-12 rounded-full"/>
 				</Button>
 			</View>
 		</View>

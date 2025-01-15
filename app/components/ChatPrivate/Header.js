@@ -14,7 +14,7 @@ import {Button} from '@/components';
 // common
 import {Colors} from '@/common';
 
-function HeaderPrivateChat({navigation}) {
+function HeaderPrivateChat({params, navigation}) {
 	const insets = useSafeAreaInsets();
 
 	return (
@@ -26,16 +26,18 @@ function HeaderPrivateChat({navigation}) {
 
 			<View className="flex-row items-center ml-2">
 				<View className="w-12 h-12 relative">
-					<Image source={require('@/assets/images/person-1.webp')}
+					<Image source={params?.avatar}
 						   className="w-12 h-12 rounded-full"/>
-					<View className="w-4 h-4 rounded-full bg-green border-[3px] border-main absolute top-0 left-0"/>
+					<View className="w-3.5 h-3.5 rounded-full bg-green border-[3px] border-main absolute top-0 right-0"/>
 				</View>
 
 				<View className="ml-3">
 					<Text className="font-rubik font-medium text-sm text-white">
-						Martijn Dragonj
+						{params?.nickname || params?.contactFullName}
 					</Text>
-					<Text className="mt-1 font-rubik text-xs text-white/40">Online</Text>
+					<Text className="mt-1 font-rubik text-xs text-white/40">
+						{params?.status || 'offline'}
+					</Text>
 				</View>
 			</View>
 

@@ -39,7 +39,6 @@ function MessageCard({item, navigation}) {
 			contactNickname: item.contactNickname,
 			status: item.status,
 			avatar: {uri: avatarUrl},
-			online: item.online,
 		},
 		onSelectCallbacks: {
 			// Tùy chỉnh các callback cho message

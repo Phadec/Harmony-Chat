@@ -105,7 +105,7 @@ function ChatPrivateContainer({navigation}) {
 						reducedTransparencyFallbackColor="black"
 					/>
 				)}
-				<HeaderPrivateChat navigation={navigation}/>
+				<HeaderPrivateChat params={route.params} navigation={navigation}/>
 				<View className="px-5 flex-1">
 					<SectionList
 						sections={messages}
