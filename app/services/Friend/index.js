@@ -123,4 +123,18 @@ export class FriendService {
 			return null;
 		}
 	}
+
+	async blockUser(friendId) {
+        try {
+			const userId = await AsyncStorage.getItem('userId');
+            const response = await axiosInstance.post(`${API_URL}/${userId}/block/${friendId}`);
+			if (response.status === 200) {
+				return true;
+			}
+			console.log("ERROR Message:", response.data)
+        } catch (error) {
+            console.error('Block user error:', error);
+            throw error;
+        }
+    }
 }

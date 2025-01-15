@@ -74,11 +74,11 @@ function useContextMenu(
 		}
 	};
 
+	//delete chat
 	const deleteChat = async () => {
 		try {
 			if (!item) return;
-
-			const response = await chatService.deleteChat(item.contactId);
+			const response = await chatService.deleteChat(item.c);
 			if (response) {
 				console.log(`Deleted chat with ${item.contactFullName} successfully!`);
 				Alert.alert(`Chat with ${item.contactFullName} has been deleted.`);
@@ -86,6 +86,38 @@ function useContextMenu(
 			}
 		} catch (error) {
 			console.error('Error deleting chat:', error);
+		}
+	};
+
+	//Block
+	const handleBlockUser = async () => {
+		try {
+			Alert.alert(
+				"",
+				`Are you sure you want to block ${item.fullName}? You won't be able to:
+				• See their posts
+				• Receive messages from them
+				• They won't be able to find you`,
+				[
+					{
+						text: "Cancel",
+						style: "cancel"
+					},
+					{
+						text: "Block",
+						style: 'destructive',
+						onPress: async () => {
+							const friendService = new FriendService();
+							const response = await friendService.blockUser(item.contactId);
+							if (response) {
+								dispatch(removeFriend(item.id));
+							}
+						}
+					}
+				]
+			);
+		} catch (error) {
+			console.error('Error blocking user:', error);
 		}
 	};
 
@@ -108,6 +140,9 @@ function useContextMenu(
 					break;
 				case 'delete':
 					deleteChat();
+					break;
+				case 'block':
+					handleBlockUser();
 					break;
 				default:
 					throw new Error('Unknown option');

@@ -47,6 +47,7 @@ function MessageCard({item, navigation}) {
 	const menuOptions = [
 		{value: 'mute', icon: '🔕', text: 'Mute/Unmute'},
 		{value: item.hasNewMessage ? 'mark_read' : 'mark_unread', icon: '🔄', text: item.hasNewMessage ? 'Mark as Read' : 'Mark as unread'},
+		{value: 'block', icon: '🚫', text: 'Block'},
 		{value: 'delete', icon: '🗑️', text: 'Delete', color: 'red'},
 	];
 
