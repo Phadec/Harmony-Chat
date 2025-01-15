@@ -20,11 +20,6 @@ function SettingsContainer({ navigation }) {
 
 			<View className="bg-light rounded-3xl px-4 mb-4 mt-6">
 				<ScrollView showsVerticalScrollIndicator={false}>
-					<Button className="flex-row items-center py-6" onPress={() => navigation.navigate('Invitations')}>
-						<MaterialCommunityIcons name="email-newsletter" size={20} color={Colors.purple} />
-						<Text className="font-rubik font-medium text-sm text-black ml-2">Invitations</Text>
-					</Button>
-
 					<Button className="flex-row items-center py-6" onPress={() => navigation.navigate('BlockedUsers')}>
 						<MaterialCommunityIcons name="block-helper" size={20} color={Colors.purple} />
 						<Text className="font-rubik font-medium text-sm text-black ml-2">Blocked users</Text>
@@ -33,11 +28,6 @@ function SettingsContainer({ navigation }) {
 					<Button className="flex-row items-center py-6 border-b-[1px] border-purple/10" onPress={() => navigation.navigate('AccountSettings')}>
 						<MaterialCommunityIcons name="account-box-outline" size={20} color={Colors.purple} />
 						<Text className="font-rubik font-medium text-sm text-black ml-2">Account</Text>
-					</Button>
-
-					<Button className="flex-row items-center py-6 border-b-[1px] border-purple/10" onPress={() => navigation.navigate('ChatSettings')}>
-						<FontAwesome name="comments-o" size={20} color={Colors.purple} />
-						<Text className="font-rubik font-medium text-sm text-black ml-2">Chat</Text>
 					</Button>
 
 					<Button className="flex-row items-center py-6 border-b-[1px] border-purple/10" onPress={() => navigation.navigate('SecuritySettings')}>

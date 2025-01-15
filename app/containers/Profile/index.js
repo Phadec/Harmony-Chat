@@ -22,6 +22,7 @@ import { Colors } from '@/common';
 
 //ExpandablePersonalInfo
 function ExpandablePersonalInfo({ isExpanded, onToggle, onSave, data }) {
+    console.log('Personal Info Data:', data);
     const [personalInfo, setPersonalInfo] = useState(data);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [tempDate, setTempDate] = useState(new Date());
@@ -66,6 +67,7 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave, data }) {
         );
     }
 
+    console.log('Personal Info:', personalInfo);
     return (
         <View className="bg-white p-4 rounded-2xl mb-3">
             <TouchableOpacity
@@ -83,7 +85,7 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave, data }) {
                     <TextInput
                         value={personalInfo.firstName}
                         onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, firstName: text }))}
-                        className="bg-light p-3 rounded-xl font-rubik"
+                        className="bg-light p-3 rounded-xl font-rubik text-black"
                     />
                 </View>
 
@@ -92,7 +94,7 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave, data }) {
                     <TextInput
                         value={personalInfo.lastName}
                         onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, lastName: text }))}
-                        className="bg-light p-3 rounded-xl font-rubik"
+                        className="bg-light p-3 rounded-xl font-rubik text-black"
                     />
                 </View>
 
@@ -101,7 +103,7 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave, data }) {
                     <TextInput
                         value={personalInfo.tagName}
                         onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, tagName: text }))}
-                        className="bg-light p-3 rounded-xl font-rubik"
+                        className="bg-light p-3 rounded-xl font-rubik text-black"
                     />
                 </View>
 
@@ -110,7 +112,7 @@ function ExpandablePersonalInfo({ isExpanded, onToggle, onSave, data }) {
                     <TextInput
                         value={personalInfo.email}
                         onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, email: text }))}
-                        className="bg-light p-3 rounded-xl font-rubik"
+                        className="bg-light p-3 rounded-xl font-rubik text-black"
                         keyboardType="email-address"
                     />
                 </View>

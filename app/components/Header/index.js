@@ -16,6 +16,7 @@ import {Colors} from '@/common';
 
 // Actions
 import {actions} from '@/redux/reducer/GroupRedux';
+import { useRoute } from '@react-navigation/native';
 
 function Header({title, friends, groups, messages, search, goBack, navigation}) {
 	const dispatch = useDispatch();
