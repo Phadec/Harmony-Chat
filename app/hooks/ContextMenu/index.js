@@ -6,6 +6,7 @@ import { FriendService, ChatService } from "@/services";
 import { removeFriend, updateFriend } from "../../redux/reducer/FriendRedux";
 import { useDispatch } from "react-redux";
 import { Alert } from "react-native";
+import { removeChat, updateChatList } from "../../redux/reducer/ChatListRedux";
 
 function useContextMenu(
 	options = {
@@ -34,7 +35,7 @@ function useContextMenu(
 			const response = await chatService.markMessageAsRead(item.chatId);
 			if (response) {
 				console.log(`Marked message from ${item.contactFullName} as read successfully!`);
-				// dispatch(updateMessage({ ...item, hasNewMessage: false }));
+				dispatch(updateChatList({ ...item, hasNewMessage: false }));
 			}
 		} catch (error) {
 			console.error('Error marking as read:', error);
@@ -82,7 +83,9 @@ function useContextMenu(
 			if (response) {
 				console.log(`Deleted chat with ${item.contactFullName} successfully!`);
 				Alert.alert(`Chat with ${item.contactFullName} has been deleted.`);
-				// dispatch(updateMessage({ ...item, hasNewMessage: false }));
+				console.log(item);
+				
+				dispatch(removeChat(item.chatId));
 			}
 		} catch (error) {
 			console.error('Error deleting chat:', error);

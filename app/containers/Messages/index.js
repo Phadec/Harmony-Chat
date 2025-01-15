@@ -1,6 +1,8 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {View, FlatList} from 'react-native';
 import {useFocusEffect} from "@react-navigation/native";
+import {useDispatch, useSelector} from "react-redux";
+import {fetchChatList} from "../../redux/reducer/ChatListRedux";
 
 // Components
 import {Header, BubbleStory, MessageCard, GroupMessageCard} from '@/components';
@@ -14,58 +16,42 @@ import {SignalRService} from '../../services/signalR';
 
 
 function MessagesContainer({navigation}) {
+	const dispatch = useDispatch();
+	const {chatList, error} = useSelector((state) => state.chatList);
 	const chatService = new ChatService();
-	const signalRService = SignalRService.getInstance();  // Đảm bảo sử dụng Singleton instance
-	const [relationships, setRelationships] = useState([]);
+	const signalRService = SignalRService.getInstance();
 
-	// Hàm gọi API lấy danh sách tin nhắn
-	const fetchAndSetRelationships = async () => {
-		try {
-			const relations = await chatService.getRelationships();
-			if (relations?.$values?.length > 0) {
-				setRelationships(relations?.$values);
-			} else {
-				console.warn('No relationships found.');
-			}
-		} catch (error) {
-			console.error('Error fetching relationships:', error);
-		}
+	// Cập nhật hàm fetch
+	const fetchAndSetRelationships = () => {
+		dispatch(fetchChatList(chatService));
 	};
 
-	// Lắng nghe sự kiện messageReceived từ SignalR
+	// Cập nhật useEffect cho SignalR
 	useEffect(() => {
 		const startSignalRConnection = async () => {
-			// Kiểm tra nếu SignalR đã được kết nối
 			if (signalRService.hubConnection.state !== signalRService.hubConnection.state.Connected) {
-				await signalRService.start(); // Chỉ bắt đầu kết nối nếu chưa kết nối
+				await signalRService.start();
 			}
-			console.log("SignalR connection state:", signalRService.hubConnection.state);
 		};
 
-		// Khởi động kết nối SignalR và subscribe vào sự kiện
 		startSignalRConnection().then(() => {
-			const subscription = signalRService.messageReceived$.subscribe((event) => {
-				console.log("SignalR event received:", event);
-				fetchAndSetRelationships(); // Cập nhật danh sách tin nhắn khi nhận được tin nhắn
+			const subscription = signalRService.messageReceived$.subscribe(() => {
+				fetchAndSetRelationships();
 			});
 
-			// Cleanup khi component unmount
 			return () => {
-				console.log('Unsubscribing from SignalR messages');
-				subscription.unsubscribe(); // Hủy đăng ký sự kiện
+				subscription.unsubscribe();
 			};
 		}).catch((error) => {
 			console.error('Error while starting SignalR connection:', error);
 		});
 
-		// Cleanup khi component unmount
 		return () => {
-			console.log('Disconnecting SignalR connection');
-			signalRService.stopConnection(); // Ngừng kết nối khi component unmount
+			signalRService.stopConnection();
 		};
-	}, [signalRService]); // Chỉ chạy khi signalRService thay đổi (singleton instance)
+	}, [signalRService]);
 
-	// Handle focus events
+	// Cập nhật useFocusEffect
 	useFocusEffect(
 		React.useCallback(() => {
 			console.log("[MessageContainer] Screen focused, fetching groups...");
@@ -76,15 +62,10 @@ function MessagesContainer({navigation}) {
 	return (
 		<Layout>
 			<Header title="Messages" messages search navigation={navigation}/>
-
 			<View className="my-6 -mx-6">
 				<FlatList
-					data={relationships.filter(item => item.relationshipType === 'Private')}
-					keyExtractor={(item) => {
-						if (item.relationshipType === 'Private') {
-							return item.contactId;
-						}
-					}}
+					data={chatList.filter(item => item.relationshipType === 'Private')}
+					keyExtractor={(item) => item.contactId}
 					renderItem={({item}) => <BubbleStory item={item} navigation={navigation}/>}
 					horizontal
 					showsHorizontalScrollIndicator={false}
@@ -92,7 +73,7 @@ function MessagesContainer({navigation}) {
 				/>
 			</View>
 			<FlatList
-				data={relationships}
+				data={chatList}
 				keyExtractor={(item) => {
 					if (item.relationshipType === 'Group') {
 						return item.groupId;
