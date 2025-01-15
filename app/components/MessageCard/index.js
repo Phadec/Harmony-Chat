@@ -17,7 +17,7 @@ import {formatChatDate} from "../../utils/date";
 
 function Status({color}) {
 	return <View className="w-3 h-3 rounded-full border-2 border-white absolute -left-[1px] -top-[1px] "
-				 style={{backgroundColor: Colors[color]}}/>;
+		style={{backgroundColor: Colors[color]}}/>;
 }
 
 function MessageCard({item, navigation}) {
@@ -32,6 +32,7 @@ function MessageCard({item, navigation}) {
 		handleLongPress,
 		getMenuPosition
 	} = useContextMenu({
+		item: item,
 		navigationTarget: 'ChatPrivate',
 		navigationParams: {
 			recipientId: item.contactId,
@@ -42,18 +43,24 @@ function MessageCard({item, navigation}) {
 			online: item.online,
 			item: item, // Pass the entire item object
 		},
-		onSelectCallbacks: {
-			// Tùy chỉnh các callback cho message
-			mark_unread: () => console.log('Custom mark unread for message'),
-		}
 	});
+	
+	const menuOptions = [
+		{value: 'mute', icon: '🔕', text: 'Mute/Unmute'},
+		{value: item.hasNewMessage ? 'mark_read' : 'mark_unread', icon: '🔄', text: item.hasNewMessage ? 'Mark as Read' : 'Mark as unread'},
+		{value: 'block', icon: '🚫', text: 'Block'},
+		{value: 'delete', icon: '🗑️', text: 'Delete', color: 'red'},
+	];
+
 	return (
 		<CustomContextMenu
 			menuRef={menuRef}
 			isSelected={isSelected}
 			onClose={() => setIsSelected(false)}
 			onSelect={handleSelect}
-			menuPosition={getMenuPosition()}>
+			menuPosition={getMenuPosition()}
+			options={menuOptions}
+		>
 
 			{/* Message item */}
 			<TouchableOpacity
@@ -111,3 +118,4 @@ function MessageCard({item, navigation}) {
 	);
 }
 export default MessageCard;
+

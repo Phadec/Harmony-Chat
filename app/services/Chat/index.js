@@ -143,8 +143,9 @@ export class ChatService {
 	}
 
 	// Xóa tất cả tin nhắn giữa người dùng và người nhận
-	async deleteChat(userId, recipientId) {
+	async deleteChat(recipientId) {
 		try {
+			const userId = await AsyncStorage.getItem('userId');
 			const response = await axiosInstance.delete(
 				`${ApiUrl}/${userId}/delete-chats/${recipientId}`
 			);

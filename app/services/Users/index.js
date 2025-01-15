@@ -42,6 +42,7 @@ export class UserService {
 		const formData = new FormData();
 		formData.append('FirstName', userInfo.firstName);
 		formData.append('LastName', userInfo.lastName);
+		formData.append('TagName', userInfo.tagName);
 		formData.append('Birthday', userInfo.birthday);
 		formData.append('Email', userInfo.email);
 

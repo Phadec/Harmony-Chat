@@ -20,7 +20,7 @@ const CustomContextMenu = ({
 							   options = [
 								   {value: 'mark_read', icon: '🔄', text: 'Mark as read'},
 								   {value: 'mute', icon: '🔕', text: 'Mute'},
-								   {value: 'hide', icon: '👁️', text: 'Hide'},
+								   {value: 'block', icon: '🚫', text: 'Block'},
 								   {value: 'delete', icon: '🗑️', text: 'Delete', color: 'red'}
 							   ]
 						   }) => {

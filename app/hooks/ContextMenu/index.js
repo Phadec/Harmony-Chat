@@ -1,8 +1,11 @@
-import {useRef, useState} from "react";
-import {useNavigation} from "@react-navigation/native";
+import { useRef, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 
 // Services
-import {FriendService, ChatService} from "@/services";
+import { FriendService, ChatService } from "@/services";
+import { removeFriend, updateFriend } from "../../redux/reducer/FriendRedux";
+import { useDispatch } from "react-redux";
+import { Alert } from "react-native";
 
 function useContextMenu(
 	options = {
@@ -21,6 +24,7 @@ function useContextMenu(
 	const [isSelected, setIsSelected] = useState(false);
 	const navigation = useNavigation();
 	const chatService = new ChatService();
+	const dispatch = useDispatch();
 
 	// hàm markAsRead
 	const handleMarkAsRead = async () => {
@@ -28,6 +32,10 @@ function useContextMenu(
 			if (!item) return;
 
 			const response = await chatService.markMessageAsRead(item.chatId);
+			if (response) {
+				console.log(`Marked message from ${item.contactFullName} as read successfully!`);
+				// dispatch(updateMessage({ ...item, hasNewMessage: false }));
+			}
 		} catch (error) {
 			console.error('Error marking as read:', error);
 		}
@@ -36,30 +44,78 @@ function useContextMenu(
 	// Hàm Mute
 	const handleMuteFriendNotification = async () => {
 		try {
-			if (!item) return;
-
+			if (!item) {
+				console.warn('No item found to mute.');
+				return;
+			}
 			const friendService = new FriendService();
-			const response = await friendService.muteFriendNotification(item.id);
+			const response = await friendService.muteFriendNotification(item.contactId);
 
 			if (response) {
 				console.log('Muted success for friend:', item.fullName);
+				dispatch(updateFriend({ ...item, notificationsMuted: !item.notificationsMuted }));
 			}
 		} catch (error) {
 			console.error('Error muting chat:', error);
 		}
 	};
 
-	// Hàm Block
-	const handleBlockUser = async () => {
+	// unFriend
+	const unFriend = async () => {
+		try {
+			const friendService = new FriendService();
+			const response = await friendService.unFriend(item.contactId);
+			if (response) {
+				Alert.alert(`Unfriend with ${item.fullName} successfully!`);
+				dispatch(removeFriend(item.id));
+			}
+		} catch (error) {
+			console.log('Error unfriend:', error);
+		}
+	};
+
+	//delete chat
+	const deleteChat = async () => {
 		try {
 			if (!item) return;
-
-			const friendService = new FriendService();
-			const response = await friendService.blockUser(item.id);
-
+			const response = await chatService.deleteChat(item.contactId);
 			if (response) {
-				console.log('Blocked user:', item.fullName);
+				console.log(`Deleted chat with ${item.contactFullName} successfully!`);
+				Alert.alert(`Chat with ${item.contactFullName} has been deleted.`);
+				// dispatch(updateMessage({ ...item, hasNewMessage: false }));
 			}
+		} catch (error) {
+			console.error('Error deleting chat:', error);
+		}
+	};
+
+	//Block
+	const handleBlockUser = async () => {
+		try {
+			Alert.alert(
+				"",
+				`Are you sure you want to block ${item.fullName}? You won't be able to:
+				• See their posts
+				• Receive messages from them
+				• They won't be able to find you`,
+				[
+					{
+						text: "Cancel",
+						style: "cancel"
+					},
+					{
+						text: "Block",
+						style: 'destructive',
+						onPress: async () => {
+							const friendService = new FriendService();
+							const response = await friendService.blockUser(item.contactId);
+							if (response) {
+								dispatch(removeFriend(item.id));
+							}
+						}
+					}
+				]
+			);
 		} catch (error) {
 			console.error('Error blocking user:', error);
 		}
@@ -73,6 +129,9 @@ function useContextMenu(
 				case 'mark_read':
 					handleMarkAsRead();
 					break;
+				case 'mark_unread':
+					console.log('unRead');
+					break;
 				case 'mute':
 					handleMuteFriendNotification();
 					break;
@@ -83,7 +142,10 @@ function useContextMenu(
 					console.log('Hidden');
 					break;
 				case 'delete':
-					console.log('Deleted');
+					deleteChat();
+					break;
+				case 'block':
+					handleBlockUser();
 					break;
 				default:
 					throw new Error('Unknown option');
@@ -102,7 +164,7 @@ function useContextMenu(
 	};
 
 	const getMenuPosition = () => {
-		const {isBottomThird = true, topMargin = 70, bottomMargin = 5} = options.menuPosition || {};
+		const { isBottomThird = true, topMargin = 70, bottomMargin = 5 } = options.menuPosition || {};
 		return {
 			marginTop: isBottomThird ? topMargin : 0,
 			marginBottom: isBottomThird ? bottomMargin : 0,
