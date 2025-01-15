@@ -16,6 +16,7 @@ import Calls from './Calls';
 import Auth from './Auth';
 
 import {OnboardingContainer} from '../containers';
+import CallingContainer from '../containers/Calling';
 
 // Components
 import {TabBar, TabBarIcon} from '@/components';
@@ -121,10 +122,34 @@ function Navigation() {
 	return (
 		<OverlayContext.Provider value={{isOverlayVisible, setIsOverlayVisible}}>
 			<NavigationContainer theme={Themes} ref={navigationRef}>
-				<Stack.Navigator initialRouteName="Onboarding">
-					<Stack.Screen name="Root" component={BottomTabNavigator} options={() => options}/>
-					<Stack.Screen name="Auth" component={Auth} options={() => options}/>
-					<Stack.Screen name="Onboarding" component={OnboardingContainer} options={() => options}/>
+				<Stack.Navigator 
+					initialRouteName="Onboarding" 
+					screenOptions={{
+						headerShown: false,
+						animation: 'slide_from_right',
+					}}
+				>
+					<Stack.Screen 
+						name="Root" 
+						component={BottomTabNavigator}
+					/>
+					<Stack.Screen 
+						name="Auth" 
+						component={Auth}
+					/>
+					<Stack.Screen 
+						name="Onboarding" 
+						component={OnboardingContainer}
+					/>
+					<Stack.Screen 
+						name="Calling" 
+						component={CallingContainer}
+						options={{
+							animation: 'slide_from_bottom',
+							presentation: 'modal',
+							gestureEnabled: false
+						}}
+					/>
 				</Stack.Navigator>
 			</NavigationContainer>
 		</OverlayContext.Provider>

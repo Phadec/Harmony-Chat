@@ -2,6 +2,9 @@
  * @format
  */
 
+import { enableScreens } from 'react-native-screens';
+enableScreens();
+
 import {gestureHandlerRootHOC} from 'react-native-gesture-handler';
 import {AppRegistry} from 'react-native';
 import App from './App';

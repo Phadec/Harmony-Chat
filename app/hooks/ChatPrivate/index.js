@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
+import { useAuth } from '../../contexts/AuthContext'; // Fix the import path
 
 // Services
 import {ChatService} from "@/services";
@@ -9,6 +10,7 @@ import {formatMessages} from "../../utils/SectionListDT";
 
 
 const useChatPrivate = (recipientId) => {
+	const { user } = useAuth(); // Get current user
 	const [messages, setMessages] = useState([]);
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
@@ -23,17 +25,16 @@ const useChatPrivate = (recipientId) => {
 	const [isSelf, setIsSelf] = useState(false);
 	const [replyTo, setReplyTo] = useState(null);
 	const [replyId, setReplyId] = useState(null);
-
+	const [pinnedMessages, setPinnedMessages] = useState([]);
 
 
 	// Hàm xử lý khi người dùng vuốt tin nhắn để trả lời
-	const swipeToReply = useCallback((messageData, me, replyId) => {
-		setReplyTo(
-			messageData.length > 40 ? `${messageData.slice(0, 40)}...` : messageData
-		);
-		setIsSelf(me);
-		setReplyId(replyId);
-	}, []);
+	const swipeToReply = useCallback((messageData, me, messageId) => {
+        console.log('SwipeToReply:', { messageData, me, messageId });
+        setReplyTo(messageData);
+        setIsSelf(me);
+        setReplyId(messageId); // Đảm bảo messageId được truyền đúng
+    }, []);
 
 	// Đóng reply box
 	const closeReplyBox = () => {
@@ -59,6 +60,14 @@ const useChatPrivate = (recipientId) => {
 			// Cập nhật trạng thái có thêm tin nhắn hay không
 			setHasMore(response.totalPages > pageNumber);
 			setPage(pageNumber);
+
+			// Update pinned messages
+			const newPinnedMessages = response.messages.$values.filter(msg => msg.isPinned);
+			setPinnedMessages(prev => {
+				const existingPinnedIds = new Set(prev.map(msg => msg.id));
+				const mergedPinnedMessages = [...prev, ...newPinnedMessages.filter(msg => !existingPinnedIds.has(msg.id))];
+				return mergedPinnedMessages;
+			});
 		} catch (error) {
 			console.error('Error loading messages:', error);
 		} finally {
@@ -67,52 +76,60 @@ const useChatPrivate = (recipientId) => {
 		}
 	}, [recipientId, hasMore]);
 
-	// Gửi tin nhắn
-	const sendMessage = useCallback(async (messageText, replyId) => {
-		if (!messageText.trim()) return;
+	// Sửa lại hàm sendMessage để xử lý reply
+    const sendMessage = useCallback(async (messageText, replyToId = null) => {
+        try {
+            console.log('Sending message:', {
+                messageText,
+                replyToId,
+                recipientId
+            });
 
-		try {
-			setLoading(true);
+            if (!messageText?.trim()) {
+                console.error('Empty message');
+                return false;
+            }
 
-			if (replyId) {
-				// Đóng reply box sau khi gửi tin nhắn
-				closeReplyBox();
-			}
+            const response = await chatService.current.sendMessage(
+                recipientId,
+                messageText.trim(),
+                null,
+                replyToId // Đảm bảo truyền replyToId
+            );
 
-			const response = await chatService.current.sendMessage(
-				recipientId,
-				messageText,
-				replyId
-			);
+            console.log('Send response:', response);
 
-			// Format tin nhắn theo cấu trúc của SectionList
-			const formattedMessage = formatMessages([response], recipientId)[0];
-			setMessages(prev => {
-				// Kiểm tra xem tin nhắn có thuộc cùng một nhóm với tin nhắn trước không
-				const existingGroupIndex = prev.findIndex(
-					group => group.title === formattedMessage.title
-				);
+            if (response) {
+                // Cập nhật messages với thông tin reply
+                setMessages(prev => {
+                    const formattedMessage = formatMessages([{
+                        ...response,
+                        message: messageText.trim(),
+                        repliedToMessage: response.repliedToMessage, // Lấy từ response
+                        repliedToId: replyToId
+                    }], recipientId)[0];
 
-				// Nếu có thì thêm vào nhóm đó, không thì tạo nhóm mới
-				if (existingGroupIndex !== -1) {
-					const newMessages = [...prev];
-					newMessages[existingGroupIndex].data.unshift(
-						formattedMessage.data[0]
-					);
-					return newMessages;
-				}
+                    const existingGroupIndex = prev.findIndex(
+                        group => group.title === formattedMessage.title
+                    );
 
-				return [formattedMessage, ...prev];
-			});
+                    if (existingGroupIndex !== -1) {
+                        const newMessages = [...prev];
+                        newMessages[existingGroupIndex].data.unshift(formattedMessage.data[0]);
+                        return newMessages;
+                    }
+                    return [formattedMessage, ...prev];
+                });
 
-			return true;
-		} catch (error) {
-			console.error('Error sending message:', error);
-			return false;
-		} finally {
-			setLoading(false);
-		}
-	}, [recipientId]);
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            console.error('Error sending message:', error);
+            return false;
+        }
+    }, [recipientId]);
 
 	// tải thêm tin nhắn cũ.
 	const handleEndReached = useCallback(() => {
@@ -186,8 +203,118 @@ const useChatPrivate = (recipientId) => {
 		signalR.current.hubConnection.invoke("NotifyTyping", recipientId, false);
 	}, [recipientId]);
 
+	// Add delete message function
+	const deleteMessage = useCallback(async (messageId) => {
+		try {
+			console.log('Deleting message with ID:', messageId);
+			await chatService.current.deleteMessage(messageId);
+			console.log('API delete successful');
+			
+			setMessages(prevMessages => {
+				console.log('Previous messages:', prevMessages);
+				
+				const updatedMessages = prevMessages.map(section => ({
+					...section,
+					data: section.data.map(msg => {
+						if (msg.id === messageId) {
+							console.log('Found message to update:', msg);
+							return {
+								...msg,
+								content: "Message has been deleted",
+								message: "Message has been deleted" // Add this in case your structure uses 'message' instead of 'content'
+							};
+						}
+						return msg;
+					})
+				}));
+				
+				console.log('Updated messages:', updatedMessages);
+				return updatedMessages;
+			});
+			
+			return true;
+		} catch (error) {
+			console.error('Error deleting message:', error);
+			return false;
+		}
+	}, []);
+
+	const togglePin = useCallback(async (messageId, pinned) => {
+		try {
+			let result;
+			if (pinned) {
+				result = await chatService.current.unpinMessage(messageId);
+			} else {
+				result = await chatService.current.pinMessage(messageId);
+			}
+			console.log('Pin/Unpin response:', result);
+
+			setMessages(prevMessages =>
+				prevMessages.map(section => ({
+					...section,
+					data: section.data.map(msg =>
+						msg.id === messageId
+							? { ...msg, isPinned: !pinned }
+							: msg
+					)
+				}))
+			);
+
+			setPinnedMessages(prev => {
+				if (pinned) {
+					return prev.filter(msg => msg.id !== messageId);
+				} else {
+					const newPinnedMessage = messages.flatMap(section =>
+						section.data.filter(msg => msg.id === messageId)
+					)[0];
+					return [...prev, newPinnedMessage];
+				}
+			});
+		} catch (error) {
+			console.error('Error toggling pin:', error);
+		}
+	}, [messages]);
+
+	const handleReactionAdded = useCallback((messageId, newReaction) => {
+    console.log('handleReactionAdded:', { messageId, newReaction });
+    
+    setMessages(prevMessages => 
+        prevMessages.map(section => ({
+            ...section,
+            data: section.data.map(msg => {
+                if (msg.id === messageId) {
+                    if (!newReaction) {
+                        // If reaction is null, remove all reactions
+                        return {
+                            ...msg,
+                            reactions: { $values: [] }
+                        };
+                    }
+                    
+                    // Initialize reactions if they don't exist
+                    const currentReactions = msg.reactions?.$values || [];
+                    
+                    // Remove old reaction from same user if exists
+                    const filteredReactions = currentReactions.filter(
+                        r => r?.reactedByUser?.id !== user?.id
+                    );
+                    
+                    return {
+                        ...msg,
+                        reactions: {
+                            $values: [...filteredReactions, newReaction].filter(Boolean)
+                        }
+                    };
+                }
+                return msg;
+            })
+        }))
+    );
+}, [user?.id]);
+
 	return {
-		messages,
+		messages: messages || [], // Ensure messages is always an array
+		currentUserId: user?.id, // Add currentUserId to return object
 		loading,
 		hasMore,
 		page,
@@ -202,6 +329,10 @@ const useChatPrivate = (recipientId) => {
 		replyId,
 		swipeToReply,
 		closeReplyBox,
+		deleteMessage,
+		togglePin,
+		pinnedMessages,
+		handleReactionAdded,
 	};
 }
 

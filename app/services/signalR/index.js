@@ -1,7 +1,8 @@
 import {HubConnectionBuilder, LogLevel} from '@microsoft/signalr';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Subject} from 'rxjs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {baseURL} from '../axiosInstance';
+import { PeerService } from '../peer';
 
 class SignalRService {
 	constructor() {
@@ -12,6 +13,7 @@ class SignalRService {
 		this.typingReceived$ = new BehaviorSubject(null);
 		this.groupCreated$ = new BehaviorSubject(null);
 		this.notificationReceived$ = new BehaviorSubject(null);
+		this.reactionReceived$ = new Subject();
 		this.registerListeners();
 	}
 
@@ -68,7 +70,12 @@ class SignalRService {
 
 		this.hubConnection.on('ReactionAdded', (reaction) => {
 			console.log('Reaction added:', reaction);
-			this.messageReceived$.next({type: 'ReactionAdded', reaction});
+			this.reactionReceived$.next({
+				messageId: reaction.chatId,
+				reaction: reaction.reactionType,
+				userId: reaction.userId,
+				hasNewMessage: reaction.hasNewMessage
+			});
 		});
 
 		this.hubConnection.on('ReactionRemoved', (reaction) => {
@@ -102,6 +109,10 @@ class SignalRService {
 			this.typingReceived$.next({ senderId, isTyping: false });
 		});
 
+		// Add reaction received handler
+		this.hubConnection.on("ReceiveReaction", (messageId, reaction, userId) => {
+			this.reactionReceived$.next({ messageId, reaction, userId });
+		});
 
 		// Thêm reconnection logic
 		this.hubConnection.onreconnected(() => {
@@ -144,6 +155,18 @@ class SignalRService {
 		}
 	}
 
+	async initializeAfterLogin() {
+		try {
+			await this.startConnection();
+			// Initialize PeerService after SignalR is connected
+			const peerService = PeerService.getInstance();
+			await peerService.initializePeer();
+			return true;
+		} catch (error) {
+			console.error('Error initializing services after login:', error);
+			return false;
+		}
+	}
 
 	stopConnection() {
 		if (!this.isConnected) return;

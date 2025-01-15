@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState, useRef} from 'react';
 import {View, SectionList, Text, ActivityIndicator, Image} from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import {useSharedValue, useAnimatedStyle, withTiming} from 'react-native-reanimated';
@@ -20,7 +20,7 @@ function ChatPrivateContainer({navigation}) {
 	const avatar = route.params?.avatar;
 	const fullName = route.params?.contactNickName || route.params?.contactFullName;
 	const {
-		messages,
+		messages = [],
 		loading,
 		hasMore,
 		page,
@@ -35,12 +35,20 @@ function ChatPrivateContainer({navigation}) {
 		replyId,
 		swipeToReply,
 		closeReplyBox,
+		deleteMessage,
+		togglePin,
+		pinnedMessages,
+		handleReactionAdded,
+		currentUserId, // Thêm currentUserId từ hook
 	} = useChatPrivate(recipientId);
 
 	const [opened, setOpen] = useState(false);
 	const opacity = useSharedValue(0);
 	const transform = useSharedValue(30);
 
+	const handleMessageDeleted = useCallback((messageId) => {
+		deleteMessage(messageId);
+	}, [deleteMessage]);
 
 	const animation = useAnimatedStyle(() => {
 		return {
@@ -62,6 +70,11 @@ function ChatPrivateContainer({navigation}) {
 	useEffect(() => {
 		fetchMessages(1);
 	}, [recipientId]);
+
+	// Thêm debug log để kiểm tra dữ liệu messages
+    useEffect(() => {
+        console.log('Messages in container:', messages);
+    }, [messages]);
 
 	// Component TypingIndicator
 	const TypingIndicatorRender = () => {
@@ -96,6 +109,69 @@ function ChatPrivateContainer({navigation}) {
 		setPositionMessage(null);
 	}, []);
 
+	const sectionListRef = useRef(null);
+
+	const handleScrollToMessage = useCallback((messageId) => {
+		console.log('Scrolling to message:', messageId);
+		
+		// Find section and message indices
+		let targetSectionIndex = -1;
+		let targetItemIndex = -1;
+
+		messages.forEach((section, sectionIndex) => {
+			const itemIndex = section.data.findIndex(msg => msg.id === messageId);
+			if (itemIndex !== -1) {
+				targetSectionIndex = sectionIndex;
+				targetItemIndex = itemIndex;
+			}
+		});
+
+		if (targetSectionIndex !== -1 && targetItemIndex !== -1) {
+			// Scroll to message
+			sectionListRef.current?.scrollToLocation({
+				sectionIndex: targetSectionIndex,
+				itemIndex: targetItemIndex,
+				animated: true,
+				viewPosition: 0.5, // Center the item
+			});
+
+			// Optional: Highlight the message temporarily
+			const targetMessage = messages[targetSectionIndex].data[targetItemIndex];
+			if (targetMessage) {
+				// Add visual feedback like highlighting
+				// You can implement this by adding a temporary style to the message
+			}
+		}
+	}, [messages]);
+
+	const handleSendMedia = useCallback(async (media) => {
+        try {
+            if (!media?.uri) {
+                throw new Error('Invalid media file');
+            }
+
+            const attachment = {
+                uri: media.uri,
+                type: media.type || 'application/octet-stream',
+                fileName: media.fileName,
+                fileSize: media.fileSize
+            };
+
+            console.log('Sending media attachment:', attachment);
+            
+            // Pass the attachment directly
+            const response = await sendMessage('', attachment, null);
+            console.log('Send media response:', response);
+            
+            if (response) {
+                console.log('Media sent successfully');
+                setOpen(false);
+            }
+        } catch (error) {
+            console.error('Error sending media:', error);
+        }
+    }, [sendMessage, setOpen]);
+
 	return (
 		<GestureHandlerRootView style={{flex: 1}}>
 			<View className="flex-1 bg-white relative">
@@ -106,9 +182,29 @@ function ChatPrivateContainer({navigation}) {
 						reducedTransparencyFallbackColor="black"
 					/>
 				)}
-				<HeaderPrivateChat navigation={navigation}/>
+				<HeaderPrivateChat 
+					navigation={navigation}
+					messages={messages}
+					onScrollToMessage={handleScrollToMessage}
+					item={route.params} // Truyền toàn bộ route.params
+				/>
+				{pinnedMessages.length > 0 && (
+					<View className="px-4 py-2 bg-gray-200">
+						<Text className="font-rubik text-xs mb-1">Pinned Messages:</Text>
+						{pinnedMessages.map((msg) => (
+							<Text
+								key={msg.id}
+								className="text-black text-xs mb-1"
+								onPress={() => handleScrollToMessage(msg.id)}
+							>
+								{msg.message}
+							</Text>
+						))}
+					</View>
+				)}
 				<View className="px-5 flex-1">
 					<SectionList
+						ref={sectionListRef}
 						sections={messages}
 						keyExtractor={useCallback((item) => item.id, [])}
 						renderItem={useCallback(({item}) => (
@@ -117,6 +213,7 @@ function ChatPrivateContainer({navigation}) {
 								onSwipe={swipeToReply}
 								onLongPress={handleMessageLongPress}
 								onCloseActions={handleCloseActions}
+								onReactionAdded={handleReactionAdded} // Add this prop
 							/>
 						), [swipeToReply, handleMessageLongPress, handleCloseActions, selectedMessage, positionMessage])}
 
@@ -162,8 +259,14 @@ function ChatPrivateContainer({navigation}) {
 							{/* Actions Layer - Trực tiếp render với selectedMessage */}
 							<MessageOverlay
 								message={selectedMessage}
+								messageId={selectedMessage?.id}
 								position={positionMessage}
 								onClose={handleCloseActions}
+								onMessageDeleted={handleMessageDeleted}
+								pinned={selectedMessage?.pinned}
+								onPinToggle={togglePin}
+								onReactionAdded={handleReactionAdded}
+								currentUserId={currentUserId} // Thêm currentUserId
 							/>
 						</View>
 					)}
@@ -182,7 +285,7 @@ function ChatPrivateContainer({navigation}) {
 				</View>
 
 				{/*Attachment Menu*/}
-				<DropUp animation={animation} opened={opened} setOpen={setOpen}/>
+				<DropUp animation={animation} opened={opened} setOpen={setOpen} onSendMedia={handleSendMedia} recipientId={recipientId} />
 			</View>
 		</GestureHandlerRootView>
 	);

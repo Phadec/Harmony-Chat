@@ -40,6 +40,7 @@ function MessageCard({item, navigation}) {
 			status: item.status,
 			avatar: {uri: avatarUrl},
 			online: item.online,
+			item: item, // Pass the entire item object
 		},
 		onSelectCallbacks: {
 			// Tùy chỉnh các callback cho message

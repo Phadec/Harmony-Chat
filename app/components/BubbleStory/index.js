@@ -22,7 +22,7 @@ function BubbleStory({item, navigation}) {
 
 	return (
 		<Button className="w-16 h-16 rounded-3xl items-center justify-center mr-4"
-				onPress={() => navigation.navigate('Chat', {
+				onPress={() => navigation.navigate('ChatPrivate', {
 					recipientId: item.contactId,
 					contactFullName: item.contactFullName,
 					contactNickname: item.contactNickname,
