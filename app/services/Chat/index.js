@@ -55,61 +55,53 @@ export class ChatService {
 	async sendMessage(recipientId, message, attachment, RepliedToMessageId) {
         try {
             const userId = await AsyncStorage.getItem('userId');
-            const formData = new FormData();
+            
+            // Create request body as plain object first
+            const requestData = {
+                UserId: userId?.toString() || '',
+                RecipientId: recipientId?.toString() || '',
+                Message: message || '',
+                RepliedToMessageId: RepliedToMessageId?.toString() || ''
+            };
 
-            formData.append('UserId', userId ? userId.toString() : '');
-            formData.append('RecipientId', recipientId ? recipientId.toString() : '');
-            formData.append('Message', message || '');
-            formData.append('RepliedToMessageId', RepliedToMessageId ? RepliedToMessageId.toString() : '');
+            // Log the request data
+            console.log('Sending message request:', requestData);
 
+            let formData = new FormData();
+            
+            // Append data to FormData
+            Object.keys(requestData).forEach(key => {
+                formData.append(key, requestData[key]);
+            });
+
+            // Add attachment if exists
             if (attachment) {
-                console.log('Processing attachment:', attachment);
-                
-                // Ensure file name doesn't have spaces and special characters
-                const safeFileName = (attachment.fileName || "attachment").replace(/[^a-z0-9.]/gi, '_');
-                
                 const file = {
                     uri: Platform.OS === 'android' ? attachment.uri : attachment.uri.replace('file://', ''),
                     type: attachment.type || 'application/octet-stream',
-                    name: safeFileName
+                    name: attachment.fileName || 'attachment'
                 };
-
-                console.log('Adding file to FormData:', file);
-
-                formData.append('Attachment', file); // Ensure the file is appended
-
-                // Log FormData after
-                console.log('FormData after attachment:', formData);
+                formData.append('Attachment', file);
             }
 
-            console.log('Sending request to:', `${ApiUrl}/send-message`);
-
+            // Make the request
             const response = await axiosInstance.post(
                 `${ApiUrl}/send-message`, 
                 formData,
                 {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
                         'Accept': 'application/json',
-                    },
-                    transformRequest: (data, headers) => {
-                        // Don't transform FormData
-                        return data;
-                    },
+                        'Content-Type': 'multipart/form-data'
+                    }
                 }
             );
 
-            console.log('Server response:', {
-                status: response.status,
-                data: response.data
-            });
-
+            console.log('Server response:', response.data);
             return response.data;
         } catch (error) {
             console.error('Send message error:', {
-                message: error.message,
-                responseData: error.response?.data,
-                status: error.response?.status
+                error: error.message,
+                data: error.response?.data
             });
             throw error;
         }

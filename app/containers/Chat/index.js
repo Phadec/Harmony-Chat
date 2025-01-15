@@ -221,7 +221,7 @@ function formatChatsByDate(messages, userId) {
 
 function PinnedMessages({ pinnedMessages, onPinnedMessagePress }) {
 	return (
-		<View className="bg-light p-4 rounded-b-3xl">
+		<View className="bg-red p-4 rounded-b-3xl">
 			<Text className="font-rubik font-medium text-sm text-black mb-2">Pinned Messages</Text>
 			{pinnedMessages.map((message) => (
 				<TouchableOpacity key={message.id} onPress={() => onPinnedMessagePress(message.id)}>

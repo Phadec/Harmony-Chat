@@ -24,9 +24,11 @@ function HeaderPrivateChat({navigation, messages = [], onScrollToMessage, isGrou
 	// Set default value
 	const insets = useSafeAreaInsets();
 	const route = useRoute();
-	const item = route.params?.item;
-	const avatarUrl = `${baseURL}/${item?.avatar}`; // Correct avatarUrl
+	const item = isGroupChat ? route.params : route.params?.item;
+	const avatarUrl = isGroupChat ? item?.avatar?.uri: `${baseURL}/${item?.avatar}`; // Correct avatarUrl
 	const [searchVisible, setSearchVisible] = useState(false);
+
+	console.log('HeaderPrivateChat:', route);
 
 	const handleMessagePress = message => {
 		if (message && message.id) {
@@ -95,7 +97,7 @@ function HeaderPrivateChat({navigation, messages = [], onScrollToMessage, isGrou
 	  
 			<View className="ml-3">
 			  <Text className="font-rubik font-medium text-sm text-white">
-				{item?.contactFullName}
+				{isGroupChat ? item?.nameGroup : item?.contactFullName}
 			  </Text>
 			  <View className="flex-row items-center">
 				{isGroupChat ? (

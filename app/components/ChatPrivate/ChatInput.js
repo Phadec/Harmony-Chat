@@ -151,31 +151,48 @@ const ChatInput = ({
 	}, []);
 
 	const handleSend = useCallback(async () => {
-		if (!message.trim()) return;
+        try {
+            // Only allow sending if there's a message or it's a reply
+            if (!message.trim() && !replyId) return;
 
-		try {
-			console.log('Sending message with:', {
-				message: message.trim(),
-				replyId,
-				hasReply: !!reply
-			});
+            console.log('Attempting to send message with reply:', {
+                message: message.trim(),
+                replyToId: replyId, // Log the actual replyId
+                replyContent: reply
+            });
 
-			const success = await onSend(message.trim(), replyId);
-			console.log('Send result:', success);
+            // Send message with explicit replyId
+            const result = await onSend(
+                message.trim(), 
+                null, 
+                replyId || null // Ensure replyId is explicitly null if not present
+            );
 
-			if (success) {
-				setMessage('');
-				notifyStopTyping();
-				
-				// Đóng reply box sau khi gửi thành công
-				if (reply) {
-					closeReply();
-				}
-			}
-		} catch (error) {
-			console.error('Error in handleSend:', error);
-		}
-	}, [message, onSend, notifyStopTyping, reply, replyId, closeReply]);
+            if (result) {
+                console.log('Message sent successfully:', result);
+                setMessage('');
+                notifyStopTyping();
+                
+                // Clear reply after successful send
+                if (closeReply) {
+                    closeReply();
+                }
+            }
+        } catch (error) {
+            console.error('Error in handleSend:', error);
+        }
+    }, [message, onSend, notifyStopTyping, replyId, reply, closeReply]);
+
+    // Add effect to verify reply props
+    useEffect(() => {
+        if (reply || replyId) {
+            console.log('Reply state:', {
+                replyId,
+                replyContent: reply,
+                hasCloseReply: !!closeReply
+            });
+        }
+    }, [reply, replyId, closeReply]);
 
 	const handleMessageChange = useCallback((text) => {
 		setMessage(text);
@@ -205,6 +222,9 @@ const ChatInput = ({
 			inputRef.current?.focus();
 		}, 100);
 	}, [showEmojiPicker]);
+
+	// Disable send button only if no message AND no reply
+	const isDisabled = !message.trim() && !replyId;
 
 	return (
 		<KeyboardAvoidingView 
@@ -239,7 +259,7 @@ const ChatInput = ({
 
 					<Button
 						onPress={handleSend}
-						disabled={!message.trim()}
+						 disabled={isDisabled}
 						className={`rounded-full bg-main items-center justify-center mt-2 ml-6 ${
 							showEmojiPicker ? 'w-10 h-10' : 'w-12 h-12 mt-3'
 						}`}
@@ -281,9 +301,17 @@ const ChatInput = ({
 
 // Tối ưu việc re-render với custom compare function
 export default memo(ChatInput, (prevProps, nextProps) => {
-	return (
+	const propsEqual = 
 		prevProps.reply === nextProps.reply &&
+		prevProps.replyId === nextProps.replyId &&
 		prevProps.me === nextProps.me &&
-		prevProps.fullName === nextProps.fullName
-	);
+		prevProps.fullName === nextProps.fullName;
+		
+	console.log('ChatInput memo check:', {
+		propsEqual,
+		prevReplyId: prevProps.replyId,
+		nextReplyId: nextProps.replyId
+	});
+	
+	return propsEqual;
 });

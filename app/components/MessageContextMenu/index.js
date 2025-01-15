@@ -45,15 +45,8 @@ function ContextMenuActions({me, onClose, messageId, onMessageDeleted, pinned, o
             id: pinned ? 'unpin' : 'pin',
             label: pinned ? 'Unpin' : 'Pin',
             icon: '📌',
-            onPress: handlePinToggle
-        },
-        {
-            id: 'more',
-            label: 'More',
-            icon: '🗑',
-            onPress: () => {
-                console.log('More');
-            }
+            onPress: handlePinToggle,
+            textColor: '#3182CE' // Màu xanh cho Pin
         }
     ];
 

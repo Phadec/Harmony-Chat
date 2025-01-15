@@ -14,6 +14,7 @@ class SignalRService {
 		this.groupCreated$ = new BehaviorSubject(null);
 		this.notificationReceived$ = new BehaviorSubject(null);
 		this.reactionReceived$ = new Subject();
+		this.connectionState$ = new Subject();
 		this.registerListeners();
 	}
 
@@ -117,29 +118,54 @@ class SignalRService {
 		// Thêm reconnection logic
 		this.hubConnection.onreconnected(() => {
 			console.log('SignalR reconnected');
+			this.connectionState$.next(true);
 		});
-		// this.hubConnection.onclose((error) => {
-		// 	console.error('SignalR connection closed:', error);
-		// 	this.isConnected = false;
-		// });
+		this.hubConnection.onclose(() => {
+			this.connectionState$.next(false);
+		});
 	}
 
-	startConnection() {
-		if (this.isConnected) return;
+	async startConnection() {
+		if (!this.hubConnection) {
+			this.hubConnection = new HubConnectionBuilder()
+				.withUrl(`${baseURL}/chat-hub`, {
+					accessTokenFactory: this.getAccessToken,
+				})
+				.configureLogging(LogLevel.Information)
+				.withAutomaticReconnect([0, 2000, 10000, 30000])
+				.build();
+		}
 
-		this.hubConnection
-			.start()
-			.then(() => {
-				this.isConnected = true;
-				this.reconnectAttempts = 0;
-				console.log('SignalR connection established.');
-			})
-			.catch((err) => {
-				console.error('Error while starting SignalR connection: ', err);
-				this.isConnected = false;
-				this.reconnectAttempts++;
-				this.retryConnection();
-			});
+		try {
+			await this.hubConnection.start();
+			this.isConnected = true;
+			this.reconnectAttempts = 0;
+			this.connectionState$.next(true);
+			console.log('SignalR connection established.');
+		} catch (err) {
+			console.error('Error while starting SignalR connection: ', err);
+			this.isConnected = false;
+			this.reconnectAttempts++;
+			this.connectionState$.next(false);
+			this.retryConnection();
+		}
+	}
+
+	async ensureConnection() {
+		if (!this.hubConnection || this.hubConnection.state !== 'Connected') {
+			await this.startConnection();
+		}
+		return this.hubConnection;
+	}
+
+	async invoke(methodName, ...args) {
+		try {
+			await this.ensureConnection();
+			return await this.hubConnection.invoke(methodName, ...args);
+		} catch (error) {
+			console.error(`Error invoking ${methodName}:`, error);
+			throw error;
+		}
 	}
 
 	retryConnection() {
@@ -183,13 +209,13 @@ class SignalRService {
 	}
 
 	startTyping(recipientId) {
-		this.hubConnection.invoke('NotifyTyping', recipientId, true)
+		this.invoke('NotifyTyping', recipientId, true)
 			.then(() => console.log('Typing notification sent.'))
 			.catch(err => console.error('Error sending typing notification:', err));
 	}
 
 	stopTyping(recipientId) {
-		this.hubConnection.invoke('NotifyStopTyping', recipientId)
+		this.invoke('NotifyStopTyping', recipientId)
 			.then(() => console.log('StopTyping notification sent.'))
 			.catch(err => console.error('Error sending stop typing notification:', err));
 	}

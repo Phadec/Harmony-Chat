@@ -189,7 +189,7 @@ function GroupChatContainer({navigation}) {
 					isGroupChat={true} // Thêm prop isGroupChat
 				/>
 				{pinnedMessages.length > 0 && (
-					<View className="px-4 py-2 bg-gray-200">
+					<View className="px-4 py-2 bg-red">
 						<Text className="font-rubik text-xs mb-1">Pinned Messages:</Text>
 						{pinnedMessages.map((msg) => (
 							<Text
