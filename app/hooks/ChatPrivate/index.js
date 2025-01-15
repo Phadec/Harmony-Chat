@@ -30,17 +30,31 @@ const useChatPrivate = (recipientId) => {
 
 	// Hàm xử lý khi người dùng vuốt tin nhắn để trả lời
 	const swipeToReply = useCallback((messageData, me, messageId) => {
-        console.log('SwipeToReply:', { messageData, me, messageId });
+        if (!messageId) {
+            console.error('No messageId provided for reply');
+            return;
+        }
+        
+        console.log('Setting up reply:', { messageData, messageId, me });
+        
+        const messageIdString = messageId?.toString();
         setReplyTo(messageData);
         setIsSelf(me);
-        setReplyId(messageId); // Đảm bảo messageId được truyền đúng
+        setReplyId(messageIdString);
     }, []);
 
 	// Đóng reply box
-	const closeReplyBox = () => {
-		setReplyTo(null);
-		setReplyId(null);
-	}
+	const closeReplyBox = useCallback(() => {
+        console.log('Closing reply box, current states:', {
+            replyTo,
+            replyId,
+            isSelf
+        });
+        
+        setReplyTo(null);
+        setReplyId(null);
+        setIsSelf(false);
+    }, []);
 
 	// Gọi API lấy tin nhắn giữa người dùng và người nhận
 	const fetchMessages = useCallback(async (pageNumber) => {
@@ -77,35 +91,32 @@ const useChatPrivate = (recipientId) => {
 	}, [recipientId, hasMore]);
 
 	// Sửa lại hàm sendMessage để xử lý reply
-    const sendMessage = useCallback(async (messageText, replyToId = null) => {
+    const sendMessage = useCallback(async (messageText, attachment = null, replyToId = null) => {
         try {
-            console.log('Sending message:', {
+            // Log để debug
+            console.log('SendMessage called with:', {
                 messageText,
-                replyToId,
-                recipientId
+                hasAttachment: !!attachment,
+                replyToId
             });
 
-            if (!messageText?.trim()) {
-                console.error('Empty message');
+            if (!messageText?.trim() && !attachment && !replyToId) {
                 return false;
             }
 
             const response = await chatService.current.sendMessage(
                 recipientId,
-                messageText.trim(),
-                null,
-                replyToId // Đảm bảo truyền replyToId
+                messageText?.trim() || '',
+                attachment,
+                replyToId
             );
 
-            console.log('Send response:', response);
-
             if (response) {
-                // Cập nhật messages với thông tin reply
                 setMessages(prev => {
                     const formattedMessage = formatMessages([{
                         ...response,
-                        message: messageText.trim(),
-                        repliedToMessage: response.repliedToMessage, // Lấy từ response
+                        message: messageText?.trim() || '[File]',
+                        repliedToMessage: response.repliedToMessage,
                         repliedToId: replyToId
                     }], recipientId)[0];
 
@@ -121,6 +132,11 @@ const useChatPrivate = (recipientId) => {
                     return [formattedMessage, ...prev];
                 });
 
+                // Move closeReplyBox call here after successful send
+                if (replyToId) {
+                    closeReplyBox();
+                }
+
                 return true;
             }
 
@@ -129,7 +145,7 @@ const useChatPrivate = (recipientId) => {
             console.error('Error sending message:', error);
             return false;
         }
-    }, [recipientId]);
+    }, [recipientId, closeReplyBox]);
 
 	// tải thêm tin nhắn cũ.
 	const handleEndReached = useCallback(() => {
@@ -195,12 +211,22 @@ const useChatPrivate = (recipientId) => {
 	}, [recipientId]);
 
 	// Gửi sự kiện "typing" và "stop typing" khi người dùng nhập tin nhắn
-	const notifyTyping = useCallback(() => {
-		signalR.current.hubConnection.invoke("NotifyTyping", recipientId, true);
+	const notifyTyping = useCallback(async () => {
+		try {
+			await signalR.current.invoke("NotifyTyping", recipientId, true);
+		} catch (error) {
+			// Silently fail for typing notifications
+			console.warn('Failed to send typing notification:', error);
+		}
 	}, [recipientId]);
 
-	const notifyStopTyping = useCallback(() => {
-		signalR.current.hubConnection.invoke("NotifyTyping", recipientId, false);
+	const notifyStopTyping = useCallback(async () => {
+		try {
+			await signalR.current.invoke("NotifyTyping", recipientId, false);
+		} catch (error) {
+			// Silently fail for typing notifications
+			console.warn('Failed to send stop typing notification:', error);
+		}
 	}, [recipientId]);
 
 	// Add delete message function
@@ -311,6 +337,19 @@ const useChatPrivate = (recipientId) => {
         }))
     );
 }, [user?.id]);
+
+	// Add connection state handling
+	useEffect(() => {
+		const subscription = signalR.current.connectionState$.subscribe(
+			isConnected => {
+				if (!isConnected) {
+					setIsTyping(false); // Reset typing indicator if connection is lost
+				}
+			}
+		);
+
+		return () => subscription.unsubscribe();
+	}, []);
 
 	return {
 		messages: messages || [], // Ensure messages is always an array

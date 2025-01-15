@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text} from 'react-native';
+import {View, Text, Alert} from 'react-native';
 import Animated from 'react-native-reanimated';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {Button} from '@/components';
@@ -8,52 +8,122 @@ import * as ImagePicker from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function DropUp ({animation, opened, setOpen, onSendMedia, recipientId}) {
+function DropUp({animation, opened, setOpen, onSendMedia, recipientId}) {
     const handleUpload = async (type) => {
-        console.log('handleUpload called with type:', type); // Add debug log
         try {
             let result;
-            const options = {
-                mediaType: 'mixed', // 'photo', 'video', or 'mixed'
-                includeBase64: false,
-            };
-
-            if (type === 'camera') {
-                result = await ImagePicker.launchCamera(options);
-            } else if (type === 'photo' || type === 'video') {
-                result = await ImagePicker.launchImageLibrary(options);
-            } else if (type === 'file') {
-                result = await DocumentPicker.pick({
-                    type: [DocumentPicker.types.allFiles],
-                });
+            
+            switch (type) {
+                case 'camera':
+                    result = await ImagePicker.launchCamera({
+                        mediaType: 'mixed',
+                        quality: 0.8,
+                        includeBase64: false,
+                        saveToPhotos: true,
+                    });
+                    // Ensure fileName includes extension for camera uploads
+                    if (result?.assets?.[0]) {
+                        const asset = result.assets[0];
+                        const uriParts = asset.uri?.split('.');
+                        let fileExt = uriParts && uriParts.length > 1 ? uriParts.pop().toLowerCase() : '';
+                        
+                        // Check if the file is a video and set extension to 'mp4' if missing or incorrect
+                        if (asset.type?.startsWith('video/') && (fileExt !== 'mp4')) {
+                            fileExt = 'mp4';
+                        } else if (!fileExt) {
+                            fileExt = asset.type?.startsWith('image/') ? 'jpg' : 'txt';
+                        }
+                        
+                        asset.fileName = `${type}_${Date.now()}.${fileExt}`;
+                    }
+                    break;
+                    
+                case 'photo':
+                    result = await ImagePicker.launchImageLibrary({
+                        mediaType: 'mixed',
+                        quality: 0.8,
+                        includeBase64: false,
+                        selectionLimit: 1,
+                    });
+                    // Ensure fileName includes extension for photo uploads
+                    if (result?.assets?.[0]) {
+                        const asset = result.assets[0];
+                        const uriParts = asset.uri?.split('.');
+                        let fileExt = uriParts && uriParts.length > 1 ? uriParts.pop().toLowerCase() : '';
+                        
+                        // Check if the file is a video and set extension to 'mp4' if missing or incorrect
+                        if (asset.type?.startsWith('video/') && (fileExt !== 'mp4')) {
+                            fileExt = 'mp4';
+                        } else if (!fileExt) {
+                            fileExt = asset.type?.startsWith('image/') ? 'jpg' : 'txt';
+                        }
+                        
+                        asset.fileName = `${type}_${Date.now()}.${fileExt}`;
+                    }
+                    break;
+                    
+                case 'file':
+                    result = await DocumentPicker.pick({
+                        type: [DocumentPicker.types.allFiles],
+                        copyTo: 'cachesDirectory',
+                    });
+                    if (result && result[0]) {
+                        const fileExt = result[0].name?.split('.').pop()?.toLowerCase() || 'txt';
+                        result = {
+                            assets: [{
+                                uri: result[0].fileCopyUri || result[0].uri,
+                                type: result[0].type || `application/${fileExt}`,
+                                fileName: `${result[0].name || `file_${Date.now()}`}.${fileExt}`,
+                                fileSize: result[0].size
+                            }]
+                        };
+                    }
+                    break;
             }
 
-            if (result && result.assets && result.assets.length > 0) {
+            if (result?.assets?.[0]) {
                 const file = result.assets[0];
-                console.log('Selected file:', file);
-                console.log('Recipient ID:', recipientId); // Use passed-in prop
-
-                if (!recipientId) {
-                    throw new Error('Recipient ID is missing');
+                
+                const maxSize = 10 * 1024 * 1024;
+                if (file.fileSize > maxSize) {
+                    Alert.alert('Error', 'File size must be less than 10MB');
+                    return;
                 }
 
-                // Ensure the file has a valid extension
-                if (!file.fileName || !file.fileName.includes('.')) {
-                    const extension = file.type.split('/').pop();
-                    file.fileName = `${file.fileName || 'file'}.${extension}`;
-                }
+                const fileExt = file.fileName?.split('.').pop()?.toLowerCase() || '';
+                let mimeType = file.type;
 
-                // Pass the file to parent for sending
-                if (onSendMedia) {
-                    try {
-                        await onSendMedia(file);
-                    } catch (error) {
-                        console.error('onSendMedia error:', error);
+                // Determine MIME type based on file extension
+                if (!mimeType) {
+                    switch (fileExt) {
+                        case 'mp4':
+                            mimeType = 'video/mp4';
+                            break;
+                        case 'jpg':
+                        case 'jpeg':
+                            mimeType = 'image/jpeg';
+                            break;
+                        case 'png':
+                            mimeType = 'image/png';
+                            break;
+                        case 'pdf':
+                            mimeType = 'application/pdf';
+                            break;
+                        // ...add other MIME types as needed...
+                        default:
+                            mimeType = `application/${fileExt}`;
                     }
+                    file.type = mimeType;
                 }
+
+                // Gửi file với message là chuỗi rỗng
+                await onSendMedia({ ...file, extension: fileExt });
+                setOpen(false);
             }
         } catch (err) {
-            console.log('ImagePicker Error: ', err);
+            if (!DocumentPicker.isCancel(err)) {
+                Alert.alert('Error', 'Failed to upload file');
+            }
         }
     };
 

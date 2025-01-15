@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState, useRef} from 'react';
-import {View, SectionList, Text, ActivityIndicator, Image} from 'react-native';
+import {View, SectionList, Text, ActivityIndicator, Image, Alert} from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import {useSharedValue, useAnimatedStyle, withTiming} from 'react-native-reanimated';
 import {GestureHandlerRootView} from "react-native-gesture-handler";
@@ -153,24 +153,24 @@ function ChatPrivateContainer({navigation}) {
             const attachment = {
                 uri: media.uri,
                 type: media.type || 'application/octet-stream',
-                fileName: media.fileName,
+                fileName: media.fileName || 'attachment',
                 fileSize: media.fileSize
             };
-
-            console.log('Sending media attachment:', attachment);
             
-            // Pass the attachment directly
-            const response = await sendMessage('', attachment, null);
-            console.log('Send media response:', response);
+            const response = await sendMessage('', attachment, replyId);
             
             if (response) {
-                console.log('Media sent successfully');
                 setOpen(false);
+                // Reply box will be closed by the hook after successful send
             }
         } catch (error) {
-            console.error('Error sending media:', error);
+            if (error.message?.includes('connection is not in the \'Connected\' State')) {
+                Alert.alert('Error', 'Lost connection to server. Please try again.');
+            } else {
+                Alert.alert('Error', 'Failed to send media');
+            }
         }
-    }, [sendMessage, setOpen]);
+    }, [sendMessage, setOpen, replyId]);
 
 	return (
 		<GestureHandlerRootView style={{flex: 1}}>
