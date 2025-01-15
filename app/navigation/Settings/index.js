@@ -4,8 +4,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {enableScreens} from 'react-native-screens';
 
 // Containers
-import {SettingsContainer, AccountSettingsContainer, ChatSettingsContainer, SecuritySettingsContainer, AboutContainer, FAQsContainer, InviteFriendsContainer, StorageSettingsContainer, InvitationsContainer, BlockedUsersContainer} from '@/containers';
-import { ProfileContainer } from '../../containers';
+import {SettingsContainer, AccountSettingsContainer, ChatSettingsContainer, SecuritySettingsContainer, AboutContainer, FAQsContainer, InviteFriendsContainer, StorageSettingsContainer, InvitationsContainer, BlockedUsersContainer, ProfileContainer} from '@/containers';
 
 enableScreens();
 

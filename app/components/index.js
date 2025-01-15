@@ -16,6 +16,7 @@ import GroupCard from './GroupCard';
 import SettingItem from './SettingItem';
 import CustomContextMenu from './ContextMenu';
 import FriendAddGroupCard from "./FriendAddGroup";
+import ActionSheet from './ActionSheet';
 
 // Chat Private
 import HeaderPrivateChat from './ChatPrivate/Header';
@@ -30,5 +31,5 @@ export {
 	TabBar, TabBarIcon, Button, Input, Header, BubbleStory, CustomContextMenu,
 	MessageCard, FriendCard, FriendSearchCard, FriendRequestCard, GroupCard,
 	GroupMessageCard, SettingItem, CustomBackdrop, FriendAddGroupCard,
-	HeaderPrivateChat, DropUp, ChatInput, ChatMessage, TypingIndicator
+	HeaderPrivateChat, DropUp, ChatInput, ChatMessage, TypingIndicator, ActionSheet
 };

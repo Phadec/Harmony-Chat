@@ -125,9 +125,10 @@ export class FriendService {
 	}
 
 	async blockUser(friendId) {
-        try {
+      try {
 			const userId = await AsyncStorage.getItem('userId');
             const response = await axiosInstance.post(`${API_URL}/${userId}/block/${friendId}`);
+
 			if (response.status === 200) {
 				return true;
 			}
@@ -137,4 +138,32 @@ export class FriendService {
             throw error;
         }
     }
+
+	async unblockUser(friendId) {
+		try {
+			const userId = await AsyncStorage.getItem('userId');
+            const response = await axiosInstance.post(`${API_URL}/${userId}/unblock/${friendId}`);
+
+			if (response.status === 200) {
+				return true;
+			}
+
+			console.log("ERROR Message:", response.data)
+		} catch (error) {
+			console.error('Unblock user error:', error);
+			throw error;
+		}
+	}
+	
+	async getBlockedUsers() {
+		try {
+			const userId = await AsyncStorage.getItem('userId');
+            const response = await axiosInstance.get(`${API_URL}/${userId}/blocked-users`);
+			return response.data;
+		} catch (error) {
+			console.error('Get blocked users error:', error);
+			throw error;
+		}
+	}
+
 }

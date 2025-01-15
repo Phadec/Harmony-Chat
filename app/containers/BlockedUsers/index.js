@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Toast from 'react-native-toast-message';
 
@@ -10,42 +10,25 @@ import Layout from '@/Layout';
 // Commons
 import { Colors } from '@/common';
 
-const mockBlockedUsers = [
-    {
-        id: '1',
-        name: 'John Doe',
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-        blockedDate: '2024-02-15',
-        mutualFriends: 5
-    },
-    {
-        id: '2',
-        name: 'Jane Smith',
-        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-        blockedDate: '2024-02-10',
-        mutualFriends: 3
-    },
-    {
-        id: '3',
-        name: 'Mike Johnson',
-        avatar: 'https://randomuser.me/api/portraits/men/52.jpg',
-        blockedDate: '2024-02-08',
-        mutualFriends: 8
-    }
-];
+// Services
+import { FriendService } from '@/services';
+
+import {baseURL} from "../../services/axiosInstance";
 
 function BlockedUserItem({ user, onUnblock }) {
     return (
         <View className="flex-row items-center justify-between bg-white p-4 mb-3 rounded-2xl">
             <View className="flex-row items-center flex-1">
                 <Image
-                    source={{ uri: user.avatar }}
+                    source={{ uri: `${baseURL}/${user.blockedAvatar}`}}
                     className="w-12 h-12 rounded-full"
                 />
                 <View className="ml-3 flex-1">
-                    <Text className="font-rubik font-medium text-base">{user.name}</Text>
+                    <Text className="font-rubik font-medium text-base">
+                        {user.blockedFullName}
+                    </Text>
                     <Text className="font-rubik text-xs text-black/40">
-                        {user.mutualFriends} mutual friends • Blocked on {new Date(user.blockedDate).toLocaleDateString()}
+                        {user.blockedTagName}
                     </Text>
                 </View>
             </View>
@@ -61,17 +44,69 @@ function BlockedUserItem({ user, onUnblock }) {
 }
 
 function BlockedUsersContainer({ navigation }) {
-    const [blockedUsers, setBlockedUsers] = useState(mockBlockedUsers);
+    const [blockedUsers, setBlockedUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const friendService = new FriendService();
 
-    const handleUnblock = (user) => {
-        // Xử lý unblock user
-        setBlockedUsers(prev => prev.filter(u => u.id !== user.id));
-        Toast.show({
-            type: 'success',
-            text1: `Unblocked ${user.name}`,
-            position: 'top',
-            visibilityTime: 2000,
-        }); 
+    useEffect(() => {
+        fetchBlockedUsers();
+    }, []);
+
+    const fetchBlockedUsers = async () => {
+        try {
+            setLoading(true);
+            const response = await friendService.getBlockedUsers();
+            setBlockedUsers(response.$values);
+        } catch (error) {
+            console.error('Error fetching blocked users:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to load blocked users',
+                position: 'top',
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUnblock = async (user) => {
+        try {
+            Alert.alert(
+                "",
+                `Are you sure you want to unblock ${user.blockedFullName}? They will be able to:
+                • See your posts
+                • Send you messages
+                • Find you in search`,
+                [
+                    {
+                        text: "Cancel",
+                        style: "cancel"
+                    },
+                    {
+                        text: "Unblock",
+                        onPress: async () => {
+                            const response = await friendService.unblockUser(user.blockedUserId);
+                            if (response) {
+                                setBlockedUsers(prev => prev.filter(u => u.blockedUserId !== user.blockedUserId));
+                                Toast.show({
+                                    type: 'success',
+                                    text1: `Unblocked ${user.blockedFullName}`,
+                                    position: 'top',
+                                    visibilityTime: 2000,
+                                });
+                            }
+                        }
+                    }
+                ]
+            );
+        } catch (error) {
+            console.error('Error unblocking user:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to unblock user',
+                position: 'top',
+            });
+        }
     };
 
     const EmptyState = () => (
@@ -92,7 +127,9 @@ function BlockedUsersContainer({ navigation }) {
             <Header title="Blocked Users" goBack navigation={navigation} />
 
             <View className="flex-1 mt-6">
-                {blockedUsers.length > 0 ? (
+                {loading ? (
+                    <ActivityIndicator size="large" color={Colors.purple} />
+                ) : blockedUsers?.length > 0 ? (
                     <FlatList
                         data={blockedUsers}
                         renderItem={({ item }) => (
@@ -101,7 +138,7 @@ function BlockedUsersContainer({ navigation }) {
                                 onUnblock={handleUnblock}
                             />
                         )}
-                        keyExtractor={item => item.id}
+                        keyExtractor={item => item.blockedUserId}
                         showsVerticalScrollIndicator={false}
                         contentContainerClassName="pb-6"
                         ListHeaderComponent={

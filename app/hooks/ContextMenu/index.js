@@ -135,6 +135,9 @@ function useContextMenu(
 				case 'mute':
 					handleMuteFriendNotification();
 					break;
+				case 'block':
+					handleBlockUser();
+					break;
 				case 'hide':
 					console.log('Hidden');
 					break;
